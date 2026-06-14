@@ -9,6 +9,7 @@ import {
   RiGoogleFill,
   RiInboxLine,
   RiLogoutBoxLine,
+  RiSparkling2Line,
 } from "@remixicon/react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -131,6 +132,7 @@ export default function Sidebar({
     { href: "/dashboard", label: "Inbox", icon: RiInboxLine },
     { href: "/dashboard/drafts", label: "Drafts", icon: RiDraftLine },
     { href: "/dashboard/calendar", label: "Calendar", icon: RiCalendarLine },
+    { href: "/dashboard/ai", label: "AI Assistant", icon: RiSparkling2Line },
   ];
 
   return (

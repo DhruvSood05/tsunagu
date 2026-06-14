@@ -1,6 +1,7 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { getHeader, decodeEmailBody } from "@/lib/email";
+import { detectEventFromEmail } from "@/lib/event-detect";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -9,12 +10,19 @@ import {
   RiDeleteBinLine,
   RiAttachmentLine,
   RiSendPlaneLine,
+  RiCalendarEventLine,
+  RiCheckLine,
 } from "@remixicon/react";
 
 interface EmailDetailProps {
   email: any;
   onClose: () => void;
   onDelete: () => void;
+}
+
+interface CalendarOption {
+  id: string;
+  summary?: string;
 }
 
 const EMAIL_STYLES = `
@@ -60,12 +68,24 @@ function SenderAvatar({ url, initials }: { url?: string; initials: string }) {
 
 export default function EmailDetail({ email, onClose, onDelete }: EmailDetailProps) {
   const [showReply, setShowReply] = useState(false);
+  const [showAddEvent, setShowAddEvent] = useState(false);
   const [replyTo, setReplyTo] = useState(getHeader(email, "From"));
   const [replyBody, setReplyBody] = useState("");
   const [files, setFiles] = useState<FileList | null>(null);
   const [sending, setSending] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  // Add-to-calendar state
+  const [calendars, setCalendars] = useState<CalendarOption[]>([]);
+  const [eventTitle, setEventTitle] = useState("");
+  const [eventDate, setEventDate] = useState("");
+  const [eventStart, setEventStart] = useState("09:00");
+  const [eventEnd, setEventEnd] = useState("10:00");
+  const [eventCalendar, setEventCalendar] = useState("primary");
+  const [eventDesc, setEventDesc] = useState("");
+  const [addingEvent, setAddingEvent] = useState(false);
+  const [addStatus, setAddStatus] = useState<"idle" | "success" | "error">("idle");
 
   const subject = getHeader(email, "Subject");
   const from = getHeader(email, "From");
@@ -83,6 +103,37 @@ export default function EmailDetail({ email, onClose, onDelete }: EmailDetailPro
   const formattedDate = dateObj && !isNaN(dateObj.getTime())
     ? dateObj.toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" })
     : "";
+
+  // Detect event info once on mount
+  const detected = useMemo(
+    () => detectEventFromEmail(subject, email?.snippet ?? "", isHtml ? "" : content, senderName, senderEmail),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [email?.id]
+  );
+
+  // Load calendars when add-event panel opens
+  useEffect(() => {
+    if (!showAddEvent || calendars.length > 0) return;
+    fetch("/api/calendar/calendars")
+      .then((r) => r.json())
+      .then((data) => {
+        const list: CalendarOption[] = data.calendars ?? [{ id: "primary", summary: "My Calendar" }];
+        setCalendars(list);
+        setEventCalendar(list[0]?.id ?? "primary");
+      })
+      .catch(() => setCalendars([{ id: "primary", summary: "My Calendar" }]));
+  }, [showAddEvent, calendars.length]);
+
+  const openAddEvent = () => {
+    setEventTitle(detected.title);
+    setEventDate(detected.date);
+    setEventStart(detected.startTime);
+    setEventEnd(detected.endTime);
+    setEventDesc(detected.description);
+    setAddStatus("idle");
+    setShowReply(false);
+    setShowAddEvent(true);
+  };
 
   const handleDelete = async () => {
     setDeleting(true);
@@ -113,6 +164,40 @@ export default function EmailDetail({ email, onClose, onDelete }: EmailDetailPro
     }
   };
 
+  const handleAddEvent = async () => {
+    setAddingEvent(true);
+    setAddStatus("idle");
+    try {
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const startDateTime = `${eventDate}T${eventStart}:00`;
+      const endDateTime = `${eventDate}T${eventEnd}:00`;
+      const res = await fetch("/api/calendar/events", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          calendarId: eventCalendar || undefined,
+          event: {
+            summary: eventTitle,
+            description: eventDesc || undefined,
+            start: { dateTime: startDateTime, timeZone: tz },
+            end: { dateTime: endDateTime, timeZone: tz },
+          },
+          sendUpdates: "all",
+        }),
+      });
+      if (res.ok) {
+        setAddStatus("success");
+        setTimeout(() => setShowAddEvent(false), 1500);
+      } else {
+        setAddStatus("error");
+      }
+    } catch {
+      setAddStatus("error");
+    } finally {
+      setAddingEvent(false);
+    }
+  };
+
   const srcDoc = isHtml
     ? `<!DOCTYPE html><html><head><meta charset="utf-8">${EMAIL_STYLES}</head><body>${content}</body></html>`
     : undefined;
@@ -126,9 +211,19 @@ export default function EmailDetail({ email, onClose, onDelete }: EmailDetailPro
         </Button>
         <div className="flex items-center gap-1.5">
           <Button
+            variant={showAddEvent ? "secondary" : "outline"}
+            size="sm"
+            onClick={showAddEvent ? () => setShowAddEvent(false) : openAddEvent}
+            className="gap-1.5"
+            title="Add to Calendar"
+          >
+            <RiCalendarEventLine className="size-3.5" />
+            {detected.isLikelyEvent ? "Add to Calendar" : "Add to Calendar"}
+          </Button>
+          <Button
             variant={showReply ? "secondary" : "outline"}
             size="sm"
-            onClick={() => setShowReply(!showReply)}
+            onClick={() => { setShowReply(!showReply); setShowAddEvent(false); }}
             className="gap-1.5"
           >
             <RiReplyLine className="size-3.5" />
@@ -169,6 +264,24 @@ export default function EmailDetail({ email, onClose, onDelete }: EmailDetailPro
         </div>
       </div>
 
+      {/* Smart detection banner */}
+      {detected.isLikelyEvent && !showAddEvent && (
+        <div className="px-4 py-2 bg-primary/5 border-b shrink-0 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 min-w-0">
+            <RiCalendarEventLine className="size-3.5 text-primary shrink-0" />
+            <p className="text-xs text-muted-foreground truncate">
+              This email looks like a meeting invite
+            </p>
+          </div>
+          <button
+            onClick={openAddEvent}
+            className="text-xs text-primary font-medium hover:underline shrink-0"
+          >
+            Add to Calendar
+          </button>
+        </div>
+      )}
+
       {/* Body */}
       <div className="flex-1 overflow-hidden">
         {isHtml ? (
@@ -184,6 +297,114 @@ export default function EmailDetail({ email, onClose, onDelete }: EmailDetailPro
           </div>
         )}
       </div>
+
+      {/* Add to Calendar panel */}
+      {showAddEvent && (
+        <>
+          <Separator />
+          <div className="bg-background shrink-0 flex flex-col">
+            <div className="px-4 pt-3 pb-2">
+              <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest mb-3">
+                Add to Calendar
+              </p>
+
+              {/* Title */}
+              <input
+                value={eventTitle}
+                onChange={(e) => setEventTitle(e.target.value)}
+                className="w-full text-xs text-foreground outline-none bg-transparent border-b border-border pb-2 mb-2"
+                placeholder="Event title"
+              />
+
+              {/* Date + Times */}
+              <div className="flex gap-2 mb-2">
+                <div className="flex flex-col gap-0.5 flex-1">
+                  <label className="text-[9px] text-muted-foreground uppercase tracking-widest">Date</label>
+                  <input
+                    type="date"
+                    value={eventDate}
+                    onChange={(e) => setEventDate(e.target.value)}
+                    className="text-xs text-foreground outline-none bg-transparent border-b border-border pb-1"
+                  />
+                </div>
+                <div className="flex flex-col gap-0.5">
+                  <label className="text-[9px] text-muted-foreground uppercase tracking-widest">Start</label>
+                  <input
+                    type="time"
+                    value={eventStart}
+                    onChange={(e) => setEventStart(e.target.value)}
+                    className="text-xs text-foreground outline-none bg-transparent border-b border-border pb-1"
+                  />
+                </div>
+                <div className="flex flex-col gap-0.5">
+                  <label className="text-[9px] text-muted-foreground uppercase tracking-widest">End</label>
+                  <input
+                    type="time"
+                    value={eventEnd}
+                    onChange={(e) => setEventEnd(e.target.value)}
+                    className="text-xs text-foreground outline-none bg-transparent border-b border-border pb-1"
+                  />
+                </div>
+              </div>
+
+              {/* Calendar picker */}
+              <div className="flex flex-col gap-0.5 mb-2">
+                <label className="text-[9px] text-muted-foreground uppercase tracking-widest">Calendar</label>
+                <select
+                  value={eventCalendar}
+                  onChange={(e) => setEventCalendar(e.target.value)}
+                  className="text-xs text-foreground outline-none bg-background border-b border-border pb-1 w-full cursor-pointer"
+                >
+                  {calendars.length > 0
+                    ? calendars.map((c) => (
+                        <option key={c.id} value={c.id}>{c.summary ?? c.id}</option>
+                      ))
+                    : <option value="primary">My Calendar</option>
+                  }
+                </select>
+              </div>
+
+              {/* Description */}
+              <textarea
+                value={eventDesc}
+                onChange={(e) => setEventDesc(e.target.value)}
+                placeholder="Description (optional)"
+                rows={2}
+                className="w-full text-xs text-foreground outline-none bg-transparent border-b border-border pb-1 mb-1 resize-none"
+              />
+            </div>
+
+            <div className="px-4 py-3 border-t flex items-center justify-between gap-3">
+              <button
+                onClick={() => setShowAddEvent(false)}
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Cancel
+              </button>
+              <div className="flex items-center gap-2">
+                {addStatus === "error" && (
+                  <span className="text-xs text-destructive">Failed to add.</span>
+                )}
+                {addStatus === "success" && (
+                  <span className="text-xs text-green-600 flex items-center gap-1">
+                    <RiCheckLine className="size-3.5" />
+                    Added!
+                  </span>
+                )}
+                <Button
+                  size="sm"
+                  onClick={handleAddEvent}
+                  disabled={addingEvent || !eventTitle.trim() || !eventDate || addStatus === "success"}
+                  className="gap-1.5"
+                >
+                  <RiCalendarEventLine className="size-3.5" />
+                  {addingEvent ? "Adding…" : "Add Event"}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Reply form */}
       {showReply && (

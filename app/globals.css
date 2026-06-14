@@ -72,7 +72,7 @@
   --chart-3: oklch(0.627 0.194 149.214);
   --chart-4: oklch(0.527 0.154 150.069);
   --chart-5: oklch(0.448 0.119 151.328);
-  --radius: 0;
+  --radius: 0.5rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.141 0.005 285.823);
   --sidebar-primary: oklch(0.21 0.006 285.885);
@@ -129,157 +129,100 @@
   }
 }
 
-/* ─── FullCalendar theme ──────────────────────────────────────────────── */
+/* ─── FullCalendar — Premium theme ────────────────────────────────────── */
 
 .fc {
-  --fc-border-color: var(--border);
+  --fc-border-color: oklch(0.92 0.004 286.32 / 0.5);
   --fc-page-bg-color: var(--background);
   --fc-neutral-bg-color: var(--muted);
-  --fc-today-bg-color: color-mix(in oklab, var(--primary) 6%, transparent);
+  --fc-today-bg-color: color-mix(in oklab, var(--primary) 4%, transparent);
   --fc-event-bg-color: var(--primary);
   --fc-event-border-color: var(--primary);
   --fc-event-text-color: var(--primary-foreground);
   --fc-list-event-hover-bg-color: var(--muted);
-  --fc-highlight-color: color-mix(in oklab, var(--primary) 10%, transparent);
-  --fc-non-business-color: color-mix(in oklab, var(--muted) 30%, transparent);
+  --fc-highlight-color: color-mix(in oklab, var(--primary) 6%, transparent);
+  --fc-non-business-color: transparent;
   font-family: inherit;
   font-size: 0.8125rem;
 }
 
-/* Toolbar */
-.fc .fc-toolbar.fc-header-toolbar {
-  margin-bottom: 1rem;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  align-items: center;
-}
+/* ── Grid ────────────────────────────────────────────────── */
 
-.fc .fc-toolbar-title {
-  font-size: 1.0625rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  color: var(--foreground);
-}
-
-/* Buttons */
-.fc .fc-button {
-  font-family: inherit;
-  font-size: 0.75rem;
-  font-weight: 500;
-  line-height: 1;
-  padding: 0.375rem 0.75rem;
-  height: 2rem;
-  border: 1px solid var(--border);
-  border-radius: 0.375rem;
-  background-color: transparent;
-  color: var(--foreground);
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  box-shadow: none;
-  text-transform: none;
-  transition: background-color 0.12s, color 0.12s, border-color 0.12s;
-}
-
-.fc .fc-button:hover:not(:disabled) {
-  background-color: var(--muted);
-  border-color: var(--border);
-  color: var(--foreground);
-}
-
-.fc .fc-button:focus {
-  outline: none;
-  box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--ring);
-}
-
-.fc .fc-button-primary:not(:disabled).fc-button-active,
-.fc .fc-button-primary:not(:disabled):active {
-  background-color: var(--primary);
-  border-color: var(--primary);
-  color: var(--primary-foreground);
-  box-shadow: none;
-}
-
-.fc .fc-button-primary:not(:disabled).fc-button-active:hover {
-  background-color: var(--primary);
-  opacity: 0.9;
-}
-
-.fc .fc-button-primary:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-  background-color: transparent;
-  border-color: var(--border);
-  color: var(--muted-foreground);
-}
-
-/* Button groups — rounded ends only */
-.fc .fc-button-group .fc-button {
-  border-radius: 0;
-  margin-left: -1px;
-}
-.fc .fc-button-group .fc-button:first-child { border-radius: 0.375rem 0 0 0.375rem; margin-left: 0; }
-.fc .fc-button-group .fc-button:last-child  { border-radius: 0 0.375rem 0.375rem 0; }
-
-/* Prev / Next icon buttons */
-.fc .fc-prev-button,
-.fc .fc-next-button {
-  padding: 0 0.5rem;
-  width: 2rem;
-}
-
-/* Grid borders */
 .fc td, .fc th {
-  border-color: var(--border) !important;
+  border-color: oklch(0.92 0.004 286.32 / 0.45) !important;
 }
 
 .fc .fc-scrollgrid {
-  border: 1px solid var(--border);
-  border-radius: 0.5rem;
+  border: 1px solid oklch(0.92 0.004 286.32 / 0.45);
+  border-radius: 10px;
   overflow: hidden;
 }
 
 .fc .fc-scrollgrid-section > * {
-  border-color: var(--border);
+  border-color: oklch(0.92 0.004 286.32 / 0.45);
 }
 
-/* Column headers (Mon, Tue…) */
-.fc .fc-col-header-cell {
-  padding: 0.625rem 0;
+/* ── Column headers ──────────────────────────────────────── */
+
+.fc .fc-col-header {
   background-color: transparent;
 }
 
-.fc .fc-col-header-cell-cushion {
-  font-weight: 600;
-  font-size: 0.6875rem;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  color: var(--muted-foreground);
-  text-decoration: none;
+.fc .fc-col-header-cell {
+  padding: 0.625rem 0;
+  border-bottom: 1px solid oklch(0.92 0.004 286.32 / 0.4) !important;
 }
 
-/* Month-view day cells */
+.fc .fc-col-header-cell-cushion {
+  font-size: 0.5625rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+  color: var(--muted-foreground);
+  text-decoration: none;
+  display: inline-block;
+  opacity: 0.55;
+}
+
+.fc .fc-day-today .fc-col-header-cell-cushion {
+  color: var(--foreground);
+  opacity: 1;
+}
+
+/* ── Month day cells ─────────────────────────────────────── */
+
 .fc .fc-daygrid-day {
   cursor: pointer;
+  transition: background-color 0.12s;
 }
 
 .fc .fc-daygrid-day:hover {
-  background-color: color-mix(in oklab, var(--muted) 50%, transparent);
+  background-color: color-mix(in oklab, var(--muted) 45%, transparent);
 }
 
 .fc .fc-day-today {
   background-color: var(--fc-today-bg-color) !important;
 }
 
-/* Day numbers */
+.fc .fc-day-sat,
+.fc .fc-day-sun {
+  background-color: transparent;
+}
+
+.fc .fc-day-today.fc-day-sat,
+.fc .fc-day-today.fc-day-sun {
+  background-color: var(--fc-today-bg-color) !important;
+}
+
+/* ── Day numbers ─────────────────────────────────────────── */
+
 .fc .fc-daygrid-day-top {
   justify-content: flex-end;
-  padding: 0.25rem 0.375rem 0;
+  padding: 0.4rem 0.5rem 0.2rem;
 }
 
 .fc .fc-daygrid-day-number {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: 400;
   color: var(--foreground);
   text-decoration: none;
@@ -297,43 +240,44 @@
 }
 
 .fc .fc-day-today .fc-daygrid-day-number {
-  background-color: var(--primary);
-  color: var(--primary-foreground);
-  font-weight: 700;
+  background-color: var(--foreground);
+  color: var(--background);
+  font-weight: 600;
 }
 
 .fc .fc-day-other .fc-daygrid-day-number {
   color: var(--muted-foreground);
-  opacity: 0.45;
+  opacity: 0.28;
 }
 
 .fc td.fc-day-past .fc-daygrid-day-number {
   color: var(--muted-foreground);
+  opacity: 0.55;
 }
 
-/* ─── Events ─────────────────────────────────────────────── */
+/* ── Events ──────────────────────────────────────────────── */
 
-/* Base event */
 .fc .fc-event {
-  border: none !important;
-  border-radius: 4px;
+  border-style: solid !important;
+  border-width: 0 0 0 2.5px !important;
+  border-radius: 3px !important;
   cursor: pointer;
   font-family: inherit;
-  transition: filter 0.1s, opacity 0.1s;
+  transition: opacity 0.12s, box-shadow 0.12s;
 }
 
 .fc .fc-event:hover {
-  filter: brightness(0.88);
-  opacity: 1;
+  opacity: 0.84;
 }
 
 /* Month-view event pills */
 .fc .fc-daygrid-event {
-  margin: 1px 3px 0;
-  padding: 2px 6px;
-  font-size: 0.7rem;
+  margin: 1.5px 3px 0;
+  padding: 2px 5px;
+  font-size: 0.6875rem;
   font-weight: 500;
-  line-height: 1.4;
+  line-height: 1.45;
+  border-radius: 3px !important;
 }
 
 .fc .fc-daygrid-event .fc-event-title {
@@ -344,127 +288,122 @@
 
 .fc .fc-daygrid-event .fc-event-time {
   font-weight: 400;
-  opacity: 0.8;
-  margin-right: 3px;
+  opacity: 0.65;
+  margin-right: 4px;
   flex-shrink: 0;
 }
 
 /* Week / Day time-grid events */
-.fc .fc-timegrid-event-harness-inset .fc-timegrid-event {
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.25) !important;
-}
-
 .fc .fc-timegrid-event {
-  border-radius: 4px;
+  border-radius: 3px !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.07);
   padding: 2px 6px;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.15);
 }
 
 .fc .fc-timegrid-event .fc-event-main {
   padding: 0;
 }
 
-.fc .fc-timegrid-event .fc-event-title {
-  font-size: 0.75rem;
-  font-weight: 600;
-  line-height: 1.3;
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-}
-
-.fc .fc-timegrid-event .fc-event-time {
-  font-size: 0.6875rem;
-  font-weight: 400;
-  opacity: 0.8;
-  margin-bottom: 1px;
-}
-
-/* Event dragging */
+/* Event mirror (drag ghost) */
 .fc .fc-event.fc-event-mirror {
-  opacity: 0.7;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  opacity: 0.48;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.14);
 }
 
-/* Event selected (clicked) */
+/* Event selected */
 .fc .fc-event.fc-event-selected::after {
   display: none;
 }
 
 .fc .fc-event.fc-event-selected {
-  box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--primary) !important;
+  box-shadow: 0 0 0 2px var(--background), 0 0 0 3.5px var(--foreground) !important;
 }
 
 /* Resize handle */
 .fc .fc-event .fc-event-resizer {
-  background-color: rgba(255,255,255,0.4);
+  background-color: rgba(255,255,255,0.28);
 }
 
 /* "+N more" link */
 .fc .fc-daygrid-more-link {
-  font-size: 0.7rem;
+  font-size: 0.5625rem;
   font-weight: 600;
-  color: var(--primary);
-  padding: 1px 4px;
-  border-radius: 3px;
-  transition: background-color 0.1s;
+  letter-spacing: 0.06em;
+  color: var(--muted-foreground);
+  padding: 1px 5px;
+  border-radius: 4px;
+  transition: color 0.1s, background-color 0.1s;
+  text-transform: uppercase;
+  opacity: 0.55;
 }
 
 .fc .fc-daygrid-more-link:hover {
   background-color: var(--muted);
-  color: var(--primary);
+  color: var(--foreground);
   text-decoration: none;
+  opacity: 1;
 }
 
-/* ─── Time grid ──────────────────────────────────────────── */
+/* ── Time grid ───────────────────────────────────────────── */
 
 .fc .fc-timegrid-slot {
-  height: 3rem;
+  height: 2.5rem;
 }
 
 .fc .fc-timegrid-slot-minor {
   border-top-style: dashed;
-  opacity: 0.4;
+  opacity: 0.18;
+}
+
+.fc .fc-timegrid-slot-label {
+  border-right: 1px solid oklch(0.92 0.004 286.32 / 0.35);
 }
 
 .fc .fc-timegrid-slot-label-cushion {
-  font-size: 0.6875rem;
+  font-size: 0.5625rem;
   color: var(--muted-foreground);
-  font-weight: 400;
+  font-weight: 500;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
   padding-right: 0.75rem;
   white-space: nowrap;
+  opacity: 0.45;
 }
 
-/* Now indicator (red line) */
+/* Now indicator */
 .fc .fc-timegrid-now-indicator-line {
-  border-color: #ef4444;
-  border-width: 2px;
+  border-color: oklch(0.65 0.22 25);
+  border-width: 1.5px;
 }
 
 .fc .fc-timegrid-now-indicator-arrow {
-  border-top-color: #ef4444;
-  border-bottom-color: #ef4444;
+  border-top-color: oklch(0.65 0.22 25);
+  border-bottom-color: oklch(0.65 0.22 25);
 }
 
-/* ─── List view ──────────────────────────────────────────── */
+/* ── List view ───────────────────────────────────────────── */
 
 .fc .fc-list-table td,
 .fc .fc-list-table th {
-  border-color: var(--border) !important;
+  border-color: oklch(0.92 0.004 286.32 / 0.4) !important;
 }
 
 .fc .fc-list-day th {
-  background-color: var(--muted);
+  background-color: transparent;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  border-bottom: 1px solid oklch(0.92 0.004 286.32 / 0.4) !important;
 }
 
 .fc .fc-list-day-cushion {
-  font-size: 0.6875rem;
-  font-weight: 700;
+  font-size: 0.5625rem;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.07em;
+  letter-spacing: 0.13em;
   color: var(--muted-foreground);
-  padding: 0.5rem 1rem;
+  padding: 0.625rem 1.25rem;
+  opacity: 0.5;
 }
 
 .fc .fc-list-event {
@@ -472,24 +411,31 @@
 }
 
 .fc .fc-list-event:hover td {
-  background-color: var(--muted) !important;
+  background-color: color-mix(in oklab, var(--muted) 55%, transparent) !important;
 }
 
 .fc .fc-list-event-title a {
   color: var(--foreground);
   text-decoration: none;
   font-weight: 500;
+  font-size: 0.8125rem;
 }
 
 .fc .fc-list-event-time {
   color: var(--muted-foreground);
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
   white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.55;
 }
 
 .fc .fc-list-event-dot {
   border-radius: 50%;
-  border-width: 5px;
+  width: 6px;
+  height: 6px;
+  border: none !important;
+  background-color: currentColor;
 }
 
 .fc .fc-list-empty {
@@ -498,33 +444,38 @@
 
 .fc .fc-list-empty-cushion {
   color: var(--muted-foreground);
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
+  opacity: 0.45;
 }
 
-/* ─── Popover (overflow events) ─────────────────────────── */
+/* ── Popover (overflow events) ───────────────────────────── */
 
 .fc .fc-popover {
   background-color: var(--popover);
-  border: 1px solid var(--border);
-  border-radius: 0.625rem;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.14);
+  border: 1px solid oklch(0.92 0.004 286.32 / 0.5);
+  border-radius: 10px;
+  box-shadow: 0 20px 48px rgba(0,0,0,0.1), 0 4px 12px rgba(0,0,0,0.06);
   overflow: hidden;
 }
 
 .fc .fc-popover-header {
-  background-color: var(--muted);
+  background-color: transparent;
   color: var(--foreground);
-  font-size: 0.75rem;
+  font-size: 0.5625rem;
   font-weight: 600;
-  padding: 0.5rem 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.625rem 0.875rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  border-bottom: 1px solid oklch(0.92 0.004 286.32 / 0.4);
+  opacity: 0.6;
 }
 
 .fc .fc-popover-title {
   font-weight: 600;
-  font-size: 0.75rem;
+  font-size: 0.5625rem;
 }
 
 .fc .fc-popover-close {
@@ -532,7 +483,7 @@
   font-size: 1rem;
   line-height: 1;
   cursor: pointer;
-  opacity: 0.7;
+  opacity: 0.5;
   transition: opacity 0.1s;
 }
 
@@ -542,7 +493,7 @@
 }
 
 .fc .fc-popover-body {
-  padding: 0.375rem 0.5rem 0.5rem;
+  padding: 0.5rem 0.625rem 0.625rem;
   display: flex;
   flex-direction: column;
   gap: 2px;

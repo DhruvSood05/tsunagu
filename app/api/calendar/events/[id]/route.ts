@@ -18,6 +18,7 @@ export async function PATCH(
       .withTenant(session.user.id)
       .googlecalendar.api.events.update({
         id,
+        calendarId: body.calendarId,
         event: body.event,
         sendUpdates: body.sendUpdates ?? "all",
       });
@@ -29,18 +30,19 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const session = await getSessionCached(await headers());
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await params;
+  const calendarId = new URL(req.url).searchParams.get("calendarId") ?? undefined;
 
   try {
     await corsair
       .withTenant(session.user.id)
-      .googlecalendar.api.events.delete({ id, sendUpdates: "all" });
+      .googlecalendar.api.events.delete({ id, calendarId, sendUpdates: "all" });
     return NextResponse.json({ success: true });
   } catch (err: any) {
     console.error("[api/calendar/events/[id] DELETE]", err?.message ?? err);

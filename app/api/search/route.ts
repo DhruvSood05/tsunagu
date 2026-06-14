@@ -1,5 +1,4 @@
 import { corsair } from "@/db";
-import { auth } from "@/lib/auth";
 import { getSessionCached } from "@/lib/session-cache";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
@@ -20,24 +19,21 @@ async function fetchInBatches<T>(
 
 export async function GET(req: Request) {
   const session = await getSessionCached(await headers());
-  if (!session)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { searchParams } = new URL(req.url);
-  const q = searchParams.get("q");
+  const q         = searchParams.get("q") ?? "";
   const pageToken = searchParams.get("pageToken") ?? undefined;
 
-  if (!q)
-    return NextResponse.json({ error: "q is required" }, { status: 400 });
+  if (!q.trim()) return NextResponse.json({ messages: [], nextPageToken: null });
 
   const tenant = corsair.withTenant(session.user.id);
-  const subjectQuery = q.includes(" ") ? `subject:"${q}"` : `subject:${q}`;
 
   try {
     const list = await tenant.gmail.api.messages.list({
+      q,
       maxResults: 20,
       pageToken,
-      q: subjectQuery,
     });
 
     const results = await fetchInBatches(list.messages ?? [], (m) =>
@@ -55,7 +51,7 @@ export async function GET(req: Request) {
   } catch (err: any) {
     console.error("[api/search]", err?.message ?? err);
     return NextResponse.json(
-      { error: "Failed to search emails", messages: [], nextPageToken: null },
+      { error: "Search failed", messages: [], nextPageToken: null },
       { status: 500 },
     );
   }

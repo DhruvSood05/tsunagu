@@ -12,28 +12,38 @@ export async function GET(req: Request) {
   const timeMax =
     searchParams.get("timeMax") ??
     new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
-  const maxResults = Number(searchParams.get("maxResults") ?? "50");
+  const calendarIdsParam = searchParams.get("calendarIds");
+  const calendarIds = calendarIdsParam
+    ? calendarIdsParam.split(",").map((s) => s.trim()).filter(Boolean)
+    : ["primary"];
 
   try {
     const tenant = corsair.withTenant(session.user.id);
-    const allItems: any[] = [];
-    let pageToken: string | undefined;
 
-    // Page through all results so every event in the range is returned
-    do {
-      const result = await tenant.googlecalendar.api.events.getMany({
-        timeMin,
-        timeMax,
-        maxResults: 250,
-        singleEvents: true,
-        orderBy: "startTime",
-        pageToken,
-      });
-      allItems.push(...(result.items ?? []));
-      pageToken = result.nextPageToken ?? undefined;
-    } while (pageToken);
+    // Fetch events for each calendar in parallel, then merge
+    const perCalendar = await Promise.all(
+      calendarIds.map(async (calendarId) => {
+        const items: any[] = [];
+        let pageToken: string | undefined;
+        do {
+          const result = await tenant.googlecalendar.api.events.getMany({
+            calendarId,
+            timeMin,
+            timeMax,
+            maxResults: 250,
+            singleEvents: true,
+            orderBy: "startTime",
+            pageToken,
+          });
+          // Tag each event with the calendar it came from
+          items.push(...(result.items ?? []).map((e: any) => ({ ...e, _calendarId: calendarId })));
+          pageToken = result.nextPageToken ?? undefined;
+        } while (pageToken);
+        return items;
+      }),
+    );
 
-    return NextResponse.json({ events: allItems });
+    return NextResponse.json({ events: perCalendar.flat() });
   } catch (err: any) {
     console.error("[api/calendar/events GET]", err?.message ?? err);
     return NextResponse.json({ error: "Failed to fetch events", events: [] }, { status: 500 });
@@ -49,6 +59,7 @@ export async function POST(req: Request) {
     const event = await corsair
       .withTenant(session.user.id)
       .googlecalendar.api.events.create({
+        calendarId: body.calendarId,
         event: body.event,
         sendUpdates: body.sendUpdates ?? "all",
       });
