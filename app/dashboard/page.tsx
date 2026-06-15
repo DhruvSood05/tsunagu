@@ -2,6 +2,7 @@ import { corsair } from "@/db";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 import ConnectCalendar from "./ConnectCalendar";
 import ConnectGmail from "./ConnectGmail";
 import DashboardContent from "./DashboardContent";
@@ -27,6 +28,8 @@ export default async function DashboardPage() {
   if (!calendarConnected) return <ConnectCalendar />;
 
   return (
-    <DashboardContent gmailConnected={gmailConnected} calendarConnected={calendarConnected} />
+    <Suspense fallback={<div className="flex h-screen items-center justify-center bg-background text-xs text-muted-foreground">Loading workspace…</div>}>
+      <DashboardContent gmailConnected={gmailConnected} calendarConnected={calendarConnected} />
+    </Suspense>
   );
 }

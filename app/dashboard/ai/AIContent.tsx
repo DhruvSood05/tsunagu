@@ -1,38 +1,34 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import ReactMarkdown from "react-markdown";
-import Sidebar from "@/components/dashboard/Sidebar";
+import { useEffect, useRef, useState, useCallback } from "react";
+import Sidebar from "@/components/layout/Sidebar";
+import TopNav from "@/components/layout/TopNav";
+import SettingsOverlay from "@/components/layout/SettingsOverlay";
+import AIChatBubble from "@/components/ai/AIChatBubble";
 import { Button } from "@/components/ui/button";
 import {
   RiSendPlaneLine,
-  RiSparkling2Line,
-  RiCalendarEventLine,
-  RiMailLine,
+  RiSparkling2Fill,
+  RiAddLine,
+  RiDeleteBinLine,
+  RiChatHistoryLine,
+  RiMenuFoldLine,
+  RiMenuUnfoldLine,
 } from "@remixicon/react";
+import type { Message } from "@/types/ai";
 
-interface Message {
-  role: "user" | "assistant";
-  content: string;
-  toolsUsed?: string[];
+interface ChatSession {
+  id: string;
+  title: string;
+  createdAt: string;
+  updatedAt: string;
 }
-
-// Module-level — survives page navigation within the session
-let _cachedMessages: Message[] = [];
 
 interface AIContentProps {
   user: { name?: string | null; email?: string | null; image?: string | null } | null;
   gmailConnected: boolean;
   calendarConnected: boolean;
 }
-
-const TOOL_LABELS: Record<string, string> = {
-  list_operations: "Discovering available tools…",
-  get_schema: "Reading API schema…",
-  run_script: "Calling API…",
-  send_email: "Sending email…",
-  corsair_setup: "Setting up…",
-};
 
 const SUGGESTIONS = [
   "Give me a brief summary of what's important in my inbox today. Highlight urgent items, action items, and key senders.",
@@ -49,10 +45,13 @@ const SUGGESTION_LABELS = [
 ];
 
 export default function AIContent({ user, gmailConnected, calendarConnected }: AIContentProps) {
-  const [messages, setMessages] = useState<Message[]>(_cachedMessages);
+  const [sessions, setSessions] = useState<ChatSession[]>([]);
+  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
-  const [activeTools, setActiveTools] = useState<string[]>([]);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [loadingMessages, setLoadingMessages] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -60,30 +59,91 @@ export default function AIContent({ user, gmailConnected, calendarConnected }: A
   // Auto-scroll to bottom when messages update
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, activeTools]);
+  }, [messages, streaming]);
 
-  const updateMessages = (updater: (prev: Message[]) => Message[]) => {
-    setMessages((prev) => {
-      const next = updater(prev);
-      _cachedMessages = next;
-      return next;
+  // Load sessions on mount
+  useEffect(() => {
+    fetchSessions();
+  }, []);
+
+  const fetchSessions = async () => {
+    const res = await fetch("/api/ai/sessions");
+    if (!res.ok) return;
+    const data = await res.json();
+    setSessions(data.sessions ?? []);
+  };
+
+  const loadSession = useCallback(async (sessionId: string) => {
+    setLoadingMessages(true);
+    setActiveSessionId(sessionId);
+    setMessages([]);
+    try {
+      const res = await fetch(`/api/ai/sessions/${sessionId}/messages`);
+      if (!res.ok) return;
+      const data = await res.json();
+      const msgs: Message[] = (data.messages ?? []).map((m: any) => ({
+        role: m.role as "user" | "assistant",
+        content: m.content,
+        toolsUsed: m.toolsUsed ?? undefined,
+      }));
+      setMessages(msgs);
+    } finally {
+      setLoadingMessages(false);
+      setTimeout(() => inputRef.current?.focus(), 100);
+    }
+  }, []);
+
+  const createNewSession = async () => {
+    const res = await fetch("/api/ai/sessions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: "New Chat" }),
     });
+    if (!res.ok) return;
+    const data = await res.json();
+    const newSession: ChatSession = data.session;
+    setSessions((prev) => [newSession, ...prev]);
+    setActiveSessionId(newSession.id);
+    setMessages([]);
+    setTimeout(() => inputRef.current?.focus(), 100);
+  };
+
+  const deleteSession = async (e: React.MouseEvent, sessionId: string) => {
+    e.stopPropagation();
+    await fetch(`/api/ai/sessions/${sessionId}`, { method: "DELETE" });
+    setSessions((prev) => prev.filter((s) => s.id !== sessionId));
+    if (activeSessionId === sessionId) {
+      setActiveSessionId(null);
+      setMessages([]);
+    }
   };
 
   const sendMessage = async (text: string) => {
     if (!text.trim() || streaming) return;
 
+    // Auto-create session if none selected
+    let sessionId = activeSessionId;
+    if (!sessionId) {
+      const res = await fetch("/api/ai/sessions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: "New Chat" }),
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      sessionId = data.session.id;
+      setSessions((prev) => [data.session, ...prev]);
+      setActiveSessionId(sessionId);
+    }
+
     const userMsg: Message = { role: "user", content: text };
     const newMessages = [...messages, userMsg];
-    _cachedMessages = newMessages;
     setMessages(newMessages);
     setInput("");
     setStreaming(true);
-    setActiveTools([]);
 
-    // Placeholder for streaming assistant response
     const assistantPlaceholder: Message = { role: "assistant", content: "" };
-    updateMessages((prev) => [...prev, assistantPlaceholder]);
+    setMessages((prev) => [...prev, assistantPlaceholder]);
 
     const openaiMessages = newMessages.map((m) => ({ role: m.role, content: m.content }));
 
@@ -93,7 +153,7 @@ export default function AIContent({ user, gmailConnected, calendarConnected }: A
       const res = await fetch("/api/ai/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: openaiMessages }),
+        body: JSON.stringify({ messages: openaiMessages, sessionId }),
         signal: abortRef.current.signal,
       });
 
@@ -122,7 +182,7 @@ export default function AIContent({ user, gmailConnected, calendarConnected }: A
             const event = JSON.parse(raw);
             if (event.text) {
               fullText += event.text;
-              updateMessages((prev) => {
+              setMessages((prev) => {
                 const updated = [...prev];
                 updated[updated.length - 1] = { role: "assistant", content: fullText, toolsUsed: usedTools };
                 return updated;
@@ -130,14 +190,10 @@ export default function AIContent({ user, gmailConnected, calendarConnected }: A
             }
             if (event.tool) {
               if (!usedTools.includes(event.tool)) usedTools.push(event.tool);
-              setActiveTools([...usedTools]);
-            }
-            if (event.done) {
-              setActiveTools([]);
             }
             if (event.error) {
               fullText = "Sorry, something went wrong. Please try again.";
-              updateMessages((prev) => {
+              setMessages((prev) => {
                 const updated = [...prev];
                 updated[updated.length - 1] = { role: "assistant", content: fullText };
                 return updated;
@@ -147,21 +203,28 @@ export default function AIContent({ user, gmailConnected, calendarConnected }: A
         }
       }
 
-      updateMessages((prev) => {
+      setMessages((prev) => {
         const updated = [...prev];
         updated[updated.length - 1] = { role: "assistant", content: fullText || "Done.", toolsUsed: usedTools };
         return updated;
       });
+
+      // Update session title in sidebar list after first message
+      if (newMessages.filter((m) => m.role === "user").length === 1 && sessionId) {
+        const title = text.slice(0, 60) + (text.length > 60 ? "…" : "");
+        setSessions((prev) =>
+          prev.map((s) => (s.id === sessionId ? { ...s, title, updatedAt: new Date().toISOString() } : s))
+        );
+      }
     } catch (err: any) {
       if (err?.name === "AbortError") return;
-      updateMessages((prev) => {
+      setMessages((prev) => {
         const updated = [...prev];
         updated[updated.length - 1] = { role: "assistant", content: "Sorry, I couldn't connect. Please try again." };
         return updated;
       });
     } finally {
       setStreaming(false);
-      setActiveTools([]);
       abortRef.current = null;
       inputRef.current?.focus();
     }
@@ -181,190 +244,199 @@ export default function AIContent({ user, gmailConnected, calendarConnected }: A
 
   const isEmpty = messages.length === 0;
 
+  function formatSessionDate(iso: string) {
+    const d = new Date(iso);
+    const now = new Date();
+    const diff = now.getTime() - d.getTime();
+    if (diff < 86400000) return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+    if (diff < 604800000) return d.toLocaleDateString("en-US", { weekday: "short" });
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  }
+
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex h-screen overflow-hidden bg-background">
       <Sidebar user={user} gmailConnected={gmailConnected} calendarConnected={calendarConnected} />
 
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
-        <div className="px-6 py-4 border-b shrink-0 flex items-center gap-2.5">
-          <RiSparkling2Line className="size-4 text-primary" />
-          <h1 className="text-sm font-semibold text-foreground">Tsunagu AI</h1>
-          <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">Beta</span>
-        </div>
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+        <TopNav user={user} gmailConnected={gmailConnected} />
 
-        {/* Messages area */}
-        <div className="flex-1 overflow-y-auto px-4 py-4">
-          {isEmpty ? (
-            <div className="flex flex-col items-center justify-center h-full gap-6 pb-20">
-              <div className="flex flex-col items-center gap-3">
-                <div className="size-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <RiSparkling2Line className="size-6 text-primary" />
+        <div className="flex-1 flex overflow-hidden p-4 pt-0 gap-4">
+
+          {/* Session History Sidebar */}
+          {sidebarOpen && (
+            <div
+              id="tour-ai-sessions"
+              className="w-56 shrink-0 bg-card border border-border/40 rounded-xl overflow-hidden shadow-xl flex flex-col"
+            >
+              <div className="px-3 py-3 border-b border-border/40 flex items-center justify-between bg-card/60 backdrop-blur-sm shrink-0">
+                <div className="flex items-center gap-1.5">
+                  <RiChatHistoryLine className="size-3.5 text-muted-foreground" />
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">History</span>
                 </div>
-                <div className="text-center">
-                  <p className="text-sm font-medium text-foreground">How can I help you?</p>
-                  <p className="text-xs text-muted-foreground mt-1">Ask me about your emails, calendar, or get help drafting</p>
-                </div>
+                <button
+                  onClick={() => setSidebarOpen(false)}
+                  className="size-6 flex items-center justify-center rounded text-muted-foreground/40 hover:text-foreground hover:bg-secondary/60 transition-all cursor-pointer"
+                >
+                  <RiMenuFoldLine className="size-3.5" />
+                </button>
               </div>
-              <div className="grid grid-cols-2 gap-2 w-full max-w-lg">
-                {SUGGESTION_LABELS.map((label, i) => (
+
+              <div className="px-2 py-2 shrink-0">
+                <button
+                  onClick={createNewSession}
+                  className="w-full flex items-center gap-2 px-2.5 py-2 text-xs font-semibold text-foreground bg-secondary/40 hover:bg-secondary/80 border border-border/30 rounded-md transition-all cursor-pointer"
+                >
+                  <RiAddLine className="size-3.5 shrink-0" />
+                  New Chat
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto px-2 pb-2 space-y-0.5">
+                {sessions.length === 0 && (
+                  <p className="text-[10px] text-muted-foreground/40 text-center py-6 px-2">
+                    No conversations yet. Start chatting!
+                  </p>
+                )}
+                {sessions.map((s) => (
                   <button
-                    key={label}
-                    onClick={() => sendMessage(SUGGESTIONS[i])}
-                    className="text-left px-3 py-2.5 text-xs text-muted-foreground bg-muted/50 hover:bg-muted border border-border rounded-lg transition-colors"
+                    key={s.id}
+                    onClick={() => loadSession(s.id)}
+                    className={`group w-full flex items-center gap-1.5 px-2.5 py-2 rounded-md text-left transition-all cursor-pointer ${
+                      activeSessionId === s.id
+                        ? "bg-secondary text-foreground"
+                        : "text-muted-foreground hover:text-foreground hover:bg-secondary/40"
+                    }`}
                   >
-                    {label}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[11px] font-medium truncate leading-tight">{s.title}</p>
+                      <p className="text-[9px] text-muted-foreground/50 mt-0.5 font-mono">
+                        {formatSessionDate(s.updatedAt)}
+                      </p>
+                    </div>
+                    <button
+                      onClick={(e) => deleteSession(e, s.id)}
+                      className="shrink-0 opacity-0 group-hover:opacity-100 size-5 flex items-center justify-center rounded text-muted-foreground/40 hover:text-rose-500 transition-all cursor-pointer"
+                    >
+                      <RiDeleteBinLine className="size-3" />
+                    </button>
                   </button>
                 ))}
               </div>
             </div>
-          ) : (
-            <div className="max-w-3xl mx-auto space-y-4">
-              {messages.map((msg, i) => (
-                <div key={i} className={`flex gap-3 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-                  {msg.role === "assistant" && (
-                    <div className="size-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-                      <RiSparkling2Line className="size-3.5 text-primary" />
+          )}
+
+          {/* Main Chat Area */}
+          <div
+            id="tour-ai-chat"
+            className="flex-1 bg-card border border-border/40 rounded-xl overflow-hidden shadow-xl flex flex-col relative min-w-0"
+          >
+            {/* Inner Header */}
+            <div className="px-6 py-4.5 border-b border-border/40 shrink-0 flex items-center justify-between bg-card/60 backdrop-blur-sm relative z-10">
+              <div className="flex items-center gap-2">
+                {!sidebarOpen && (
+                  <button
+                    onClick={() => setSidebarOpen(true)}
+                    className="size-7 flex items-center justify-center rounded-md text-muted-foreground/40 hover:text-foreground hover:bg-secondary/60 transition-all cursor-pointer mr-1"
+                  >
+                    <RiMenuUnfoldLine className="size-3.5" />
+                  </button>
+                )}
+                <RiSparkling2Fill className="size-4.5 text-foreground animate-pulse-glow" />
+                <h1 className="text-xs font-bold text-foreground uppercase tracking-widest">Tsunagu Assistant</h1>
+              </div>
+              <button
+                onClick={createNewSession}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-semibold text-muted-foreground hover:text-foreground bg-secondary/40 hover:bg-secondary/80 border border-border/30 rounded-md transition-all cursor-pointer"
+              >
+                <RiAddLine className="size-3" />
+                New Chat
+              </button>
+            </div>
+
+            {/* Messages Area */}
+            <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
+              {loadingMessages ? (
+                <div className="flex flex-col items-center justify-center h-full gap-3 text-muted-foreground/40">
+                  <RiChatHistoryLine className="size-7 animate-pulse" />
+                  <p className="text-xs">Loading conversation…</p>
+                </div>
+              ) : isEmpty ? (
+                <div className="flex flex-col items-center justify-center h-full gap-8 max-w-2xl mx-auto text-center py-10">
+                  <div className="flex flex-col items-center gap-4">
+                    <div className="size-14 rounded-lg bg-linear-to-tr from-foreground/80 to-foreground flex items-center justify-center shadow-lg">
+                      <RiSparkling2Fill className="size-7 text-background" />
                     </div>
-                  )}
-                  <div className={`max-w-[75%] ${msg.role === "user" ? "order-first" : ""}`}>
-                    {msg.toolsUsed && msg.toolsUsed.length > 0 && msg.role === "assistant" && (
-                      <div className="flex flex-wrap gap-1 mb-1.5">
-                        {msg.toolsUsed.map((t) => (
-                          <span key={t} className="inline-flex items-center gap-1 text-[9px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">
-                            <ToolIcon name={t} />
-                            {t.replace(/_/g, " ")}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                    <div
-                      className={`px-3.5 py-2.5 rounded-xl text-sm leading-relaxed ${
-                        msg.role === "user"
-                          ? "bg-primary text-primary-foreground rounded-br-sm whitespace-pre-wrap"
-                          : "bg-muted text-foreground rounded-bl-sm"
-                      } ${msg.role === "assistant" && !msg.content ? "min-w-16" : ""}`}
-                    >
-                      {msg.role === "assistant" && !msg.content ? (
-                        <TypingIndicator />
-                      ) : msg.role === "assistant" ? (
-                        <MarkdownMessage content={msg.content} />
-                      ) : (
-                        msg.content
-                      )}
+                    <div className="space-y-2">
+                      <h2 className="text-3xl font-serif text-foreground tracking-tight leading-tight">
+                        How can I help{user?.name ? `, ${user.name.split(" ")[0]}` : ""}?
+                      </h2>
+                      <p className="text-[13px] text-muted-foreground max-w-sm mx-auto leading-relaxed">
+                        I can analyze your inbox, draft email responses, outline your schedule, or schedule calendar events.
+                      </p>
                     </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2.5 w-full">
+                    {SUGGESTION_LABELS.map((label, i) => (
+                      <button
+                        key={label}
+                        onClick={() => sendMessage(SUGGESTIONS[i])}
+                        className="text-left px-4.5 py-3.5 text-xs text-muted-foreground hover:text-foreground bg-secondary/35 hover:bg-secondary/65 border border-border/30 hover:border-border/60 rounded-lg transition-all cursor-pointer shadow-sm"
+                      >
+                        <p className="font-semibold">{label}</p>
+                        <p className="text-[10px] opacity-60 truncate mt-1">Prompt template</p>
+                      </button>
+                    ))}
                   </div>
                 </div>
-              ))}
-
-              {/* Active tool indicator */}
-              {streaming && activeTools.length > 0 && (
-                <div className="flex gap-3 justify-start">
-                  <div className="size-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-                    <RiSparkling2Line className="size-3.5 text-primary animate-pulse" />
-                  </div>
-                  <div className="bg-muted rounded-xl rounded-bl-sm px-3.5 py-2 text-xs text-muted-foreground">
-                    {TOOL_LABELS[activeTools[activeTools.length - 1]] ?? "Working…"}
-                  </div>
+              ) : (
+                <div className="max-w-3xl mx-auto space-y-5">
+                  {messages.map((msg, i) => (
+                    <AIChatBubble key={i} message={msg} />
+                  ))}
+                  <div ref={bottomRef} />
                 </div>
               )}
-
-              <div ref={bottomRef} />
             </div>
-          )}
-        </div>
 
-        {/* Input bar */}
-        <div className="px-4 py-3 border-t shrink-0">
-          <form onSubmit={handleSubmit} className="max-w-3xl mx-auto">
-            <div className="flex items-end gap-2 bg-muted/50 border border-border rounded-xl px-3 py-2 focus-within:border-primary/50 transition-colors">
-              <textarea
-                ref={inputRef}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Ask about your emails or calendar…"
-                rows={1}
-                disabled={streaming}
-                className="flex-1 text-sm text-foreground bg-transparent outline-none resize-none placeholder:text-muted-foreground leading-relaxed max-h-36 overflow-y-auto disabled:opacity-50"
-                style={{ fieldSizing: "content" } as any}
-              />
-              <Button
-                type="submit"
-                size="icon-sm"
-                disabled={!input.trim() || streaming}
-                className="shrink-0 mb-0.5"
-              >
-                <RiSendPlaneLine className="size-3.5" />
-              </Button>
+            {/* Input Bar */}
+            <div className="px-6 py-4.5 border-t border-border/40 shrink-0 bg-card/60 backdrop-blur-sm relative z-10">
+              <form onSubmit={handleSubmit} className="max-w-3xl mx-auto">
+                <div className="flex items-end gap-2 bg-card border border-border focus-within:border-foreground/30 focus-within:ring-2 focus-within:ring-foreground/6 rounded-2xl pl-4 pr-2 py-2 shadow-sm transition-all">
+                  <textarea
+                    ref={inputRef}
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Ask about your emails or calendar…"
+                    rows={1}
+                    disabled={streaming}
+                    className="flex-1 text-[13px] text-foreground bg-transparent outline-none resize-none placeholder:text-muted-foreground/50 leading-relaxed max-h-36 overflow-y-auto disabled:opacity-50 py-1.5"
+                    style={{ fieldSizing: "content" } as any}
+                  />
+                  <Button
+                    type="submit"
+                    size="icon-sm"
+                    disabled={!input.trim() || streaming}
+                    className="shrink-0 mb-0.5 rounded-xl size-8 cursor-pointer disabled:opacity-40"
+                  >
+                    <RiSendPlaneLine className="size-4" />
+                  </Button>
+                </div>
+                <p className="text-[10px] text-muted-foreground/60 text-center mt-2 font-medium">
+                  Enter to send · Shift+Enter for newline · Alt+A to open from anywhere
+                </p>
+              </form>
             </div>
-            <p className="text-[10px] text-muted-foreground text-center mt-1.5">
-              Enter to send · Shift+Enter for new line
-            </p>
-          </form>
+          </div>
         </div>
       </div>
+
+      <SettingsOverlay
+        user={user}
+        gmailConnected={gmailConnected}
+        calendarConnected={calendarConnected}
+      />
     </div>
   );
-}
-
-function MarkdownMessage({ content }: { content: string }) {
-  return (
-    <ReactMarkdown
-      components={{
-        p: ({ children }) => <p className="mb-2 last:mb-0 leading-relaxed">{children}</p>,
-        strong: ({ children }) => <strong className="font-semibold text-foreground">{children}</strong>,
-        em: ({ children }) => <em className="italic">{children}</em>,
-        ul: ({ children }) => <ul className="mb-2 last:mb-0 pl-4 space-y-0.5 list-disc">{children}</ul>,
-        ol: ({ children }) => <ol className="mb-2 last:mb-0 pl-4 space-y-0.5 list-decimal">{children}</ol>,
-        li: ({ children }) => <li className="leading-relaxed">{children}</li>,
-        h1: ({ children }) => <h1 className="text-base font-semibold mb-1.5 mt-2 first:mt-0">{children}</h1>,
-        h2: ({ children }) => <h2 className="text-sm font-semibold mb-1.5 mt-2 first:mt-0">{children}</h2>,
-        h3: ({ children }) => <h3 className="text-sm font-medium mb-1 mt-2 first:mt-0">{children}</h3>,
-        code: ({ children, className }) => {
-          const isBlock = className?.includes("language-");
-          if (isBlock) {
-            return (
-              <pre className="bg-background/60 border border-border/40 rounded-lg px-3 py-2 text-xs overflow-x-auto my-2 font-mono">
-                <code>{children}</code>
-              </pre>
-            );
-          }
-          return <code className="bg-background/60 border border-border/30 rounded px-1 py-0.5 text-xs font-mono">{children}</code>;
-        },
-        pre: ({ children }) => <>{children}</>,
-        a: ({ href, children }) => (
-          <a href={href} target="_blank" rel="noreferrer" className="text-primary underline underline-offset-2 hover:opacity-75">
-            {children}
-          </a>
-        ),
-        blockquote: ({ children }) => (
-          <blockquote className="border-l-2 border-border pl-3 text-muted-foreground my-2">{children}</blockquote>
-        ),
-        hr: () => <hr className="border-border/40 my-3" />,
-      }}
-    >
-      {content}
-    </ReactMarkdown>
-  );
-}
-
-function TypingIndicator() {
-  return (
-    <span className="flex gap-1 items-center h-4">
-      {[0, 1, 2].map((i) => (
-        <span
-          key={i}
-          className="size-1.5 rounded-full bg-muted-foreground/50 animate-bounce"
-          style={{ animationDelay: `${i * 150}ms`, animationDuration: "800ms" }}
-        />
-      ))}
-    </span>
-  );
-}
-
-function ToolIcon({ name }: { name: string }) {
-  if (name === "send_email") return <RiSendPlaneLine className="size-2.5" />;
-  if (name === "run_script") return <RiSparkling2Line className="size-2.5" />;
-  return <RiMailLine className="size-2.5" />;
 }

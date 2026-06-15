@@ -147,7 +147,7 @@ export default function ComposeModal({ onClose, initialTo = "", initialSubject =
 
   return (
     <div
-      className="fixed z-50 flex flex-col bg-background border border-border shadow-2xl overflow-hidden"
+      className="fixed z-50 flex flex-col bg-card border border-border/80 shadow-2xl overflow-hidden rounded-xl font-sans"
       style={{
         left: pos.x,
         top: pos.y,
@@ -160,32 +160,32 @@ export default function ComposeModal({ onClose, initialTo = "", initialSubject =
       {/* ── Drag handle / header ─────────────────────────────────────────── */}
       <div
         onMouseDown={onHeaderDown}
-        className={`flex items-center justify-between px-4 py-2.5 bg-primary shrink-0 select-none ${minimized ? "cursor-default" : "cursor-grab active:cursor-grabbing"}`}
+        className={`flex items-center justify-between px-4.5 py-3 bg-secondary/85 shrink-0 select-none ${minimized ? "cursor-default" : "cursor-grab active:cursor-grabbing"}`}
       >
-        <span className="text-xs font-medium text-primary-foreground truncate pr-2">
+        <span className="text-xs font-semibold text-foreground truncate pr-2 font-heading">
           {subject.trim() ? subject : "New Message"}
         </span>
 
-        <div className="flex items-center gap-0.5 shrink-0">
+        <div className="flex items-center gap-1 shrink-0">
           {/* Minimize / restore */}
           <Button
             variant="ghost"
-            size="icon-sm"
+            size="icon-xs"
             type="button"
             title={minimized ? "Restore" : "Minimize"}
             onClick={toggleMinimize}
-            className="text-primary-foreground/70 hover:text-primary-foreground hover:bg-white/15 size-6"
+            className="text-muted-foreground hover:text-foreground hover:bg-secondary size-6 rounded-lg cursor-pointer"
           >
             <RiSubtractLine className="size-3.5" />
           </Button>
           {/* Close */}
           <Button
             variant="ghost"
-            size="icon-sm"
+            size="icon-xs"
             type="button"
             title="Discard"
             onClick={onClose}
-            className="text-primary-foreground/70 hover:text-primary-foreground hover:bg-white/15 size-6"
+            className="text-muted-foreground hover:text-foreground hover:bg-secondary size-6 rounded-lg cursor-pointer"
           >
             <RiCloseLine className="size-4" />
           </Button>
@@ -204,11 +204,11 @@ export default function ComposeModal({ onClose, initialTo = "", initialSubject =
           overflow: "hidden",
         }}
       >
-        <form onSubmit={handleSend} className="flex flex-col" style={{ minHeight: MODAL_H - 44 }}>
+        <form onSubmit={handleSend} className="flex flex-col bg-card" style={{ minHeight: MODAL_H - HEADER_H }}>
           {/* To / Subject fields */}
-          <div className="px-4 pt-3 pb-1 space-y-2.5 shrink-0">
-            <div className="flex items-center gap-3 border-b border-border/60 pb-2.5">
-              <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider w-10 shrink-0">
+          <div className="px-4.5 pt-3 pb-1 space-y-2.5 shrink-0">
+            <div className="flex items-center gap-3 border-b border-border/40 pb-2">
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider w-10 shrink-0 font-heading">
                 To
               </span>
               <Input
@@ -217,12 +217,12 @@ export default function ComposeModal({ onClose, initialTo = "", initialSubject =
                 placeholder="recipient@example.com"
                 type="email"
                 autoFocus={!initialTo}
-                className="h-7 text-sm border-0 rounded-none px-0 shadow-none focus-visible:ring-0 bg-transparent"
+                className="h-8 text-xs border-0 rounded-none px-0 shadow-none focus-visible:ring-0 bg-transparent"
               />
             </div>
 
-            <div className="flex items-center gap-3 border-b border-border/60 pb-2.5">
-              <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider w-10 shrink-0">
+            <div className="flex items-center gap-3 border-b border-border/40 pb-2">
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider w-10 shrink-0 font-heading">
                 Subj
               </span>
               <Input
@@ -230,7 +230,7 @@ export default function ComposeModal({ onClose, initialTo = "", initialSubject =
                 onChange={(e) => setSubject(e.target.value)}
                 placeholder="Subject"
                 autoFocus={!!initialTo}
-                className="h-7 text-sm border-0 rounded-none px-0 shadow-none focus-visible:ring-0 bg-transparent"
+                className="h-8 text-xs border-0 rounded-none px-0 shadow-none focus-visible:ring-0 bg-transparent"
               />
             </div>
           </div>
@@ -240,36 +240,38 @@ export default function ComposeModal({ onClose, initialTo = "", initialSubject =
             value={body}
             onChange={(e) => setBody(e.target.value)}
             placeholder="Write your message…"
-            className="flex-1 px-4 py-3 text-sm text-foreground resize-none outline-none bg-transparent placeholder:text-muted-foreground/50 leading-relaxed"
-            style={{ minHeight: 280 }}
+            className="flex-1 px-5 py-4 text-xs text-foreground resize-none outline-none bg-transparent placeholder:text-muted-foreground/45 leading-relaxed"
+            style={{ minHeight: 240 }}
           />
 
-          <Separator />
+          <Separator className="border-border/40" />
 
           {/* Footer toolbar */}
-          <div className="px-4 py-2.5 flex items-center justify-between gap-2 shrink-0">
+          <div className="px-4.5 py-3.5 flex items-center justify-between gap-2 shrink-0 bg-secondary/15">
             {/* Attach */}
             <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer hover:text-foreground transition-colors select-none">
-              <RiAttachmentLine className="size-3.5" />
+              <RiAttachmentLine className="size-4" />
               <input
                 type="file"
                 multiple
                 onChange={(e) => setFiles(e.target.files)}
                 className="hidden"
               />
-              {files && files.length > 0 ? `${files.length} attached` : "Attach"}
+              <span className="text-[11px] font-medium">
+                {files && files.length > 0 ? `${files.length} attached` : "Attach files"}
+              </span>
             </label>
 
             {/* Status + actions */}
             <div className="flex items-center gap-2">
               {status === "sent" && (
-                <span className="text-xs text-green-600 font-medium">Sent!</span>
+                <span className="text-xs text-emerald-500 font-semibold mr-1 animate-pulse">Sent!</span>
               )}
               {status === "draft" && (
-                <span className="text-xs text-muted-foreground">Draft saved</span>
+                <span className="text-xs text-muted-foreground mr-1">Draft saved</span>
               )}
               {status && status !== "sent" && status !== "draft" && (
-                <span className="text-xs text-destructive">{status}</span>
+                <span className="text-xs text-rose-500 font-semibold mr-1">{status}</span>
               )}
 
               <Button
@@ -277,7 +279,7 @@ export default function ComposeModal({ onClose, initialTo = "", initialSubject =
                 variant="outline"
                 size="sm"
                 onClick={handleSaveDraft}
-                className="h-8 gap-1.5 text-xs"
+                className="h-9 px-3.5 gap-1.5 text-xs font-semibold rounded-lg cursor-pointer border border-border/60 hover:border-border transition-all"
               >
                 <RiDraftLine className="size-3.5" />
                 Save Draft
@@ -287,7 +289,7 @@ export default function ComposeModal({ onClose, initialTo = "", initialSubject =
                 type="submit"
                 size="sm"
                 disabled={sending || !to.trim() || !subject.trim() || !body.trim()}
-                className="h-8 gap-1.5 text-xs"
+                className="h-9 px-4.5 gap-1.5 text-xs font-semibold rounded-lg cursor-pointer"
               >
                 <RiSendPlaneLine className="size-3.5" />
                 {sending ? "Sending…" : "Send"}

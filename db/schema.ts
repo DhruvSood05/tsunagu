@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { pgTable, text, jsonb, timestamp, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, jsonb, timestamp, boolean, integer } from "drizzle-orm/pg-core";
 
 // Better Auth tables
 export const user = pgTable("user", {
@@ -127,3 +127,58 @@ export const corsairEvents = pgTable("corsair_events", {
   payload: jsonb("payload").notNull().default({}),
   status: text("status"),
 });
+
+// AI chat sessions (ChatGPT-style)
+export const chatSessions = pgTable("chat_sessions", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  title: text("title").notNull().default("New Chat"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const chatMessages = pgTable("chat_messages", {
+  id: text("id").primaryKey(),
+  sessionId: text("session_id")
+    .notNull()
+    .references(() => chatSessions.id, { onDelete: "cascade" }),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  role: text("role").notNull(), // "user" | "assistant"
+  content: text("content").notNull(),
+  toolsUsed: jsonb("tools_used"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// User preferences (onboarding tour, etc.)
+export const userPreferences = pgTable("user_preferences", {
+  userId: text("user_id")
+    .primaryKey()
+    .references(() => user.id, { onDelete: "cascade" }),
+  hasSeenTour: boolean("has_seen_tour").notNull().default(false),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Calendar webhook last-updated tracker (for real-time refresh signalling)
+export const webhookEvents = pgTable("webhook_events", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  eventType: text("event_type").notNull(), // "calendar" | "gmail"
+  receivedAt: timestamp("received_at").notNull().defaultNow(),
+});
+
+// Relations
+export const chatSessionRelations = relations(chatSessions, ({ one, many }) => ({
+  user: one(user, { fields: [chatSessions.userId], references: [user.id] }),
+  messages: many(chatMessages),
+}));
+
+export const chatMessageRelations = relations(chatMessages, ({ one }) => ({
+  session: one(chatSessions, { fields: [chatMessages.sessionId], references: [chatSessions.id] }),
+  user: one(user, { fields: [chatMessages.userId], references: [user.id] }),
+}));

@@ -6,9 +6,12 @@ import { NextResponse } from "next/server";
 
 const CATEGORY_LABELS: Record<string, string[]> = {
   primary:    ["INBOX"],
+  inbox:      ["INBOX"],
   promotions: ["CATEGORY_PROMOTIONS"],
   social:     ["CATEGORY_SOCIAL"],
   updates:    ["CATEGORY_UPDATES"],
+  sent:       ["SENT"],
+  starred:    ["STARRED"],
 };
 
 // Run at most CONCURRENCY fetches at a time so 100 simultaneous users
@@ -35,17 +38,23 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const pageToken  = searchParams.get("pageToken")  ?? undefined;
   const maxResults = Number(searchParams.get("maxResults") ?? "20");
-  const category   = searchParams.get("category") ?? "primary";
+  const category   = searchParams.get("category") ?? "inbox";
 
-  const labelIds = CATEGORY_LABELS[category] ?? CATEGORY_LABELS.primary;
   const tenant = corsair.withTenant(session.user.id);
 
   try {
-    const list = await tenant.gmail.api.messages.list({
+    const queryParams: any = {
       maxResults,
       pageToken,
-      labelIds,
-    });
+    };
+
+    if (category === "archive") {
+      queryParams.q = "-in:inbox -in:trash -in:spam -in:draft";
+    } else {
+      queryParams.labelIds = CATEGORY_LABELS[category] ?? CATEGORY_LABELS.inbox;
+    }
+
+    const list = await tenant.gmail.api.messages.list(queryParams);
 
     const results = await fetchInBatches(list.messages ?? [], (m) =>
       tenant.gmail.api.messages.get({ id: m.id!, format: "metadata" }),

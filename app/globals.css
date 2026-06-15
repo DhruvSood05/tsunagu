@@ -7,9 +7,12 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-mono);
-  --font-heading: var(--font-mono);
+  --font-sans: var(--font-sans);
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  /* Editorial serif for display headlines */
+  --font-serif: var(--font-instrument), Georgia, "Times New Roman", serif;
+  /* Small uppercase labels / eyebrows stay clean sans */
+  --font-heading: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -49,72 +52,74 @@
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.141 0.005 285.823);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.141 0.005 285.823);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.141 0.005 285.823);
-  --primary: oklch(0.21 0.006 285.885);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.967 0.001 286.375);
-  --secondary-foreground: oklch(0.21 0.006 285.885);
-  --muted: oklch(0.967 0.001 286.375);
-  --muted-foreground: oklch(0.552 0.016 285.938);
-  --accent: oklch(0.967 0.001 286.375);
-  --accent-foreground: oklch(0.21 0.006 285.885);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.92 0.004 286.32);
-  --input: oklch(0.92 0.004 286.32);
-  --ring: oklch(0.705 0.015 286.067);
+  /* ── Warm editorial — Light (warm paper) ── */
+  --background: #faf9f6;       /* warm paper canvas */
+  --foreground: #211e1a;       /* warm ink */
+  --card: #ffffff;             /* clean white cards layer over paper */
+  --card-foreground: #211e1a;
+  --popover: #ffffff;
+  --popover-foreground: #211e1a;
+  --primary: #211e1a;          /* warm near-black */
+  --primary-foreground: #faf9f6;
+  --secondary: #f1eee8;        /* warm light gray */
+  --secondary-foreground: #211e1a;
+  --muted: #f1eee8;
+  --muted-foreground: #79736a; /* warm gray */
+  --accent: #f1eee8;
+  --accent-foreground: #211e1a;
+  --destructive: #c0392b;      /* refined warm red */
+  --border: #e8e3d9;           /* warm hairline */
+  --input: #e8e3d9;
+  --ring: #211e1a;
   --chart-1: oklch(0.871 0.15 154.449);
   --chart-2: oklch(0.723 0.219 149.579);
   --chart-3: oklch(0.627 0.194 149.214);
   --chart-4: oklch(0.527 0.154 150.069);
   --chart-5: oklch(0.448 0.119 151.328);
-  --radius: 0.5rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.141 0.005 285.823);
-  --sidebar-primary: oklch(0.21 0.006 285.885);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.967 0.001 286.375);
-  --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
-  --sidebar-border: oklch(0.92 0.004 286.32);
-  --sidebar-ring: oklch(0.705 0.015 286.067);
+  --radius: 0.625rem; /* 10px — soft editorial */
+  --sidebar: #f6f4ef;          /* rail sits a touch deeper than canvas */
+  --sidebar-foreground: #211e1a;
+  --sidebar-primary: #211e1a;
+  --sidebar-primary-foreground: #faf9f6;
+  --sidebar-accent: #f1eee8;
+  --sidebar-accent-foreground: #211e1a;
+  --sidebar-border: #e8e3d9;
+  --sidebar-ring: rgba(33, 30, 26, 0.04);
 }
 
 .dark {
-  --background: oklch(0.141 0.005 285.823);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.21 0.006 285.885);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.21 0.006 285.885);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.92 0.004 286.32);
-  --primary-foreground: oklch(0.21 0.006 285.885);
-  --secondary: oklch(0.274 0.006 286.033);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.274 0.006 286.033);
-  --muted-foreground: oklch(0.705 0.015 286.067);
-  --accent: oklch(0.274 0.006 286.033);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.552 0.016 285.938);
+  /* ── Warm editorial — Dark (warm charcoal) ── */
+  --background: #181613;       /* warm charcoal */
+  --foreground: #f4f1ea;       /* warm off-white */
+  --card: #201e1a;             /* lifted charcoal */
+  --card-foreground: #f4f1ea;
+  --popover: #201e1a;
+  --popover-foreground: #f4f1ea;
+  --primary: #f4f1ea;
+  --primary-foreground: #181613;
+  --secondary: #252220;
+  --secondary-foreground: #f4f1ea;
+  --muted: #252220;
+  --muted-foreground: #a8a096; /* warm gray */
+  --accent: #2c2823;
+  --accent-foreground: #f4f1ea;
+  --destructive: #f0857a;      /* warm red, lifted for dark */
+  --border: rgba(245, 241, 234, 0.08);
+  --input: rgba(245, 241, 234, 0.08);
+  --ring: #f4f1ea;
   --chart-1: oklch(0.871 0.15 154.449);
   --chart-2: oklch(0.723 0.219 149.579);
   --chart-3: oklch(0.627 0.194 149.214);
   --chart-4: oklch(0.527 0.154 150.069);
   --chart-5: oklch(0.448 0.119 151.328);
-  --sidebar: oklch(0.21 0.006 285.885);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.274 0.006 286.033);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.552 0.016 285.938);
+  --sidebar: #1c1a16;
+  --sidebar-foreground: #f4f1ea;
+  --sidebar-primary: #f4f1ea;
+  --sidebar-primary-foreground: #181613;
+  --sidebar-accent: #252220;
+  --sidebar-accent-foreground: #f4f1ea;
+  --sidebar-border: rgba(245, 241, 234, 0.06);
+  --sidebar-ring: rgba(245, 241, 234, 0.05);
 }
 
 @layer base {
@@ -122,17 +127,38 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
   }
   html {
-    @apply font-mono;
+    @apply font-sans;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-serif);
+    letter-spacing: -0.01em;
+    font-weight: 400;
+  }
+  
+  /* Scrollbar styles */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: color-mix(in oklab, var(--foreground) 10%, transparent);
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in oklab, var(--foreground) 18%, transparent);
   }
 }
 
 /* ─── FullCalendar — Premium theme ────────────────────────────────────── */
 
 .fc {
-  --fc-border-color: oklch(0.92 0.004 286.32 / 0.5);
+  --fc-border-color: var(--border);
   --fc-page-bg-color: var(--background);
   --fc-neutral-bg-color: var(--muted);
   --fc-today-bg-color: color-mix(in oklab, var(--primary) 4%, transparent);
@@ -498,3 +524,215 @@
   flex-direction: column;
   gap: 2px;
 }
+
+/* ─── Custom animations ────────────────────────────────────────────────── */
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2.4s ease-in-out infinite;
+}
+
+/* ─── Landing — premium hero background + typewriter ────────────────────── */
+
+/* Slow-drifting aurora blobs */
+@keyframes drift-1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(38px, -30px) scale(1.08); }
+}
+@keyframes drift-2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(-32px, 26px) scale(1.12); }
+}
+@keyframes drift-3 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(26px, 22px) scale(1.05); }
+}
+
+/* Faint editorial grid, masked to fade toward the edges */
+.hero-grid {
+  background-image:
+    linear-gradient(to right, var(--border) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--border) 1px, transparent 1px);
+  background-size: 60px 60px;
+  -webkit-mask-image: radial-gradient(ellipse 58% 55% at 50% 26%, #000 28%, transparent 76%);
+  mask-image: radial-gradient(ellipse 58% 55% at 50% 26%, #000 28%, transparent 76%);
+}
+
+/* Typewriter caret */
+@keyframes caret-blink {
+  0%, 49%  { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+.animate-caret {
+  animation: caret-blink 1s steps(1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-caret,
+  [class*="drift-"] {
+    animation: none !important;
+  }
+}
+
+/* ─── Driver.js — Premium onboarding theme ─────────────────────────────── */
+
+@keyframes driver-pop-in {
+  0% { opacity: 0; transform: scale(0.97) translateY(6px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Smooth, soft overlay cutout */
+.driver-overlay,
+svg.driver-overlay {
+  filter: drop-shadow(0 0 0 transparent);
+}
+
+.driver-popover.tsunagu-tour {
+  background-color: var(--card);
+  color: var(--foreground);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow:
+    0 24px 56px -12px rgba(0, 0, 0, 0.28),
+    0 8px 20px -8px rgba(0, 0, 0, 0.16),
+    0 0 0 1px color-mix(in oklab, var(--foreground) 4%, transparent);
+  padding: 1.35rem 1.35rem 1.1rem;
+  font-family: var(--font-sans), sans-serif;
+  max-width: 332px;
+  min-width: 300px;
+  animation: driver-pop-in 0.26s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Top accent hairline — the single violet brand moment */
+.driver-popover.tsunagu-tour::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 1.35rem;
+  right: 1.35rem;
+  height: 2px;
+  border-radius: 0 0 2px 2px;
+  background: linear-gradient(90deg, transparent, #8b5cf6, transparent);
+  opacity: 0.7;
+}
+
+.driver-popover.tsunagu-tour .driver-popover-title {
+  font-family: var(--font-heading), var(--font-sans), sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--foreground);
+  line-height: 1.35;
+  margin-bottom: 0.4rem;
+}
+
+.driver-popover.tsunagu-tour .driver-popover-description {
+  font-size: 0.78rem;
+  line-height: 1.6;
+  color: var(--muted-foreground);
+  font-weight: 400;
+}
+
+.driver-popover.tsunagu-tour .driver-popover-description kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 19px;
+  padding: 0 5px;
+  margin: 0 1px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background-color: var(--secondary);
+  color: var(--foreground);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.625rem;
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: 0 1px 0 var(--border);
+  vertical-align: middle;
+}
+
+/* Footer — divider above, progress left, buttons right */
+.driver-popover.tsunagu-tour .driver-popover-footer {
+  margin-top: 1.1rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid color-mix(in oklab, var(--border) 70%, transparent);
+  gap: 0.5rem;
+}
+
+.driver-popover.tsunagu-tour .driver-popover-progress-text {
+  font-size: 0.5625rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+  opacity: 0.55;
+  font-family: var(--font-mono), ui-monospace, monospace;
+}
+
+.driver-popover.tsunagu-tour .driver-popover-footer button {
+  font-family: var(--font-sans), sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-shadow: none;
+  border-radius: var(--radius-md);
+  padding: 0.45rem 0.9rem;
+  transition: background-color 0.15s, color 0.15s, opacity 0.15s, border-color 0.15s;
+  cursor: pointer;
+}
+
+/* Next / Done — solid primary */
+.driver-popover.tsunagu-tour .driver-popover-next-btn {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+  border: 1px solid var(--primary);
+}
+
+.driver-popover.tsunagu-tour .driver-popover-next-btn:hover {
+  opacity: 0.88;
+}
+
+/* Back — ghost secondary */
+.driver-popover.tsunagu-tour .driver-popover-prev-btn {
+  background-color: transparent;
+  color: var(--muted-foreground);
+  border: 1px solid var(--border);
+  text-shadow: none;
+}
+
+.driver-popover.tsunagu-tour .driver-popover-prev-btn:hover {
+  background-color: var(--secondary);
+  color: var(--foreground);
+}
+
+/* Disabled prev on first step */
+.driver-popover.tsunagu-tour .driver-popover-prev-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.driver-popover.tsunagu-tour .driver-popover-close-btn {
+  color: var(--muted-foreground);
+  font-size: 1.15rem;
+  width: 1.75rem;
+  height: 1.75rem;
+  line-height: 1.6rem;
+  transition: color 0.15s, background-color 0.15s;
+  border-radius: var(--radius-sm);
+}
+
+.driver-popover.tsunagu-tour .driver-popover-close-btn:hover {
+  color: var(--foreground);
+  background-color: var(--secondary);
+}
+
+/* Arrow tints to match popover surface */
+.driver-popover.tsunagu-tour .driver-popover-arrow-side-left.driver-popover-arrow { border-left-color: var(--card); }
+.driver-popover.tsunagu-tour .driver-popover-arrow-side-right.driver-popover-arrow { border-right-color: var(--card); }
+.driver-popover.tsunagu-tour .driver-popover-arrow-side-top.driver-popover-arrow { border-top-color: var(--card); }
+.driver-popover.tsunagu-tour .driver-popover-arrow-side-bottom.driver-popover-arrow { border-bottom-color: var(--card); }

@@ -1,4 +1,5 @@
 "use client";
+
 import { useEffect, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { RiSearchLine, RiCloseLine } from "@remixicon/react";
@@ -24,20 +25,21 @@ export default function SearchBar({ onSearch, onClear }: SearchBarProps) {
   }, [value]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div className="relative flex items-center">
-      <RiSearchLine className="absolute left-2 size-3.5 text-muted-foreground pointer-events-none" />
+    <div className="relative flex items-center w-full font-sans select-none">
+      <RiSearchLine className="absolute left-3.5 size-4 text-muted-foreground/60 pointer-events-none" />
       <Input
+        id="workspace-search-input"
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        placeholder="Search by subject..."
-        className="pl-7 pr-7 h-8 text-xs"
+        placeholder="Search inbox..."
+        className="pl-10 pr-8 h-10 text-xs bg-secondary/50 border border-border/40 rounded-lg focus-visible:ring-1 focus-visible:ring-foreground/30 transition-all placeholder:text-muted-foreground/45"
       />
       {value && (
         <button
           onClick={() => { setValue(""); lastFired.current = ""; onClear(); }}
-          className="absolute right-2 text-muted-foreground hover:text-foreground transition-colors"
+          className="absolute right-3 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
         >
-          <RiCloseLine className="size-3.5" />
+          <RiCloseLine className="size-4" />
         </button>
       )}
     </div>

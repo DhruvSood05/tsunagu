@@ -1,6 +1,8 @@
 import { Agent, run, tool } from "@openai/agents";
 import { OpenAIAgentsProvider } from "@corsair-dev/mcp";
-import { corsair } from "@/db";
+import { corsair, db } from "@/db";
+import { chatMessages, chatSessions } from "@/db/schema";
+import { eq } from "drizzle-orm";
 import { getSessionCached } from "@/lib/session-cache";
 import { buildRawEmail } from "@/lib/mime";
 import { headers } from "next/headers";
@@ -10,7 +12,10 @@ export async function POST(req: Request) {
   const session = await getSessionCached(await headers());
   if (!session) return new Response("Unauthorized", { status: 401 });
 
-  const { messages } = await req.json() as { messages: { role: "user" | "assistant"; content: string }[] };
+  const { messages, sessionId } = await req.json() as {
+    messages: { role: "user" | "assistant"; content: string }[];
+    sessionId?: string;
+  };
 
   const tenant = corsair.withTenant(session.user.id);
   const userEmail = session.user.email ?? "";
@@ -18,20 +23,12 @@ export async function POST(req: Request) {
 
   const now = new Date();
 
-  // Build conversation history string for context
-  const history = messages.slice(0, -1);
-  const currentMessage = messages[messages.length - 1]?.content ?? "";
-  const historyBlock = history.length > 0
-    ? `\n\nCONVERSATION HISTORY (for context only — do not repeat):\n${history.map((m) => `${m.role === "user" ? "User" : "Assistant"}: ${m.content}`).join("\n")}\n`
-    : "";
-
   const systemPrompt = `You are Tsunagu AI, a focused personal assistant for ${userName} (${userEmail}). Today is ${now.toDateString()}, ${now.toLocaleTimeString()}.
-${historyBlock}
-YOUR STRICT SCOPE: You ONLY help with the user's Gmail and Google Calendar. Nothing else.
 
-If the user asks about something that has NO connection to email or calendar — refuse with exactly:
+YOUR SCOPE: You are a personal assistant focused on Gmail and Google Calendar. Handle all email and calendar tasks. Also respond naturally to casual conversation, greetings, compliments, small talk, and social messages — be friendly and brief in those cases.
+
+Only refuse when the user is explicitly asking you to perform a task that has nothing to do with email or calendar — for example: "solve this coding problem", "what's the weather today", "write me a poem", "explain quantum physics". In those cases refuse with exactly:
 "I can only help with your Gmail and Google Calendar. Try asking about your emails or upcoming events."
-Do NOT engage or elaborate on out-of-scope topics. Just return that one sentence and stop.
 
 IN-SCOPE — handle all of these:
 - Reading, searching, summarising, or organising emails and inbox
@@ -42,13 +39,13 @@ IN-SCOPE — handle all of these:
 - Scheduling meetings, checking availability, finding free slots
 - Reminders and event-related tasks
 - Anything that involves the user's email data or calendar data
+- Casual conversation, greetings, compliments, small talk — respond briefly and naturally
 
-OUT-OF-SCOPE — refuse ONLY clearly unrelated requests:
-- General knowledge, trivia, coding help, math, science questions
-- Weather forecasts, news, sports scores
-- Recommendations for restaurants, movies, products
-- Opinions on topics unrelated to the user's emails or calendar
-- Creative writing, stories, poems not tied to an email draft
+OUT-OF-SCOPE — refuse ONLY explicit requests to perform unrelated tasks:
+- Requests for coding help, math problems, science explanations
+- Requests for weather forecasts, news summaries, sports scores
+- Requests for restaurant/movie/product recommendations
+- Requests to write poems, stories, or creative content not tied to an email draft
 
 ---
 
@@ -85,6 +82,12 @@ When the user asks to schedule an email for a future date/time:
    View draft in Gmail: https://mail.google.com/mail/#drafts/[DRAFT_ID]
 3. Confirm to the user what was scheduled and when.
 
+FOLLOW-UP AND CONVERSATION RULES — read these carefully:
+- You have the full conversation history. Use it. Never repeat a question you already asked.
+- When the user replies with a short affirmative ("yes", "sure", "go ahead", "please", "ok", "yep", "do it") — look at your previous message to understand what they agreed to, then execute it immediately. Do NOT re-summarise or re-ask the question.
+- When the user asks for a "day by day", "daily", "per day", or "breakdown by day" view: actually group the data by calendar date and create a separate section for each day (e.g. "**Monday Jun 16**" followed by that day's items as a list). Do NOT simply bold the dates inline within a flat paragraph — restructure into real per-day sections with their own content.
+- Always move the conversation forward. If you already fetched and presented data, do not re-fetch the same data unless the user explicitly asks you to refresh.
+
 Be concise and action-oriented. Always fetch real data before answering questions about emails or calendar.`;
 
   // Build Corsair meta-tools (list_operations, get_schema, run_script)
@@ -115,6 +118,28 @@ Be concise and action-oriented. Always fetch real data before answering question
 
   const encoder = new TextEncoder();
 
+  // Save the latest user message to DB if we have a sessionId
+  const userMessage = messages[messages.length - 1];
+  if (sessionId && userMessage?.role === "user") {
+    await db.insert(chatMessages).values({
+      id: crypto.randomUUID(),
+      sessionId,
+      userId: session.user.id,
+      role: "user",
+      content: userMessage.content,
+      createdAt: new Date(),
+    });
+
+    // Auto-title session from first user message
+    const isFirstMessage = messages.filter((m) => m.role === "user").length === 1;
+    if (isFirstMessage) {
+      const title = userMessage.content.slice(0, 60) + (userMessage.content.length > 60 ? "…" : "");
+      await db.update(chatSessions).set({ title, updatedAt: new Date() }).where(eq(chatSessions.id, sessionId));
+    } else {
+      await db.update(chatSessions).set({ updatedAt: new Date() }).where(eq(chatSessions.id, sessionId));
+    }
+  }
+
   const responseStream = new ReadableStream({
     async start(controller) {
       const send = (chunk: object) => {
@@ -122,13 +147,26 @@ Be concise and action-oriented. Always fetch real data before answering question
       };
 
       try {
-        const streamedResult = await run(agent, currentMessage, { stream: true });
+        const conversationInput = messages.map((m) => {
+          if (m.role === "user") {
+            return { role: "user" as const, content: m.content };
+          }
+          return {
+            role: "assistant" as const,
+            status: "completed" as const,
+            content: [{ type: "output_text" as const, text: m.content }],
+          };
+        });
+        const streamedResult = await run(agent, conversationInput, { stream: true });
+
+        let fullText = "";
+        const usedTools: string[] = [];
 
         for await (const event of streamedResult) {
           if (event.type === "raw_model_stream_event") {
             const data = event.data as any;
-            // Responses API text delta
             if (data?.type === "output_text_delta" && data?.delta) {
+              fullText += data.delta;
               send({ text: data.delta });
             }
           }
@@ -136,9 +174,23 @@ Be concise and action-oriented. Always fetch real data before answering question
           if (event.type === "run_item_stream_event") {
             if (event.name === "tool_called") {
               const toolName: string = (event.item as any).rawItem?.name ?? "tool";
+              if (!usedTools.includes(toolName)) usedTools.push(toolName);
               send({ tool: toolName });
             }
           }
+        }
+
+        // Persist assistant reply to DB
+        if (sessionId && fullText) {
+          await db.insert(chatMessages).values({
+            id: crypto.randomUUID(),
+            sessionId,
+            userId: session.user.id,
+            role: "assistant",
+            content: fullText || "Done.",
+            toolsUsed: usedTools.length > 0 ? usedTools : null,
+            createdAt: new Date(),
+          });
         }
 
         send({ done: true });

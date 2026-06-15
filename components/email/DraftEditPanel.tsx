@@ -71,23 +71,23 @@ export default function DraftEditPanel({
   const avatarLetter = (to?.[0] ?? "M").toUpperCase();
 
   return (
-    <div className="flex flex-col h-full overflow-hidden bg-background">
+    <div className="flex flex-col h-full overflow-hidden bg-card font-sans select-none">
       {/* Toolbar */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b shrink-0">
-        <Button variant="ghost" size="icon-sm" onClick={onClose} title="Close">
-          <RiArrowLeftLine />
+      <div className="flex items-center justify-between px-5 py-3 border-b border-border/40 shrink-0 bg-card/60 backdrop-blur-sm">
+        <Button variant="ghost" size="icon-sm" onClick={onClose} title="Close" className="rounded-lg hover:bg-secondary cursor-pointer">
+          <RiArrowLeftLine className="size-4 text-muted-foreground hover:text-foreground" />
         </Button>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
           {saveLabel[saveStatus] && (
-            <span className={`text-[10px] ${
-              saveStatus === "saved" ? "text-green-600"
-              : saveStatus === "error" ? "text-destructive"
-              : "text-muted-foreground"
+            <span className={`text-[10px] font-semibold ${
+              saveStatus === "saved" ? "text-emerald-500"
+              : saveStatus === "error" ? "text-rose-500"
+              : "text-muted-foreground/60"
             }`}>
               {saveLabel[saveStatus]}
             </span>
           )}
-          <Button size="sm" onClick={handleSend} disabled={sending} className="gap-1.5">
+          <Button onClick={handleSend} disabled={sending} className="gap-2 h-9 px-4.5 rounded-lg font-semibold text-xs cursor-pointer shadow-sm">
             <RiSendPlaneLine className="size-3.5" />
             {sending ? "Sending…" : "Send"}
           </Button>
@@ -95,26 +95,26 @@ export default function DraftEditPanel({
       </div>
 
       {/* Header */}
-      <div className="px-6 pt-5 pb-4 border-b shrink-0">
+      <div className="px-6 pt-5 pb-4 border-b border-border/25 shrink-0 bg-card/20">
         <input
           value={subject}
           onChange={(e) => setSubject(e.target.value)}
           placeholder="Subject"
-          className="w-full text-base font-semibold text-foreground outline-none mb-4 bg-transparent placeholder:text-muted-foreground/50"
+          className="w-full text-xl font-serif text-foreground outline-none mb-4 bg-transparent placeholder:text-muted-foreground/45 tracking-tight"
         />
         <div className="flex items-start gap-3">
-          <Avatar>
-            <AvatarFallback className="text-xs">{avatarLetter}</AvatarFallback>
+          <Avatar className="size-9 border border-border/40">
+            <AvatarFallback className="text-xs bg-secondary/80 font-bold">{avatarLetter}</AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
             <p className="text-xs font-semibold text-foreground">Me</p>
             <div className="flex items-center gap-1.5 mt-0.5">
-              <span className="text-[10px] text-muted-foreground shrink-0">To:</span>
+              <span className="text-[10px] text-muted-foreground/60 shrink-0 font-heading">To:</span>
               <input
                 value={to}
                 onChange={(e) => setTo(e.target.value)}
                 placeholder="recipient@example.com"
-                className="text-xs text-foreground outline-none flex-1 min-w-0 bg-transparent placeholder:text-muted-foreground/50"
+                className="text-xs text-foreground outline-none flex-1 min-w-0 bg-transparent placeholder:text-muted-foreground/45"
               />
             </div>
           </div>
@@ -122,23 +122,25 @@ export default function DraftEditPanel({
       </div>
 
       {/* Body */}
-      <div className="flex-1 overflow-y-auto px-6 py-5">
+      <div className="flex-1 overflow-y-auto px-6 py-5 bg-card/10">
         <textarea
           value={body}
           onChange={(e) => setBody(e.target.value)}
           placeholder="Write your message…"
-          className="w-full h-full min-h-48 text-sm text-foreground resize-none outline-none leading-relaxed bg-transparent placeholder:text-muted-foreground/50"
+          className="w-full h-full min-h-48 text-xs text-foreground resize-none outline-none leading-relaxed bg-transparent placeholder:text-muted-foreground/45"
         />
       </div>
 
-      <Separator />
+      <Separator className="border-border/40" />
 
       {/* Attachments */}
-      <div className="px-4 py-2.5 shrink-0">
-        <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer hover:text-foreground transition-colors w-fit">
-          <RiAttachmentLine className="size-3.5" />
+      <div className="px-5 py-3.5 shrink-0 bg-secondary/15">
+        <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer hover:text-foreground transition-colors w-fit select-none">
+          <RiAttachmentLine className="size-4" />
           <input type="file" multiple onChange={(e) => setFiles(e.target.files)} className="hidden" />
-          {files && files.length > 0 ? `${files.length} file(s) attached` : "Attach files"}
+          <span className="text-[11px] font-medium">
+            {files && files.length > 0 ? `${files.length} file(s) attached` : "Attach files"}
+          </span>
         </label>
       </div>
     </div>
