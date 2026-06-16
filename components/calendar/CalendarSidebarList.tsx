@@ -2,26 +2,31 @@
 
 import type { CalendarInfo } from "@/types/calendar";
 import { COLOR_SWATCHES } from "@/constants/calendar";
+import { Calendar } from "@/components/ui/calendar";
 
 interface CalendarSidebarListProps {
   calendars: CalendarInfo[];
   enabledCals: Set<string>;
   colorPickerFor: string | null;
+  selectedDate: Date;
   onToggle: (id: string) => void;
   onColorChange: (id: string, hex: string) => void;
   onOpenColorPicker: (id: string | null) => void;
+  onDateSelect: (date: Date) => void;
 }
 
 export default function CalendarSidebarList({
   calendars,
   enabledCals,
   colorPickerFor,
+  selectedDate,
   onToggle,
   onColorChange,
   onOpenColorPicker,
+  onDateSelect,
 }: CalendarSidebarListProps) {
   return (
-    <div className="w-52 shrink-0 border-r border-border/30 flex flex-col overflow-y-auto bg-background font-sans select-none">
+    <div className="w-60 shrink-0 border-r border-border/30 flex flex-col  overflow-y-auto bg-background font-sans select-none ">
       <div className="px-5 pt-5 pb-4">
         <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-muted-foreground/50 mb-3 font-heading">
           Calendars
@@ -68,11 +73,26 @@ export default function CalendarSidebarList({
                     <button
                       type="button"
                       title="Change color"
-                      onClick={() => onOpenColorPicker(pickerOpen ? null : cal.id)}
+                      onClick={() =>
+                        onOpenColorPicker(pickerOpen ? null : cal.id)
+                      }
                       className="size-5 shrink-0 flex items-center justify-center rounded opacity-0 group-hover:opacity-50 hover:opacity-100! hover:bg-secondary transition-all text-muted-foreground cursor-pointer"
                     >
-                      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="size-3">
-                        <circle cx="8" cy="8" r="2.5" fill="currentColor" stroke="none" />
+                      <svg
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        className="size-3"
+                      >
+                        <circle
+                          cx="8"
+                          cy="8"
+                          r="2.5"
+                          fill="currentColor"
+                          stroke="none"
+                        />
                         <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M11.54 4.46l1.41-1.41M3.05 12.95l1.41-1.41" />
                       </svg>
                     </button>
@@ -90,9 +110,10 @@ export default function CalendarSidebarList({
                             className="size-4 rounded-full transition-transform hover:scale-110 focus:outline-none cursor-pointer"
                             style={{
                               backgroundColor: hex,
-                              boxShadow: cal.color === hex
-                                ? `0 0 0 2px var(--card), 0 0 0 3.5px ${hex}`
-                                : undefined,
+                              boxShadow:
+                                cal.color === hex
+                                  ? `0 0 0 2px var(--card), 0 0 0 3.5px ${hex}`
+                                  : undefined,
                             }}
                           />
                         ))}
@@ -104,6 +125,19 @@ export default function CalendarSidebarList({
             })}
           </ul>
         )}
+      </div>
+
+      {/* Mini date picker — navigate the main calendar by clicking a day */}
+      <div className="px-2 pb-4 pt-2 border-t border-border/30">
+        <Calendar
+          mode="single"
+          selected={selectedDate}
+          month={selectedDate}
+          onSelect={(date) => date && onDateSelect(date)}
+          onMonthChange={onDateSelect}
+          showOutsideDays
+          className="w-full p-2 [--cell-size:1.92rem]"
+        />
       </div>
     </div>
   );

@@ -5,6 +5,20 @@ import { buildRawEmail } from "@/lib/mime";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 
+const CONCURRENCY = 5;
+
+async function fetchInBatches<T>(
+  items: any[],
+  fn: (item: any) => Promise<T>,
+): Promise<PromiseSettledResult<T>[]> {
+  const results: PromiseSettledResult<T>[] = [];
+  for (let i = 0; i < items.length; i += CONCURRENCY) {
+    const batch = await Promise.allSettled(items.slice(i, i + CONCURRENCY).map(fn));
+    results.push(...batch);
+  }
+  return results;
+}
+
 export async function GET(req: Request) {
   const session = await getSessionCached(await headers());
   if (!session)
@@ -16,8 +30,25 @@ export async function GET(req: Request) {
   const tenant = corsair.withTenant(session.user.id);
   const data = await tenant.gmail.api.drafts.list({ maxResults: 20, pageToken });
 
+  const results = await fetchInBatches(data.drafts ?? [], (d) =>
+    tenant.gmail.api.drafts.get({ id: d.id!, format: "metadata" })
+  );
+
+  const drafts = results
+    .filter((r) => r.status === "fulfilled")
+    .map((r) => {
+      const draft = (r as PromiseFulfilledResult<any>).value;
+      const msg = draft.message ?? {};
+      const subject = msg.payload?.headers?.find((h: any) => h.name === "Subject")?.value ?? "";
+      return {
+        id: draft.id,
+        subject,
+        body: msg.snippet ?? "",
+      };
+    });
+
   return NextResponse.json({
-    drafts: data.drafts ?? [],
+    drafts,
     nextPageToken: data.nextPageToken ?? null,
   });
 }

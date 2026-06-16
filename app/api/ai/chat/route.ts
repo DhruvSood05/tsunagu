@@ -1,12 +1,53 @@
-import { Agent, run, tool } from "@openai/agents";
+export const maxDuration = 60;
+
+import { Agent, run, tool, OpenAIProvider } from "@openai/agents";
 import { OpenAIAgentsProvider } from "@corsair-dev/mcp";
 import { corsair, db } from "@/db";
-import { chatMessages, chatSessions } from "@/db/schema";
+import { chatMessages, chatSessions, userPreferences } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { getSessionCached } from "@/lib/session-cache";
 import { buildRawEmail } from "@/lib/mime";
 import { headers } from "next/headers";
 import { z } from "zod";
+import type { ChatArtifact } from "@/types/ai";
+
+// Turn a tool call into a renderable chat artifact (email draft / event card).
+function buildArtifact(toolName: string, rawArgs: unknown): ChatArtifact | null {
+  let args: any = {};
+  try {
+    args = typeof rawArgs === "string" ? JSON.parse(rawArgs) : (rawArgs ?? {});
+  } catch {
+    return null;
+  }
+
+  if (toolName === "draft_email") {
+    if (!args.to && !args.subject && !args.body) return null;
+    return {
+      kind: "email",
+      status: "draft" as const,
+      to: args.to ?? "",
+      subject: args.subject ?? "",
+      body: args.body ?? "",
+    };
+  }
+
+  if (toolName === "create_calendar_event") {
+    if (!args.summary && !args.start) return null;
+    return {
+      kind: "event",
+      summary: args.summary ?? "(No title)",
+      start: args.start ?? null,
+      end: args.end ?? null,
+      timeZone: args.timeZone ?? null,
+      location: args.location ?? null,
+      description: args.description ?? null,
+      attendees: Array.isArray(args.attendees) ? args.attendees : null,
+      allDay: args.allDay ?? null,
+    };
+  }
+
+  return null;
+}
 
 export async function POST(req: Request) {
   const session = await getSessionCached(await headers());
@@ -21,38 +62,66 @@ export async function POST(req: Request) {
   const userEmail = session.user.email ?? "";
   const userName = session.user.name ?? userEmail;
 
+  // Use user's own OpenAI key if they've saved one, otherwise fall back to env
+  const [prefs] = await db
+    .select({ openaiApiKey: userPreferences.openaiApiKey })
+    .from(userPreferences)
+    .where(eq(userPreferences.userId, session.user.id));
+  const userApiKey = prefs?.openaiApiKey ?? null;
+
   const now = new Date();
 
-  const systemPrompt = `You are Tsunagu AI, a focused personal assistant for ${userName} (${userEmail}). Today is ${now.toDateString()}, ${now.toLocaleTimeString()}.
+  const systemPrompt = `You are Tsunagu AI — the personal email and calendar assistant for ${userName} (${userEmail}). Today is ${now.toDateString()}, ${now.toLocaleTimeString()}.
 
-YOUR SCOPE: You are a personal assistant focused on Gmail and Google Calendar. Handle all email and calendar tasks. Also respond naturally to casual conversation, greetings, compliments, small talk, and social messages — be friendly and brief in those cases.
-
-Only refuse when the user is explicitly asking you to perform a task that has nothing to do with email or calendar — for example: "solve this coding problem", "what's the weather today", "write me a poem", "explain quantum physics". In those cases refuse with exactly:
-"I can only help with your Gmail and Google Calendar. Try asking about your emails or upcoming events."
-
-IN-SCOPE — handle all of these:
-- Reading, searching, summarising, or organising emails and inbox
-- Composing, drafting, replying to, forwarding, or sending emails
-- Scheduling emails to be sent (create a calendar reminder or draft with a note about when to send)
-- Following up on emails or threads
-- Listing, creating, updating, editing, or deleting calendar events
-- Scheduling meetings, checking availability, finding free slots
-- Reminders and event-related tasks
-- Anything that involves the user's email data or calendar data
-- Casual conversation, greetings, compliments, small talk — respond briefly and naturally
-
-OUT-OF-SCOPE — refuse ONLY explicit requests to perform unrelated tasks:
-- Requests for coding help, math problems, science explanations
-- Requests for weather forecasts, news summaries, sports scores
-- Requests for restaurant/movie/product recommendations
-- Requests to write poems, stories, or creative content not tied to an email draft
+Your role is to help the user manage their Gmail and Google Calendar through natural conversation. Follow these rules precisely.
 
 ---
 
-HOW TO USE CORSAIR TOOLS (for in-scope requests):
-1. Call list_operations first if you're unsure what's available (filter by plugin: 'gmail' or 'googlecalendar').
-2. Call get_schema to understand the arguments for a specific operation.
-3. Call run_script to execute any Corsair operation. Example:
+TONE AND CONVERSATIONAL STYLE
+- Talk like a thoughtful friend, not a corporate bot. Be warm, natural, and concise.
+- Mirror the user's communication style. If they're casual and brief, match that. If they write formally, match that too.
+- Be professional when the task calls for it — e.g. drafting a work email — even if the user's message to you is casual. Read the situation.
+- Don't over-explain or pad responses. Say what's useful, then stop.
+
+ASKING FOLLOW-UP QUESTIONS
+- Before drafting or scheduling, make sure you have what you actually need. Ask focused follow-up questions when key details are missing or ambiguous.
+- For emails: confirm recipient, subject, core message/intent, tone, and whether to send or just draft. Don't ask for things you can reasonably infer — only ask about genuine gaps.
+- For calendar: clarify date, time, duration, attendees, title, location/video link — only the ones that are actually unclear.
+- Ask one clear question at a time, or group a few tightly related ones. Never repeat the same question twice.
+- Phrase follow-ups conversationally, like a friend double-checking, not like a form.
+
+EMAIL PREVIEW — THE CARD IS THE PREVIEW
+- Whenever the user asks to write, compose, draft, reply to, or send an email — call draft_email with the full content. This surfaces an editable card in the chat where the user can modify any field and then click "Send Email" or "Save as Draft".
+- The card IS the preview. Do NOT show a separate text preview of an email. Just call draft_email.
+- If the user asks for edits ("change the subject", "make it shorter") — call draft_email again with the updated content. The new card replaces the old one visually.
+- Never say "I've sent your email" or imply the email was sent. The card buttons are the user's explicit send/save actions — you do not send email yourself.
+- Only ask follow-up questions if key details are genuinely missing (recipient, core intent). If you have enough to write a good draft, just call draft_email.
+
+CALENDAR PREVIEW — CONFIRM BEFORE CREATING
+- For calendar events: show the event details as formatted text first and ask "Should I create this?" before calling create_calendar_event.
+- Only call create_calendar_event after the user confirms. The event card that appears lets them edit and update after creation.
+- Exception: if the user's message is already a confirmation of details you just showed ("yes", "go ahead", "do it", "create it"), call the tool immediately.
+
+GENERAL RULES
+- Keep the user in control at every step. They should always be able to change anything before it leaves the chat.
+- You have the full conversation history. Use it. Never repeat a question you already asked.
+- When the user replies with a short affirmative after a preview ("yes", "sure", "go ahead", "please", "ok", "yep", "do it") — execute immediately. Do NOT re-summarise or re-ask.
+- When the user asks for a "day by day" or "breakdown by day" view: group data by calendar date with a separate section per day. Do NOT bold dates inline in a flat paragraph.
+- Always move the conversation forward. If you already fetched data, don't re-fetch unless the user asks.
+- Always fetch real data before answering questions about emails or calendar.
+
+SCOPE
+- In scope: reading, searching, summarising emails; composing, drafting, replying, forwarding, sending emails; scheduling meetings; listing, creating, updating, deleting calendar events; checking availability; casual conversation and small talk.
+- Out of scope (refuse only these): coding help, math problems, science explanations, weather, news, restaurant/product recommendations, poems or stories unrelated to an email draft.
+- When refusing out-of-scope tasks, say exactly: "I can only help with your Gmail and Google Calendar. Try asking about your emails or upcoming events."
+
+---
+
+TECHNICAL TOOL USAGE — READ CAREFULLY
+
+HOW TO USE CORSAIR TOOLS:
+- Use run_script to execute Corsair operations directly. You already know what's available — do NOT call list_operations or get_schema before every request. Only call them if you genuinely don't know a specific operation's parameters.
+- run_script example:
    const msgs = await corsair.gmail.api.messages.list({ labelIds: ['INBOX'], maxResults: 10 });
    return msgs.messages;
 
@@ -61,34 +130,14 @@ COMMON PATTERNS:
 - Search emails: corsair.gmail.api.messages.list({ q: 'query here', maxResults: 10 })
 - Get email details: corsair.gmail.api.messages.get({ id: 'MESSAGE_ID', format: 'full' })
 - List calendar events: corsair.googlecalendar.api.events.getMany({ calendarId: 'primary', timeMin: '...ISO...', timeMax: '...ISO...', singleEvents: true, orderBy: 'startTime' })
-- Create calendar event: corsair.googlecalendar.api.events.create({ calendarId: 'primary', event: { summary, start: { dateTime, timeZone: 'UTC' }, end: { dateTime, timeZone: 'UTC' } }, sendUpdates: 'all' })
+- Delete a calendar event: corsair.googlecalendar.api.events.delete({ calendarId: 'primary', id: 'EVENT_ID' })
 
-SENDING EMAIL:
-Use the send_email tool (not run_script) when the user explicitly asks to send an email. This handles MIME building properly.
+EMAIL TOOL (MANDATORY — never use run_script for email):
+- draft_email: use this for ALL email composition — writing, composing, drafting, replying, sending. It shows an editable card. The user clicks the card buttons to send or save. NEVER use run_script for email. NEVER call send_email (it doesn't exist).
+- CRITICAL for replies: first fetch the original message via run_script (corsair.gmail.api.messages.get({ id: '...', format: 'metadata' })) to get the exact "From" address. Use that as the "to" field. NEVER guess email addresses.
 
-SCHEDULING AN EMAIL (create draft + calendar reminder):
-When the user asks to schedule an email for a future date/time:
-1. Create a Gmail draft via run_script:
-   const draft = await corsair.gmail.api.drafts.create({ message: { raw: '<base64 encoded MIME>' } });
-   — BUT instead of building raw MIME yourself, just store the email details and use the calendar event description.
-2. Create a calendar event as a reminder. In the event description, include the FULL email content so the user can see it directly in the calendar — NOT a raw draft ID. Format it like this:
-   📧 Scheduled Email
-   To: [recipient]
-   Subject: [subject]
-
-   [full email body here]
-
-   ---
-   View draft in Gmail: https://mail.google.com/mail/#drafts/[DRAFT_ID]
-3. Confirm to the user what was scheduled and when.
-
-FOLLOW-UP AND CONVERSATION RULES — read these carefully:
-- You have the full conversation history. Use it. Never repeat a question you already asked.
-- When the user replies with a short affirmative ("yes", "sure", "go ahead", "please", "ok", "yep", "do it") — look at your previous message to understand what they agreed to, then execute it immediately. Do NOT re-summarise or re-ask the question.
-- When the user asks for a "day by day", "daily", "per day", or "breakdown by day" view: actually group the data by calendar date and create a separate section for each day (e.g. "**Monday Jun 16**" followed by that day's items as a list). Do NOT simply bold the dates inline within a flat paragraph — restructure into real per-day sections with their own content.
-- Always move the conversation forward. If you already fetched and presented data, do not re-fetch the same data unless the user explicitly asks you to refresh.
-
-Be concise and action-oriented. Always fetch real data before answering questions about emails or calendar.`;
+CALENDAR TOOL (MANDATORY — never use run_script for event creation):
+- create_calendar_event: call after the user confirms the event details. Default timezone is Asia/Kolkata (IST) unless the user specifies otherwise. Pass all details so the review card is complete.`;
 
   // Build Corsair meta-tools (list_operations, get_schema, run_script)
   const provider = new OpenAIAgentsProvider();
@@ -110,10 +159,56 @@ Be concise and action-oriented. Always fetch real data before answering question
     },
   });
 
+  // draft_email — shows an editable preview card. Does NOT write to Gmail.
+  // Actual saving/sending is an explicit user action via the card buttons.
+  const draftEmailTool = tool({
+    name: "draft_email",
+    description: `Surface an editable email draft card in the chat for ${userName} to review. Call this ONLY when the user explicitly asks to save a draft. Does NOT send or save to Gmail — the user must click the card buttons to do that.`,
+    parameters: z.object({
+      to: z.string().describe("Recipient email address"),
+      subject: z.string().describe("Email subject line"),
+      body: z.string().describe("Plain text email body"),
+    }),
+    execute: async ({ to, subject }) => {
+      return JSON.stringify({ preview: true, to, subject, note: "Draft card shown to user for review." });
+    },
+  });
+
+  // Custom create_calendar_event tool — creates an event with full structured detail
+  const createEventTool = tool({
+    name: "create_calendar_event",
+    description: "Create a Google Calendar event on the user's primary calendar. Provide complete details so the user can review exactly what was scheduled.",
+    parameters: z.object({
+      summary: z.string().describe("Event title"),
+      start: z.string().describe("Start datetime in ISO 8601, e.g. 2026-06-16T09:00:00 (or 2026-06-16 for all-day)"),
+      end: z.string().describe("End datetime in ISO 8601 (or date for all-day)"),
+      timeZone: z.string().nullable().describe("IANA timezone e.g. Asia/Kolkata. Default to Asia/Kolkata (IST) unless the user specifies a different timezone."),
+      location: z.string().nullable().describe("Event location, or null"),
+      description: z.string().nullable().describe("Event description/notes, or null"),
+      attendees: z.array(z.string()).nullable().describe("Attendee email addresses, or null"),
+      allDay: z.boolean().nullable().describe("True for an all-day event, otherwise false/null"),
+    }),
+    execute: async ({ summary, start, end, timeZone, location, description, attendees, allDay }) => {
+      const tz = timeZone || "Asia/Kolkata";
+      const startObj = allDay ? { date: start.split("T")[0] } : { dateTime: start, timeZone: tz };
+      const endObj = allDay ? { date: end.split("T")[0] } : { dateTime: end, timeZone: tz };
+      const event: Record<string, unknown> = { summary, start: startObj, end: endObj };
+      if (location) event.location = location;
+      if (description) event.description = description;
+      if (attendees && attendees.length) event.attendees = attendees.map((email) => ({ email }));
+      const created = await tenant.googlecalendar.api.events.create({
+        calendarId: "primary",
+        event,
+        sendUpdates: "all",
+      });
+      return JSON.stringify({ success: true, id: created.id, htmlLink: created.htmlLink });
+    },
+  });
+
   const agent = new Agent({
     name: "tsunagu-agent",
     instructions: systemPrompt,
-    tools: [...corsairTools, sendEmailTool],
+    tools: [...corsairTools, draftEmailTool, createEventTool],
   });
 
   const encoder = new TextEncoder();
@@ -157,15 +252,32 @@ Be concise and action-oriented. Always fetch real data before answering question
             content: [{ type: "output_text" as const, text: m.content }],
           };
         });
-        const streamedResult = await run(agent, conversationInput, { stream: true });
+        const modelProvider = userApiKey
+          ? new OpenAIProvider({ apiKey: userApiKey })
+          : undefined;
+        const streamedResult = await run(agent, conversationInput, {
+          stream: true,
+          ...(modelProvider ? { modelProvider } : {}),
+        });
 
         let fullText = "";
         const usedTools: string[] = [];
+        const artifacts: ChatArtifact[] = [];
+        // Map callId → parsed args for calendar events (correlated via tool_output)
+        const pendingEventArgs = new Map<string, any>();
+        // Track whether we're starting a fresh post-tool model turn
+        let needsTextReset = false;
 
         for await (const event of streamedResult) {
           if (event.type === "raw_model_stream_event") {
             const data = event.data as any;
             if (data?.type === "output_text_delta" && data?.delta) {
+              if (needsTextReset) {
+                // Discard text from the previous pre-tool turn and start fresh
+                fullText = "";
+                send({ text_reset: true });
+                needsTextReset = false;
+              }
               fullText += data.delta;
               send({ text: data.delta });
             }
@@ -173,24 +285,82 @@ Be concise and action-oriented. Always fetch real data before answering question
 
           if (event.type === "run_item_stream_event") {
             if (event.name === "tool_called") {
-              const toolName: string = (event.item as any).rawItem?.name ?? "tool";
+              const item = event.item as any;
+              const rawItem = item.rawItem;
+              const toolName: string = item.toolName ?? rawItem?.name ?? "tool";
+              const callId: string = item.callId ?? "";
               if (!usedTools.includes(toolName)) usedTools.push(toolName);
               send({ tool: toolName });
+
+              // Email card — built from args at call time so the card appears immediately.
+              if (toolName === "draft_email") {
+                const artifact = buildArtifact(toolName, rawItem?.arguments);
+                if (artifact) {
+                  artifacts.push(artifact);
+                  send({ artifact });
+                }
+              }
+
+              // Calendar event args are stored here; card is sent in tool_output
+              // once we have the real event ID returned by the Google API.
+              if (toolName === "create_calendar_event" && callId) {
+                try {
+                  pendingEventArgs.set(callId, JSON.parse(rawItem?.arguments ?? "{}"));
+                } catch {}
+              }
+            }
+
+            if (event.name === "tool_output") {
+              // Signal that the next text delta begins a new model turn
+              needsTextReset = true;
+              const item = event.item as any;
+              const callId: string = item.callId ?? "";
+              if (pendingEventArgs.has(callId)) {
+                const args = pendingEventArgs.get(callId)!;
+                pendingEventArgs.delete(callId);
+                let result: any = {};
+                try { result = JSON.parse(item.output ?? "{}"); } catch {}
+                const artifact: ChatArtifact = {
+                  kind: "event",
+                  summary: args.summary ?? "(No title)",
+                  start: args.start ?? null,
+                  end: args.end ?? null,
+                  timeZone: args.timeZone ?? null,
+                  location: args.location ?? null,
+                  description: args.description ?? null,
+                  attendees: Array.isArray(args.attendees) ? args.attendees : null,
+                  allDay: args.allDay ?? null,
+                  eventId: result.id ?? null,
+                  htmlLink: result.htmlLink ?? null,
+                };
+                artifacts.push(artifact);
+                send({ artifact });
+              }
             }
           }
         }
 
         // Persist assistant reply to DB
         if (sessionId && fullText) {
-          await db.insert(chatMessages).values({
+          const baseValues = {
             id: crypto.randomUUID(),
             sessionId,
             userId: session.user.id,
-            role: "assistant",
+            role: "assistant" as const,
             content: fullText || "Done.",
             toolsUsed: usedTools.length > 0 ? usedTools : null,
             createdAt: new Date(),
-          });
+          };
+          try {
+            await db.insert(chatMessages).values({
+              ...baseValues,
+              artifacts: artifacts.length > 0 ? artifacts : null,
+            });
+          } catch {
+            // Older DBs may not have the `artifacts` column yet — never let
+            // that break message persistence.
+            await db.insert(chatMessages).values(baseValues);
+          }
         }
 
         send({ done: true });

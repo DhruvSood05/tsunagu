@@ -88,6 +88,70 @@
 
 ---
 
+## Phase 11 — Waitlist & Access Gating (private beta)
+
+Goal: deploy publicly but only the landing page is open; the app is locked to an
+email allowlist the owner controls. Owner grants access by entering an email.
+
+**Model**
+- [ ] New `waitlist` table: `email` (unique), `name`, `status` (`pending` | `approved`), `source`, `createdAt`, `approvedAt`, `approvedBy`
+- [ ] Access rule: signed-in user may use the app only if email is `approved` or matches `OWNER_EMAIL`
+- [ ] Allowlist keyed by email → can pre-approve before a user ever signs in
+
+**Flow**
+- [ ] Landing CTA → "Join the waitlist" → Google sign-in (captures verified email)
+- [ ] First sign-in auto-creates a `pending` waitlist row (Better Auth `databaseHooks.user.create.after`)
+- [ ] Post-login routing: approved/owner → `/dashboard`, pending → `/waitlist`
+
+**Enforcement (server-side — 3 layers)**
+- [ ] Create `app/dashboard/layout.tsx` — primary gate: no session → `/`; not approved → `/waitlist` (covers all dashboard subroutes)
+- [ ] Augment `lib/session-cache.ts` `getSessionCached` to return `null` for non-approved users → gates ALL protected API routes with no per-route edits (admin/waitlist routes exempt via separate helper)
+- [ ] Update `app/page.tsx` redirect: approved → dashboard, pending → waitlist
+
+**Pages**
+- [ ] `/waitlist` — "You're on the list" confirmation (email + sign out), warm-editorial style
+- [ ] `/admin` — owner-only console: list entries, approve by email (also pre-approve unseen emails), revoke. Gated to `OWNER_EMAIL`
+
+**API**
+- [ ] `/api/admin/waitlist` — GET (list), POST (approve / pre-add), DELETE (revoke); owner-guarded
+- [ ] `/api/waitlist` — optional public POST (email-only signup) if a no-login form is added later
+
+**Env / config**
+- [ ] `OWNER_EMAIL` — always approved + only one who can open `/admin`
+
+**Decisions (defaults chosen)**
+- Admin via in-app `/admin` page (grant access live, no redeploy)
+- OAuth-based waitlist (verified email, no mismatch)
+- Single `OWNER_EMAIL` (revisit `role` column if multiple admins needed)
+
+**Notes:** ~half a day, low risk (additive). Gating MUST be server-side; client checks are UX only.
+
+---
+
+## Phase 12 — Inngest Background AI Pipeline (optional, after webhooks)
+
+Goal: move AI work off the request path into durable, retryable background jobs.
+Only worth doing once Gmail/Calendar webhooks (Phase 1–2) exist to trigger it.
+
+**Setup**
+- [ ] `npm install inngest`; create `/api/inngest` endpoint; configure signing keys + Vercel env
+- [ ] New `email_analysis` table (emailId, userId, priority, summary, category, followUp, createdAt)
+
+**Core pipeline (strongest use case)**
+- [ ] Gmail webhook → emit `email/received` event (instead of analyzing on client)
+- [ ] Inngest fn: `email.received → analyze priority + summary (LLM) → store in email_analysis`
+- [ ] Inbox READS precomputed priority from DB → instant, deduped, retried/rate-limited
+
+**Stretch**
+- [ ] Vector embeddings ingestion job (pairs with vector-search bonus): fan-out + backfill
+- [ ] Scheduled jobs: daily digest, follow-up reminders
+
+**Do NOT use Inngest for:** the live AI chat (SSE streaming needs low latency — keep as-is)
+
+**Why:** strengthens the "real-time AI inbox" story; escapes Vercel 60s function timeout for long LLM work. Skip if tight on time and webhooks aren't built yet.
+
+---
+
 ## Open Questions (Pending Answers)
 
 1. **Webhooks public URL** — deploying to Vercel, or using Ngrok locally first?

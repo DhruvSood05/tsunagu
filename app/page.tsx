@@ -1,7 +1,7 @@
 "use client";
 
 import { authClient } from "@/lib/auth-client";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTheme } from "@/lib/theme/ThemeProvider";
 import Link from "next/link";
@@ -859,6 +859,45 @@ function FeatureCalendar() {
   );
 }
 
+// ─── Spotlight card (Aceternity-style, warm-recolored, no deps) ───────────────
+
+function SpotlightCard({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const el = ref.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    el.style.setProperty("--mx", `${e.clientX - rect.left}px`);
+    el.style.setProperty("--my", `${e.clientY - rect.top}px`);
+  };
+
+  return (
+    <div
+      ref={ref}
+      onMouseMove={handleMouseMove}
+      className={`group relative overflow-hidden ${className ?? ""}`}
+    >
+      {/* cursor-following glow — scarce violet accent */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+        style={{
+          background:
+            "radial-gradient(240px circle at var(--mx) var(--my), color-mix(in oklab, #8b5cf6 13%, transparent), transparent 72%)",
+        }}
+      />
+      {children}
+    </div>
+  );
+}
+
 // ─── Section 8: Feature Grid ─────────────────────────────────────────────────
 
 function FeatureGrid() {
@@ -879,13 +918,13 @@ function FeatureGrid() {
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-px rounded-2xl overflow-hidden border border-border bg-border">
           {features.map(({ icon: Icon, title, desc }) => (
-            <div key={title} className="bg-card p-8 hover:bg-secondary/40 transition-colors group">
-              <div className="size-9 rounded-lg bg-secondary border border-border flex items-center justify-center mb-5 group-hover:border-foreground/15 transition-colors">
-                <Icon className="size-4 text-muted-foreground" />
+            <SpotlightCard key={title} className="bg-card p-8 transition-colors hover:bg-secondary/30">
+              <div className="relative z-10 size-9 rounded-lg bg-secondary border border-border flex items-center justify-center mb-5 group-hover:border-[#8b5cf6]/30 transition-colors">
+                <Icon className="size-4 text-muted-foreground group-hover:text-foreground transition-colors" />
               </div>
-              <h3 className="font-serif text-foreground text-lg mb-2">{title}</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">{desc}</p>
-            </div>
+              <h3 className="relative z-10 font-serif text-foreground text-lg mb-2">{title}</h3>
+              <p className="relative z-10 text-sm text-muted-foreground leading-relaxed">{desc}</p>
+            </SpotlightCard>
           ))}
         </div>
       </div>

@@ -7,12 +7,12 @@ import {
   RiMailLine,
   RiArrowUpDownLine,
   RiSearchLine,
-  RiNotification3Line,
   RiLogoutBoxLine,
   RiSettings4Line,
   RiGoogleFill,
   RiUser3Line
 } from "@remixicon/react";
+import NotificationBell from "@/components/notifications/NotificationBell";
 
 interface TopNavProps {
   user?: { name?: string | null; email?: string | null; image?: string | null } | null;
@@ -126,10 +126,7 @@ export default function TopNav({ user, onOpenPalette, gmailConnected = false }: 
       {/* Right: Notification & Profile */}
       <div className="flex items-center gap-3">
         {/* Notifications */}
-        <button className="relative size-8 flex items-center justify-center rounded-md hover:bg-secondary/80 text-muted-foreground hover:text-foreground transition-all duration-150 active:scale-95 cursor-pointer">
-          <RiNotification3Line className="size-4.5" />
-          <span className="absolute top-1.5 right-1.5 size-1.5 rounded-full bg-emerald-500 ring-2 ring-background animate-pulse" />
-        </button>
+        <NotificationBell />
 
         {/* Profile Dropdown */}
         <div ref={profileRef} className="relative">

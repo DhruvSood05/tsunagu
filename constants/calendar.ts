@@ -1,30 +1,31 @@
 import type { CalendarView, Priority } from "@/types/calendar";
 
+// Soft pastel palette — easy on the eyes, pairs with dark event text.
 export const CALENDAR_PALETTE = [
-  "#4285F4", "#0B8043", "#D50000", "#F6BF26", "#8E24AA",
-  "#E67C73", "#F4511E", "#039BE5", "#33B679", "#7986CB", "#616161",
+  "#A7C7E7", "#A8D5BA", "#F5A9A0", "#FBE7A1", "#D8B4E2",
+  "#F6B9B3", "#FBC9A0", "#A8D8EA", "#B5E0C0", "#AEB8E8", "#C9CDD4",
 ];
 
 export const COLOR_SWATCHES = [
-  "#4285F4", "#7986CB", "#33B679", "#8E24AA", "#E67C73",
-  "#F6BF26", "#F4511E", "#039BE5", "#3F51B5", "#0B8043", "#D50000", "#616161",
+  "#A7C7E7", "#AEB8E8", "#A8D5BA", "#D8B4E2", "#F6B9B3",
+  "#FBE7A1", "#FBC9A0", "#A8D8EA", "#C7B8EA", "#B5E0C0", "#F5A9A0", "#C9CDD4",
 ];
 
 export const GCAL_COLORS: Record<string, { hex: string; name: string }> = {
-  "1":  { hex: "#7986CB", name: "Lavender" },
-  "2":  { hex: "#33B679", name: "Sage" },
-  "3":  { hex: "#8E24AA", name: "Grape" },
-  "4":  { hex: "#E67C73", name: "Flamingo" },
-  "5":  { hex: "#F6BF26", name: "Banana" },
-  "6":  { hex: "#F4511E", name: "Tangerine" },
-  "7":  { hex: "#039BE5", name: "Peacock" },
-  "8":  { hex: "#3F51B5", name: "Blueberry" },
-  "9":  { hex: "#0B8043", name: "Basil" },
-  "10": { hex: "#D50000", name: "Tomato" },
-  "11": { hex: "#616161", name: "Graphite" },
+  "1":  { hex: "#C7B8EA", name: "Lavender" },
+  "2":  { hex: "#B5E0C0", name: "Sage" },
+  "3":  { hex: "#D8B4E2", name: "Grape" },
+  "4":  { hex: "#F6B9B3", name: "Flamingo" },
+  "5":  { hex: "#FBE7A1", name: "Banana" },
+  "6":  { hex: "#FBC9A0", name: "Tangerine" },
+  "7":  { hex: "#A8D8EA", name: "Peacock" },
+  "8":  { hex: "#AEB8E8", name: "Blueberry" },
+  "9":  { hex: "#A8D5BA", name: "Basil" },
+  "10": { hex: "#F5A9A0", name: "Tomato" },
+  "11": { hex: "#C9CDD4", name: "Graphite" },
 };
 
-export const GCAL_DEFAULT = "#4285F4";
+export const GCAL_DEFAULT = "#A7C7E7";
 
 export const PRIORITY_CONFIG: Record<Priority, { label: string; color: string; bg: string }> = {
   high:   { label: "High",   color: "#ef4444", bg: "rgba(239,68,68,0.08)" },

@@ -6,11 +6,14 @@ import { gmail } from "@corsair-dev/gmail";
 import { googlecalendar } from "@corsair-dev/googlecalendar";
 import * as schema from "./schema";
 
+const isProd = process.env.NODE_ENV === "production";
+
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  max: 50,
+  max: isProd ? 5 : 50,
   idleTimeoutMillis: 30_000,
   connectionTimeoutMillis: 5_000,
+  ssl: isProd ? { rejectUnauthorized: false } : false,
 });
 export const db = drizzle(pool, { schema });
 

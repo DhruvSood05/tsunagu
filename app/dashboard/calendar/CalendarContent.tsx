@@ -78,6 +78,7 @@ export default function CalendarContent({ user, gmailConnected, calendarConnecte
   // ── Toolbar ────────────────────────────────────────────────────────────────
   const [view, setView] = useState<CalendarView>("dayGridMonth");
   const [title, setTitle] = useState("");
+  const [currentDate, setCurrentDate] = useState<Date>(() => new Date());
 
   const calendarRef = useRef<InstanceType<typeof FullCalendar>>(null);
   const dateRange = useRef<{ min: string; max: string } | null>(null);
@@ -223,7 +224,7 @@ export default function CalendarContent({ user, gmailConnected, calendarConnecte
   };
 
   const handleColorChange = async (id: string, colorId: string | null) => {
-    const eventForId = events.find((e) => e.id === id);
+    const eventForId = events.find((e) => e.id === id) ?? (selected?.id === id ? selected : null);
     if (!eventForId) return;
     const calColor = (eventForId._calendarId ? calColorMap[eventForId._calendarId] : undefined) ?? GCAL_DEFAULT;
     const newBg = colorId ? (GCAL_COLORS[colorId]?.hex ?? GCAL_DEFAULT) : calColor;
@@ -240,7 +241,7 @@ export default function CalendarContent({ user, gmailConnected, calendarConnecte
       const eventBody = buildEventBody(eventForId, overrides);
       const res = await fetch(`/api/calendar/events/${id}`, {
         method: "PATCH", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ calendarId: eventForId._calendarId ?? "primary", event: eventBody }),
+        body: JSON.stringify({ calendarId: eventForId._calendarId ?? "primary", event: eventBody, sendUpdates: "none" }),
       });
       if (!res.ok) throw new Error();
     } catch {
@@ -278,7 +279,13 @@ export default function CalendarContent({ user, gmailConnected, calendarConnecte
     dateRange.current = { min, max };
     setTitle(info.view.title);
     setView(info.view.type as CalendarView);
+    setCurrentDate(info.view.currentStart);
     if (enabledCals.size > 0) loadEvents(min, max);
+  };
+
+  const handleMiniDateSelect = (date: Date) => {
+    setCurrentDate(date);
+    api()?.gotoDate(date);
   };
 
   const handleSelect = (info: DateSelectArg) => {
@@ -299,30 +306,50 @@ export default function CalendarContent({ user, gmailConnected, calendarConnecte
     setEditMode(false);
   };
 
-  const handleDrop = async (info: EventDropArg) => {
+  // Google Calendar exposes no partial `patch` here — events.update is a full
+  // replace. Always rebuild the complete event body so dragging/resizing only
+  // changes the times and never wipes title, notes, attendees, or colour.
+  const persistTimeChange = async (
+    info: EventDropArg | EventResizeDoneArg,
+    start: CalendarEvent["start"],
+    end: CalendarEvent["end"],
+  ) => {
     const { event } = info;
-    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const source = events.find((e) => e.id === event.id);
+    if (!source) { info.revert(); return; }
     const res = await fetch(`/api/calendar/events/${event.id}`, {
       method: "PATCH", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        event: {
-          start: event.allDay ? { date: event.startStr.split("T")[0] } : { dateTime: event.startStr, timeZone: tz },
-          end: event.allDay ? { date: event.endStr ? event.endStr.split("T")[0] : event.startStr.split("T")[0] } : { dateTime: event.endStr ?? event.startStr, timeZone: tz },
-        },
+        calendarId: source._calendarId,
+        event: buildEventBody(source, { start, end }),
         sendUpdates: "all",
       }),
     }).catch(() => null);
-    if (!res?.ok) info.revert();
+    if (!res?.ok) { info.revert(); return; }
+    setEvents((prev) => prev.map((e) => (e.id === event.id ? { ...e, start, end } : e)));
+    setSelected((p) => (p?.id === event.id ? { ...p, start, end } : p));
+  };
+
+  const handleDrop = async (info: EventDropArg) => {
+    const { event } = info;
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const start = event.allDay
+      ? { date: event.startStr.split("T")[0] }
+      : { dateTime: event.startStr, timeZone: tz };
+    const end = event.allDay
+      ? { date: (event.endStr || event.startStr).split("T")[0] }
+      : { dateTime: event.endStr ?? event.startStr, timeZone: tz };
+    await persistTimeChange(info, start, end);
   };
 
   const handleResize = async (info: EventResizeDoneArg) => {
     const { event } = info;
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    const res = await fetch(`/api/calendar/events/${event.id}`, {
-      method: "PATCH", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ event: { start: { dateTime: event.startStr, timeZone: tz }, end: { dateTime: event.endStr ?? event.startStr, timeZone: tz } }, sendUpdates: "all" }),
-    }).catch(() => null);
-    if (!res?.ok) info.revert();
+    await persistTimeChange(
+      info,
+      { dateTime: event.startStr, timeZone: tz },
+      { dateTime: event.endStr ?? event.startStr, timeZone: tz },
+    );
   };
 
   // ── Calendar sidebar handlers ─────────────────────────────────────────────
@@ -419,7 +446,7 @@ export default function CalendarContent({ user, gmailConnected, calendarConnecte
       allDay: !e.start?.dateTime,
       backgroundColor: bgColor,
       borderColor: calColor,
-      textColor: "#ffffff",
+      textColor: "#1f2937",
       extendedProps: { _raw: e, _calendarColor: calColor, _hasOwnColor: !!e.colorId },
     };
   });
@@ -451,9 +478,11 @@ export default function CalendarContent({ user, gmailConnected, calendarConnecte
                 calendars={calendars}
                 enabledCals={enabledCals}
                 colorPickerFor={colorPickerFor}
+                selectedDate={currentDate}
                 onToggle={toggleCalendar}
                 onColorChange={applyCalColor}
                 onOpenColorPicker={setColorPickerFor}
+                onDateSelect={handleMiniDateSelect}
               />
 
               <div className="flex-1 overflow-hidden min-w-0 p-3">
@@ -464,6 +493,7 @@ export default function CalendarContent({ user, gmailConnected, calendarConnecte
                   headerToolbar={false}
                   height="100%"
                   events={fcEvents}
+                  eventDisplay="block"
                   editable selectable selectMirror dayMaxEvents weekends nowIndicator
                   datesSet={handleDatesSet}
                   select={handleSelect}

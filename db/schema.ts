@@ -150,6 +150,7 @@ export const chatMessages = pgTable("chat_messages", {
   role: text("role").notNull(), // "user" | "assistant"
   content: text("content").notNull(),
   toolsUsed: jsonb("tools_used"),
+  artifacts: jsonb("artifacts"), // structured email-draft / event cards rendered in chat
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -159,6 +160,7 @@ export const userPreferences = pgTable("user_preferences", {
     .primaryKey()
     .references(() => user.id, { onDelete: "cascade" }),
   hasSeenTour: boolean("has_seen_tour").notNull().default(false),
+  openaiApiKey: text("openai_api_key"),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 

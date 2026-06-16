@@ -15,7 +15,7 @@ import {
   RiMenuFoldLine,
   RiMenuUnfoldLine,
 } from "@remixicon/react";
-import type { Message } from "@/types/ai";
+import type { Message, ChatArtifact } from "@/types/ai";
 
 interface ChatSession {
   id: string;
@@ -85,6 +85,7 @@ export default function AIContent({ user, gmailConnected, calendarConnected }: A
         role: m.role as "user" | "assistant",
         content: m.content,
         toolsUsed: m.toolsUsed ?? undefined,
+        artifacts: m.artifacts ?? undefined,
       }));
       setMessages(msgs);
     } finally {
@@ -164,6 +165,7 @@ export default function AIContent({ user, gmailConnected, calendarConnected }: A
       let buffer = "";
       let fullText = "";
       const usedTools: string[] = [];
+      const artifacts: ChatArtifact[] = [];
 
       while (true) {
         const { done, value } = await reader.read();
@@ -180,16 +182,35 @@ export default function AIContent({ user, gmailConnected, calendarConnected }: A
 
           try {
             const event = JSON.parse(raw);
+            if (event.text_reset) {
+              // A tool completed and the model is starting a new response turn —
+              // discard the pre-tool text so it doesn't get duplicated.
+              fullText = "";
+              setMessages((prev) => {
+                const updated = [...prev];
+                updated[updated.length - 1] = { role: "assistant", content: "", toolsUsed: usedTools, artifacts: [...artifacts] };
+                return updated;
+              });
+            }
             if (event.text) {
               fullText += event.text;
               setMessages((prev) => {
                 const updated = [...prev];
-                updated[updated.length - 1] = { role: "assistant", content: fullText, toolsUsed: usedTools };
+                updated[updated.length - 1] = { role: "assistant", content: fullText, toolsUsed: usedTools, artifacts: [...artifacts] };
                 return updated;
               });
             }
             if (event.tool) {
               if (!usedTools.includes(event.tool)) usedTools.push(event.tool);
+            }
+            if (event.artifact) {
+              artifacts.push(event.artifact as ChatArtifact);
+              setMessages((prev) => {
+                const updated = [...prev];
+                const last = updated[updated.length - 1];
+                updated[updated.length - 1] = { role: "assistant", content: last?.content ?? fullText, toolsUsed: usedTools, artifacts: [...artifacts] };
+                return updated;
+              });
             }
             if (event.error) {
               fullText = "Sorry, something went wrong. Please try again.";
@@ -205,7 +226,7 @@ export default function AIContent({ user, gmailConnected, calendarConnected }: A
 
       setMessages((prev) => {
         const updated = [...prev];
-        updated[updated.length - 1] = { role: "assistant", content: fullText || "Done.", toolsUsed: usedTools };
+        updated[updated.length - 1] = { role: "assistant", content: fullText || "Done.", toolsUsed: usedTools, artifacts: [...artifacts] };
         return updated;
       });
 
@@ -390,7 +411,7 @@ export default function AIContent({ user, gmailConnected, calendarConnected }: A
                   </div>
                 </div>
               ) : (
-                <div className="max-w-3xl mx-auto space-y-5">
+                <div className="max-w-3xl mx-auto space-y-6">
                   {messages.map((msg, i) => (
                     <AIChatBubble key={i} message={msg} />
                   ))}

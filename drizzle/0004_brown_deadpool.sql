@@ -1,0 +1,1 @@
+ALTER TABLE "user_preferences" ADD COLUMN "openai_api_key" text;
