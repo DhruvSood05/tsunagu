@@ -2,11 +2,11 @@ import { processOAuthCallback } from "corsair/oauth";
 import { corsair } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 
-const REDIRECT_URI = `${process.env.BETTER_AUTH_URL}/api/connect/callback`;
-const BASE = process.env.BETTER_AUTH_URL ?? "http://localhost:3000";
-
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
+  const reqUrl = new URL(request.url);
+  const REDIRECT_URI = `${reqUrl.origin}/api/connect/callback`;
+  const BASE = reqUrl.origin;
+  const { searchParams } = reqUrl;
   const code = searchParams.get("code");
   const state = searchParams.get("state");
 

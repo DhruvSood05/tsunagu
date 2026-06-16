@@ -5,15 +5,15 @@ import { getSessionCached } from "@/lib/session-cache";
 import { headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
-const REDIRECT_URI = `${process.env.BETTER_AUTH_URL}/api/connect/callback`;
-
 export async function GET(request: NextRequest) {
   const session = await getSessionCached(await headers());
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const plugin = new URL(request.url).searchParams.get("plugin");
+  const reqUrl = new URL(request.url);
+  const REDIRECT_URI = `${reqUrl.origin}/api/connect/callback`;
+  const plugin = reqUrl.searchParams.get("plugin");
   if (!plugin) {
     return NextResponse.json({ error: "Missing ?plugin= param" }, { status: 400 });
   }
