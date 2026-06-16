@@ -578,6 +578,26 @@
   }
 }
 
+/* ─── Testimonial marquee columns ──────────────────────────────────────── */
+
+@keyframes marquee-up {
+  0%   { transform: translateY(0); }
+  100% { transform: translateY(-50%); }
+}
+@keyframes marquee-down {
+  0%   { transform: translateY(-50%); }
+  100% { transform: translateY(0); }
+}
+.animate-marquee-up {
+  animation: marquee-up 28s linear infinite;
+}
+.animate-marquee-down {
+  animation: marquee-down 28s linear infinite;
+}
+.animate-marquee-up-slow {
+  animation: marquee-up 36s linear infinite;
+}
+
 /* ─── Driver.js — Premium onboarding theme ─────────────────────────────── */
 
 @keyframes driver-pop-in {

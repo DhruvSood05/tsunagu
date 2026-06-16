@@ -3,7 +3,7 @@ import { corsair, db } from "@/db";
 import { webhookEvents } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 
-// Receives real-time Google Calendar push notifications via Corsair
+// Receives real-time Gmail push notifications via Corsair
 export async function POST(request: Request) {
   try {
     const headers = Object.fromEntries(request.headers);
@@ -11,12 +11,12 @@ export async function POST(request: Request) {
     const result = await processWebhook(corsair, headers, body);
     return result.response as unknown as Response;
   } catch (err: any) {
-    console.error("[webhooks/calendar]", err?.message ?? err);
+    console.error("[webhooks/gmail]", err?.message ?? err);
     return new Response(JSON.stringify({ error: "Internal error" }), { status: 500 });
   }
 }
 
-// Client polls this to check for calendar changes since last check
+// Client polls this to check for new mail since last check
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const userId = searchParams.get("userId");

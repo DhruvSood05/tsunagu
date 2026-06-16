@@ -1,10 +1,10 @@
 export const maxDuration = 60;
 
-import { Agent, run, tool, OpenAIProvider } from "@openai/agents";
+import { Agent, run, tool } from "@openai/agents";
 import { OpenAIAgentsProvider } from "@corsair-dev/mcp";
 import { corsair, db } from "@/db";
-import { chatMessages, chatSessions, userPreferences } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { chatMessages, chatSessions, aiUsage } from "@/db/schema";
+import { eq, and, sql } from "drizzle-orm";
 import { getSessionCached } from "@/lib/session-cache";
 import { buildRawEmail } from "@/lib/mime";
 import { headers } from "next/headers";
@@ -62,12 +62,30 @@ export async function POST(req: Request) {
   const userEmail = session.user.email ?? "";
   const userName = session.user.name ?? userEmail;
 
-  // Use user's own OpenAI key if they've saved one, otherwise fall back to env
-  const [prefs] = await db
-    .select({ openaiApiKey: userPreferences.openaiApiKey })
-    .from(userPreferences)
-    .where(eq(userPreferences.userId, session.user.id));
-  const userApiKey = prefs?.openaiApiKey ?? null;
+  // Rate limiting: 10 AI requests/day for all users except the owner
+  const FREE_TIER_LIMIT = 10;
+  const isOwner = userEmail === "dhruvsood1102@gmail.com";
+  if (!isOwner) {
+    const today = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" }); // YYYY-MM-DD IST
+    const [usage] = await db
+      .select({ requestCount: aiUsage.requestCount })
+      .from(aiUsage)
+      .where(and(eq(aiUsage.userId, session.user.id), eq(aiUsage.date, today)));
+    const count = usage?.requestCount ?? 0;
+    if (count >= FREE_TIER_LIMIT) {
+      return new Response(
+        JSON.stringify({ error: "rate_limited", count, limit: FREE_TIER_LIMIT }),
+        { status: 429, headers: { "Content-Type": "application/json" } }
+      );
+    }
+    await db
+      .insert(aiUsage)
+      .values({ userId: session.user.id, date: today, requestCount: 1 })
+      .onConflictDoUpdate({
+        target: [aiUsage.userId, aiUsage.date],
+        set: { requestCount: sql`${aiUsage.requestCount} + 1` },
+      });
+  }
 
   const now = new Date();
 
@@ -252,13 +270,7 @@ CALENDAR TOOL (MANDATORY — never use run_script for event creation):
             content: [{ type: "output_text" as const, text: m.content }],
           };
         });
-        const modelProvider = userApiKey
-          ? new OpenAIProvider({ apiKey: userApiKey })
-          : undefined;
-        const streamedResult = await run(agent, conversationInput, {
-          stream: true,
-          ...(modelProvider ? { modelProvider } : {}),
-        });
+        const streamedResult = await run(agent, conversationInput, { stream: true });
 
         let fullText = "";
         const usedTools: string[] = [];

@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { pgTable, text, jsonb, timestamp, boolean, integer } from "drizzle-orm/pg-core";
+import { pgTable, text, jsonb, timestamp, boolean, integer, primaryKey } from "drizzle-orm/pg-core";
 
 // Better Auth tables
 export const user = pgTable("user", {
@@ -163,6 +163,19 @@ export const userPreferences = pgTable("user_preferences", {
   openaiApiKey: text("openai_api_key"),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
+
+// AI usage tracking for rate limiting (free tier: 20 requests/day)
+export const aiUsage = pgTable(
+  "ai_usage",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    date: text("date").notNull(), // YYYY-MM-DD in UTC
+    requestCount: integer("request_count").notNull().default(0),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.date] })]
+);
 
 // Calendar webhook last-updated tracker (for real-time refresh signalling)
 export const webhookEvents = pgTable("webhook_events", {

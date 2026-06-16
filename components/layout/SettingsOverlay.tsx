@@ -12,12 +12,8 @@ import {
   RiGoogleFill,
   RiCalendarLine,
   RiRefreshLine,
-  RiKeyLine,
-  RiEyeLine,
-  RiEyeOffLine,
-  RiCheckLine,
-  RiDeleteBinLine,
   RiLoaderLine,
+  RiRobot2Line,
 } from "@remixicon/react";
 import { useEffect, useState } from "react";
 
@@ -49,79 +45,17 @@ export default function SettingsOverlay({
   const [resettingTour, setResettingTour] = useState(false);
   const [tourReset, setTourReset] = useState(false);
 
-  // AI API key state
-  const [apiKeyInput, setApiKeyInput] = useState("");
-  const [showKey, setShowKey] = useState(false);
-  const [savedKeyHint, setSavedKeyHint] = useState<string | null>(null);
-  const [hasApiKey, setHasApiKey] = useState(false);
-  const [keySaving, setKeySaving] = useState(false);
-  const [keyClearing, setKeyClearing] = useState(false);
-  const [keySaved, setKeySaved] = useState(false);
-  const [keyTesting, setKeyTesting] = useState(false);
-  const [keyTestResult, setKeyTestResult] = useState<{ success: boolean; source: string; models?: string[]; error?: string } | null>(null);
+  // AI usage state
+  const [aiUsage, setAiUsage] = useState<{ count: number; limit: number; unlimited: boolean; hasOwnKey: boolean } | null>(null);
+
 
   useEffect(() => {
     setMounted(true);
-    // Fetch existing key hint
-    fetch("/api/preferences")
+    fetch("/api/ai/usage")
       .then((r) => r.json())
-      .then((data) => {
-        setHasApiKey(data.hasApiKey ?? false);
-        setSavedKeyHint(data.apiKeyHint ?? null);
-      })
+      .then((data) => setAiUsage(data))
       .catch(() => {});
   }, []);
-
-  async function handleSaveKey() {
-    if (!apiKeyInput.trim() || keySaving) return;
-    setKeySaving(true);
-    try {
-      await fetch("/api/preferences", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ openaiApiKey: apiKeyInput.trim() }),
-      });
-      setHasApiKey(true);
-      setSavedKeyHint(`${apiKeyInput.slice(0, 7)}...${apiKeyInput.slice(-4)}`);
-      setApiKeyInput("");
-      setKeySaved(true);
-      setTimeout(() => setKeySaved(false), 2500);
-    } finally {
-      setKeySaving(false);
-    }
-  }
-
-  async function handleTestKey() {
-    if (keyTesting) return;
-    setKeyTesting(true);
-    setKeyTestResult(null);
-    try {
-      const res = await fetch("/api/ai/test-key");
-      const data = await res.json();
-      setKeyTestResult(data);
-    } catch {
-      setKeyTestResult({ success: false, source: "unknown", error: "Network error" });
-    } finally {
-      setKeyTesting(false);
-    }
-  }
-
-  async function handleClearKey() {
-    if (keyClearing) return;
-    setKeyClearing(true);
-    try {
-      await fetch("/api/preferences", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ openaiApiKey: null }),
-      });
-      setHasApiKey(false);
-      setSavedKeyHint(null);
-      setApiKeyInput("");
-    } finally {
-      setKeyClearing(false);
-    }
-  }
 
   const handleResetTour = async () => {
     setResettingTour(true);
@@ -190,6 +124,77 @@ export default function SettingsOverlay({
             </div>
           </div>
 
+          {/* AI Usage Section */}
+          {aiUsage && (
+            <div className="space-y-3">
+              <h3 className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest font-heading">AI Usage</h3>
+              <div className="p-3.5 border border-border/45 rounded-lg bg-background space-y-3">
+                <div className="flex items-start gap-2.5">
+                  <div className="size-8 rounded bg-[#8b5cf6]/10 flex items-center justify-center shrink-0 mt-0.5">
+                    <RiRobot2Line className="size-4 text-[#8b5cf6]" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-bold text-foreground">Daily AI Requests</p>
+                    {aiUsage.unlimited ? (
+                      <p className="text-[10px] text-muted-foreground leading-relaxed mt-0.5">
+                        Unlimited access
+                      </p>
+                    ) : (
+                      <p className="text-[10px] text-muted-foreground leading-relaxed mt-0.5">
+                        {aiUsage.count} of {aiUsage.limit} requests used today
+                      </p>
+                    )}
+                  </div>
+                  {!aiUsage.unlimited && (
+                    <span className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full border shrink-0 ${
+                      aiUsage.count >= aiUsage.limit
+                        ? "bg-rose-500/10 text-rose-500 border-rose-500/20"
+                        : aiUsage.count >= aiUsage.limit * 0.8
+                        ? "bg-amber-500/10 text-amber-500 border-amber-500/20"
+                        : "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
+                    }`}>
+                      {aiUsage.count >= aiUsage.limit ? "Limit Reached" : "Active"}
+                    </span>
+                  )}
+                </div>
+
+                {!aiUsage.unlimited && (
+                  <>
+                    {/* Progress bar */}
+                    <div className="space-y-1.5">
+                      <div className="h-1.5 w-full rounded-full bg-secondary/60 overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all duration-300 ${
+                            aiUsage.count >= aiUsage.limit
+                              ? "bg-rose-500"
+                              : aiUsage.count >= aiUsage.limit * 0.8
+                              ? "bg-amber-500"
+                              : "bg-[#8b5cf6]"
+                          }`}
+                          style={{ width: `${Math.min((aiUsage.count / aiUsage.limit) * 100, 100)}%` }}
+                        />
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-[9px] text-muted-foreground/60">Resets daily at midnight IST</span>
+                        <span className="text-[9px] font-mono text-muted-foreground">
+                          {aiUsage.limit - aiUsage.count > 0 ? `${aiUsage.limit - aiUsage.count} left` : "0 left"}
+                        </span>
+                      </div>
+                    </div>
+
+                    {aiUsage.count >= aiUsage.limit && (
+                      <p className="text-[10px] text-muted-foreground leading-relaxed bg-rose-500/5 border border-rose-500/10 rounded-md px-3 py-2">
+                        You've reached your daily limit. Requests reset at midnight UTC.
+                      </p>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div className="border-t border-border/40" />
+
           {/* Theme Section */}
           <div className="space-y-3">
             <h3 className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest font-heading">Appearance</h3>
@@ -237,106 +242,6 @@ export default function SettingsOverlay({
                 <RiRefreshLine className={`size-3 ${resettingTour ? "animate-spin" : ""}`} />
                 {tourReset ? "Reloading…" : resettingTour ? "Resetting…" : "Restart Tour"}
               </button>
-            </div>
-          </div>
-
-          <div className="border-t border-border/40" />
-
-          {/* AI API Key Section */}
-          <div className="space-y-3">
-            <h3 className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest font-heading">AI API Key</h3>
-            <div className="space-y-3 p-3.5 border border-border/45 rounded-lg bg-background">
-              <div className="flex items-start gap-2.5">
-                <div className="size-8 rounded bg-[#8b5cf6]/10 flex items-center justify-center shrink-0 mt-0.5">
-                  <RiKeyLine className="size-4 text-[#8b5cf6]" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-bold text-foreground">OpenAI API Key</p>
-                  <p className="text-[10px] text-muted-foreground leading-relaxed mt-0.5">
-                    Paste your own key to use your OpenAI quota. Leave empty to use the shared key.
-                  </p>
-                </div>
-              </div>
-
-              {/* Current saved key */}
-              {hasApiKey && savedKeyHint && (
-                <div className="flex items-center justify-between px-3 py-2 bg-secondary/40 border border-border/30 rounded-md">
-                  <div className="flex items-center gap-2">
-                    <span className="size-1.5 rounded-full bg-emerald-500 shrink-0" />
-                    <span className="text-[10px] font-mono text-muted-foreground">{savedKeyHint}</span>
-                    <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-500 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded-full">Active</span>
-                  </div>
-                  <button
-                    onClick={handleClearKey}
-                    disabled={keyClearing}
-                    className="flex items-center gap-1 text-[9px] font-semibold text-muted-foreground/50 hover:text-rose-500 transition-colors cursor-pointer disabled:opacity-40"
-                  >
-                    {keyClearing ? <RiLoaderLine className="size-3 animate-spin" /> : <RiDeleteBinLine className="size-3" />}
-                    Remove
-                  </button>
-                </div>
-              )}
-
-              {/* Input row */}
-              <div className="flex gap-2">
-                <div className="relative flex-1">
-                  <input
-                    type={showKey ? "text" : "password"}
-                    value={apiKeyInput}
-                    onChange={(e) => setApiKeyInput(e.target.value)}
-                    placeholder={hasApiKey ? "Paste new key to replace…" : "sk-..."}
-                    onKeyDown={(e) => e.key === "Enter" && handleSaveKey()}
-                    className="w-full h-8 pl-3 pr-8 text-[11px] font-mono text-foreground bg-secondary/30 border border-border/40 rounded-md outline-none focus:border-[#8b5cf6]/50 focus:ring-1 focus:ring-[#8b5cf6]/20 placeholder:text-muted-foreground/40 transition-all"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowKey((v) => !v)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground/40 hover:text-muted-foreground transition-colors cursor-pointer"
-                  >
-                    {showKey ? <RiEyeOffLine className="size-3.5" /> : <RiEyeLine className="size-3.5" />}
-                  </button>
-                </div>
-                <button
-                  onClick={handleSaveKey}
-                  disabled={!apiKeyInput.trim() || keySaving}
-                  className="flex items-center gap-1.5 px-3 h-8 text-[10px] font-bold uppercase tracking-wider rounded-md bg-[#8b5cf6] text-white hover:bg-[#7c3aed] disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer shrink-0"
-                >
-                  {keySaving ? (
-                    <RiLoaderLine className="size-3 animate-spin" />
-                  ) : keySaved ? (
-                    <RiCheckLine className="size-3" />
-                  ) : null}
-                  {keySaving ? "Saving…" : keySaved ? "Saved!" : "Save"}
-                </button>
-              </div>
-
-              {/* Test Connection */}
-              <div className="flex items-center gap-2 pt-1">
-                <button
-                  onClick={handleTestKey}
-                  disabled={keyTesting}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-md text-muted-foreground hover:text-foreground bg-secondary/40 hover:bg-secondary/80 border border-border/30 transition-all disabled:opacity-50 cursor-pointer disabled:cursor-default"
-                >
-                  {keyTesting ? <RiLoaderLine className="size-3 animate-spin" /> : <RiKeyLine className="size-3" />}
-                  {keyTesting ? "Testing…" : "Test Connection"}
-                </button>
-                {keyTestResult && (
-                  <span className={`text-[10px] font-semibold ${keyTestResult.success ? "text-emerald-500" : "text-rose-500"}`}>
-                    {keyTestResult.success
-                      ? `✓ Working (${keyTestResult.source})`
-                      : `✗ ${keyTestResult.error ?? "Failed"} (${keyTestResult.source})`}
-                  </span>
-                )}
-              </div>
-
-              {/* Show available models on success */}
-              {keyTestResult?.success && keyTestResult.models && keyTestResult.models.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 pt-0.5">
-                  {keyTestResult.models.map((m) => (
-                    <span key={m} className="text-[9px] font-mono text-muted-foreground bg-secondary/50 border border-border/30 rounded px-1.5 py-0.5">{m}</span>
-                  ))}
-                </div>
-              )}
             </div>
           </div>
 

@@ -24,7 +24,7 @@ import {
 // ─── Warm editorial design language ───────────────────────────────────────────
 // Canvas: warm paper (--background)  Cards: white (--card)
 // Headlines: Instrument Serif (font-serif)  Labels: clean sans (font-heading)
-// Accent: violet #8b5cf6 — reserved for AI moments only
+// Accent: teal #14b8a6 — reserved for AI moments only
 //
 // Avatar pastels (tuned for light surfaces)
 const AV_VIOLET = "bg-violet-500/10 text-violet-600";
@@ -86,50 +86,59 @@ function DashboardMockup() {
   const [activeRow, setActiveRow] = useState(0);
 
   const emails = [
-    { from: "Sarah Chen",  subj: "Q3 investor update deck",  av: "SC", c: AV_VIOLET,  time: "9:41 AM",   addr: "sarah@acme.com",       unread: true,  body: ["Hi — I have attached the revised slides with updated financial projections and the go-to-market narrative. Key changes on slides 8 and 12 address the concerns from last quarter.", "Let me know if you want to hop on a call before the board presentation on Thursday. I am free from 2 to 4 PM."] },
-    { from: "Marcus Reed", subj: "Re: Partnership proposal", av: "MR", c: AV_EMERALD, time: "8:15 AM",   addr: "marcus@ventures.co",   unread: true,  body: ["Thanks for sending the proposal over. The terms look reasonable overall.", "Two things worth discussing before we move forward: the exclusivity clause and the revenue share model. Are you free this week?"] },
-    { from: "Alex Kim",    subj: "Quick sync tomorrow?",     av: "AK", c: AV_ORANGE,  time: "Yesterday", addr: "alex@studio.io",       unread: false, body: ["Hey, do you have 20 minutes to sync tomorrow? I want to walk through the updated design before we present to the client.", "Happy to jump on a call around 2 PM if that works."] },
-    { from: "Notion",      subj: "Your workspace summary",   av: "N",  c: AV_NEUTRAL, time: "Yesterday", addr: "noreply@notion.so",    unread: false, body: ["Here is your weekly workspace summary.", "12 pages edited, 3 databases updated, 2 comments resolved this week."] },
-    { from: "GitHub",      subj: "Security advisory",        av: "G",  c: AV_NEUTRAL, time: "Mon",       addr: "noreply@github.com",   unread: false, body: ["A vulnerability has been reported in a dependency used by one of your repositories.", "We recommend updating to the latest version as soon as possible."] },
-    { from: "Design team", subj: "Figma comments on v3",    av: "DT", c: AV_PINK,    time: "Mon",       addr: "design@company.io",    unread: false, body: ["Left a few comments on the v3 mockups in Figma. Nothing major — mostly spacing adjustments on the dashboard header.", "Let me know when you are ready to review."] },
+    { from: "Sarah Chen",  subj: "Q3 investor update deck",  av: "SC", c: AV_VIOLET,  time: "9:41 AM",   addr: "sarah@acme.com",     unread: true,  body: ["Hi — attached are the revised slides with updated financial projections and the go-to-market narrative. Key changes on slides 8 and 12 address the concerns raised last quarter.", "Let me know if you want to hop on a call before Thursday's board presentation. I'm free 2–4 PM."] },
+    { from: "Marcus Reed", subj: "Re: Partnership proposal", av: "MR", c: AV_EMERALD, time: "8:15 AM",   addr: "marcus@ventures.co", unread: true,  body: ["Thanks for sending the proposal. The terms look reasonable overall.", "Two things worth discussing: the exclusivity clause and the revenue share model. Are you free this week?"] },
+    { from: "Alex Kim",    subj: "Quick sync tomorrow?",     av: "AK", c: AV_ORANGE,  time: "Yesterday", addr: "alex@studio.io",     unread: false, body: ["Do you have 20 minutes to sync tomorrow? I want to walk through the updated design before we present to the client.", "Happy to jump on a call around 2 PM if that works."] },
+    { from: "Design team", subj: "Figma comments on v3",    av: "DT", c: AV_PINK,    time: "Mon",       addr: "design@company.io",  unread: false, body: ["Left a few comments on the v3 mockups in Figma. Nothing major — mostly spacing adjustments on the dashboard header.", "Let me know when you're ready to review."] },
   ];
 
   const active = emails[activeRow];
 
   return (
     <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-[0_40px_100px_-30px_rgba(33,30,26,0.30)]">
-      <div className="flex items-center gap-1.5 px-4 py-3 border-b border-border bg-secondary/50">
-        <div className="size-2.5 rounded-full bg-foreground/10" />
-        <div className="size-2.5 rounded-full bg-foreground/10" />
-        <div className="size-2.5 rounded-full bg-foreground/10" />
-        <div className="flex-1 mx-6 h-4 rounded bg-background flex items-center justify-center">
-          <span className="text-[8px] text-muted-foreground/50 font-mono">app.tsunagu.ai/dashboard</span>
+      {/* Browser chrome */}
+      <div className="flex items-center gap-1.5 px-4 py-2.5 border-b border-border bg-secondary/60">
+        <div className="size-3 rounded-full bg-red-400/60" />
+        <div className="size-3 rounded-full bg-amber-400/60" />
+        <div className="size-3 rounded-full bg-emerald-400/60" />
+        <div className="flex-1 mx-4 h-5 rounded-md bg-background border border-border/60 flex items-center justify-center">
+          <span className="text-[10px] text-muted-foreground/50 font-mono tracking-tight">app.tsunagu.ai/dashboard</span>
         </div>
       </div>
 
-      <div className="flex" style={{ height: 360 }}>
-        <div className="w-36 border-r border-border flex flex-col p-2.5 gap-2 bg-secondary/40 shrink-0">
-          <div className="flex items-center gap-1.5 px-1.5 py-1 mb-1">
-            <div className="size-4 rounded bg-primary flex items-center justify-center shrink-0">
-              <span className="text-primary-foreground text-[7px] font-bold leading-none font-heading">T</span>
+      <div className="flex" style={{ height: 420 }}>
+        {/* Sidebar */}
+        <div className="w-40 border-r border-border flex flex-col p-3 gap-1 bg-secondary/40 shrink-0">
+          <div className="flex items-center gap-2 px-2 py-2 mb-2">
+            <div className="size-5 rounded-md bg-primary flex items-center justify-center shrink-0">
+              <span className="text-primary-foreground text-[9px] font-bold leading-none">T</span>
             </div>
-            <span className="text-[8px] font-bold tracking-wider text-muted-foreground font-heading">TSUNAGU</span>
+            <span className="text-[11px] font-bold tracking-wider text-foreground font-heading">TSUNAGU</span>
           </div>
-          {["Inbox", "Sent", "Drafts", "Calendar"].map((item, i) => (
-            <div key={item} className={`flex items-center gap-1.5 px-2 py-1.5 rounded-md text-[8px] font-medium ${i === 0 ? "bg-secondary text-foreground" : "text-muted-foreground/60"}`}>{item}</div>
+          {[
+            { label: "Inbox", badge: "4" },
+            { label: "Sent", badge: null },
+            { label: "Drafts", badge: "2" },
+            { label: "Calendar", badge: null },
+          ].map((item, i) => (
+            <div key={item.label} className={`flex items-center justify-between px-2.5 py-2 rounded-lg text-[11px] font-medium ${i === 0 ? "bg-card text-foreground shadow-sm" : "text-muted-foreground/70 hover:text-foreground"}`}>
+              <span>{item.label}</span>
+              {item.badge && <span className="text-[9px] font-mono bg-teal-500/15 text-teal-700 dark:text-teal-400 px-1.5 py-0.5 rounded-full">{item.badge}</span>}
+            </div>
           ))}
           <div className="mt-auto pt-3 border-t border-border">
-            <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-md text-[8px] text-muted-foreground/60">
-              <RiSparkling2Fill className="size-2.5 text-violet-500/60" />
-              AI Assistant
+            <div className="flex items-center gap-2 px-2.5 py-2 rounded-lg bg-teal-500/8 border border-teal-500/20">
+              <RiSparkling2Fill className="size-3 text-teal-500 shrink-0" />
+              <span className="text-[11px] font-medium text-teal-700 dark:text-teal-400">AI Assistant</span>
             </div>
           </div>
         </div>
 
-        <div className="w-44 border-r border-border flex flex-col bg-background shrink-0">
-          <div className="px-3 py-2 border-b border-border flex items-center justify-between shrink-0">
-            <span className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground/60">Inbox</span>
-            <span className="text-[7px] font-mono bg-secondary text-muted-foreground/60 px-1.5 py-0.5 rounded">6</span>
+        {/* Email list */}
+        <div className="w-52 border-r border-border flex flex-col bg-background shrink-0">
+          <div className="px-3 py-2.5 border-b border-border flex items-center justify-between shrink-0">
+            <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/70">Inbox</span>
+            <span className="text-[10px] font-mono bg-secondary text-muted-foreground/60 px-2 py-0.5 rounded-full">{emails.length}</span>
           </div>
           <div className="flex-1 overflow-hidden divide-y divide-border">
             {emails.map((e, i) => (
@@ -137,42 +146,43 @@ function DashboardMockup() {
                 key={i}
                 type="button"
                 onClick={() => setActiveRow(i)}
-                className={`w-full text-left flex items-center gap-2 px-3 py-2 transition-colors cursor-pointer ${i === activeRow ? "bg-secondary" : "hover:bg-secondary/50"}`}
+                className={`w-full text-left flex items-center gap-2.5 px-3 py-2.5 transition-colors cursor-pointer ${i === activeRow ? "bg-secondary" : "hover:bg-secondary/50"}`}
               >
-                <div className={`size-5 rounded-full flex items-center justify-center text-[6px] font-bold shrink-0 ${e.c}`}>{e.av[0]}</div>
+                <div className={`size-7 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 ${e.c}`}>{e.av}</div>
                 <div className="flex-1 min-w-0">
-                  <p className={`text-[8px] truncate ${e.unread && i !== activeRow ? "font-semibold text-foreground" : "text-muted-foreground/70"}`}>{e.from}</p>
-                  <p className={`text-[7px] truncate mt-0.5 ${e.unread && i !== activeRow ? "text-muted-foreground" : "text-muted-foreground/40"}`}>{e.subj}</p>
+                  <p className={`text-[11px] truncate ${e.unread && i !== activeRow ? "font-semibold text-foreground" : "text-muted-foreground/80"}`}>{e.from}</p>
+                  <p className={`text-[10px] truncate mt-0.5 ${e.unread && i !== activeRow ? "text-muted-foreground" : "text-muted-foreground/50"}`}>{e.subj}</p>
                 </div>
-                {e.unread && i !== activeRow && <div className="size-1 rounded-full bg-violet-500 shrink-0" />}
+                {e.unread && i !== activeRow && <div className="size-1.5 rounded-full bg-teal-500 shrink-0" />}
               </button>
             ))}
           </div>
         </div>
 
+        {/* Email detail */}
         <div className="flex-1 flex flex-col min-w-0 bg-card">
-          <div className="px-5 py-3 border-b border-border shrink-0">
-            <div className="flex items-center gap-2.5 mb-2">
-              <div className={`size-7 rounded-full text-[9px] font-bold flex items-center justify-center shrink-0 ${active.c}`}>{active.av}</div>
+          <div className="px-5 py-3.5 border-b border-border shrink-0">
+            <div className="flex items-center gap-3 mb-2">
+              <div className={`size-8 rounded-full text-[10px] font-bold flex items-center justify-center shrink-0 ${active.c}`}>{active.av}</div>
               <div>
-                <p className="text-[9px] font-semibold text-foreground">{active.from}</p>
-                <p className="text-[7px] text-muted-foreground/70">{active.addr} · {active.time}</p>
+                <p className="text-[12px] font-semibold text-foreground">{active.from}</p>
+                <p className="text-[10px] text-muted-foreground/70">{active.addr} · {active.time}</p>
               </div>
             </div>
-            <p className="text-[10px] font-semibold text-foreground">{active.subj}</p>
+            <p className="text-[12px] font-semibold text-foreground">{active.subj}</p>
           </div>
-          <div className="flex-1 px-5 py-3 overflow-hidden">
+          <div className="flex-1 px-5 py-4 overflow-hidden">
             {active.body.map((para, i) => (
-              <p key={i} className={`text-[8px] leading-relaxed ${i === 0 ? "text-muted-foreground mb-2" : "text-muted-foreground/70"}`}>{para}</p>
+              <p key={i} className={`text-[11px] leading-relaxed ${i === 0 ? "text-foreground/80 mb-3" : "text-muted-foreground/70"}`}>{para}</p>
             ))}
           </div>
           <div className="px-5 py-3 border-t border-border shrink-0">
-            <div className="flex items-center gap-2 bg-secondary/60 border border-border rounded-lg px-3 py-2">
-              <RiSparkling2Fill className="size-3 text-violet-500 shrink-0" />
+            <div className="flex items-center gap-2.5 bg-teal-500/8 border border-teal-500/25 rounded-xl px-3.5 py-2.5">
+              <RiSparkling2Fill className="size-3.5 text-teal-500 shrink-0" />
               <Typewriter
                 phrases={["Draft a reply with AI…", "Summarize this thread…", "Schedule a follow-up…"]}
-                className="text-[8px] text-muted-foreground/70"
-                caretClassName="text-violet-500"
+                className="text-[11px] text-teal-700 dark:text-teal-400"
+                caretClassName="text-teal-500"
               />
             </div>
           </div>
@@ -232,7 +242,7 @@ function EmailListMockup() {
                 <p className={`text-[11px] truncate ${!isRead ? "font-medium text-foreground/80" : "text-muted-foreground/60"}`}>{e.subj}</p>
                 <p className="text-[10px] text-muted-foreground/50 truncate mt-0.5">{e.snippet}</p>
               </div>
-              {!isRead && <div className="size-1.5 rounded-full bg-violet-500 shrink-0" />}
+              {!isRead && <div className="size-1.5 rounded-full bg-teal-500 shrink-0" />}
             </button>
           );
         })}
@@ -292,7 +302,7 @@ function AIDraftMockup() {
     <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-[0_30px_70px_-30px_rgba(33,30,26,0.22)]">
       <div className="px-4 py-3 border-b border-border flex items-center justify-between">
         <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground">New Message</span>
-        <span className="text-[9px] text-violet-600 bg-violet-500/10 border border-violet-500/20 px-2 py-0.5 rounded-full font-medium flex items-center gap-1">
+        <span className="text-[10px] text-teal-700 dark:text-teal-400 bg-teal-500/10 border border-teal-500/25 px-2.5 py-0.5 rounded-full font-medium flex items-center gap-1.5">
           <RiSparkling2Fill className="size-2.5" />
           AI Draft{draftIdx > 0 ? ` v${draftIdx + 1}` : ""}
         </span>
@@ -357,16 +367,16 @@ function CalendarMockup() {
           ))}
         </div>
       </div>
-      <div className="p-3">
-        <div className="flex gap-1 mb-1">
-          <div className="w-8 shrink-0" />
+      <div className="p-4">
+        <div className="flex gap-1.5 mb-2">
+          <div className="w-10 shrink-0" />
           <div className="flex-1 grid gap-1" style={{ gridTemplateColumns: "repeat(5,1fr)" }}>
-            {days.map((d) => <div key={d} className="text-center text-[8px] font-medium text-muted-foreground/60 pb-1">{d}</div>)}
+            {days.map((d) => <div key={d} className="text-center text-[10px] font-semibold text-muted-foreground/70 pb-1">{d}</div>)}
           </div>
         </div>
-        <div className="flex gap-1">
-          <div className="w-8 shrink-0 space-y-[14px] pt-1">
-            {times.map((t) => <div key={t} className="text-[7px] text-muted-foreground/40 text-right leading-none">{t}</div>)}
+        <div className="flex gap-1.5">
+          <div className="w-10 shrink-0 space-y-[18px] pt-1">
+            {times.map((t) => <div key={t} className="text-[9px] text-muted-foreground/50 text-right leading-none font-mono">{t}</div>)}
           </div>
           <div className="flex-1 grid gap-1" style={{ gridTemplateColumns: "repeat(5,1fr)" }}>
             {days.map((_, di) => (
@@ -375,13 +385,13 @@ function CalendarMockup() {
                   const evIdx = events.findIndex((e) => e.day === di && e.start === ti);
                   const ev = evIdx >= 0 ? events[evIdx] : null;
                   return (
-                    <div key={ti} className="h-7 border-t border-border relative">
+                    <div key={ti} className="h-8 border-t border-border relative">
                       {ev && (
                         <button
                           type="button"
                           onClick={() => setSelectedEvIdx(selectedEvIdx === evIdx ? null : evIdx)}
-                          className={`absolute inset-x-0 top-0 w-full text-left rounded px-1 py-0.5 border text-[7px] font-medium overflow-hidden z-10 cursor-pointer transition-all ${ev.c} ${selectedEvIdx === evIdx ? "ring-1 ring-foreground/20 brightness-95" : "hover:brightness-105"}`}
-                          style={{ height: `${ev.len * 28 - 2}px` }}
+                          className={`absolute inset-x-0 top-0 w-full text-left rounded-md px-1.5 py-1 border text-[9px] font-semibold overflow-hidden z-10 cursor-pointer transition-all ${ev.c} ${selectedEvIdx === evIdx ? "ring-1 ring-foreground/20 brightness-95" : "hover:brightness-105"}`}
+                          style={{ height: `${ev.len * 32 - 2}px` }}
                         >
                           {ev.title}
                         </button>
@@ -397,11 +407,11 @@ function CalendarMockup() {
         {sel && (
           <div className="mt-3 border-t border-border pt-3 flex items-start justify-between gap-3">
             <div>
-              <p className="text-[9px] font-semibold text-foreground/80">{sel.title}</p>
-              <p className="text-[8px] text-muted-foreground mt-0.5">{days[sel.day]} · {sel.time}</p>
-              <p className="text-[8px] text-muted-foreground/60 mt-0.5">{sel.info}</p>
+              <p className="text-[11px] font-semibold text-foreground/80">{sel.title}</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">{days[sel.day]} · {sel.time}</p>
+              <p className="text-[10px] text-muted-foreground/60 mt-0.5">{sel.info}</p>
             </div>
-            <button type="button" onClick={() => setSelectedEvIdx(null)} className="text-[10px] text-muted-foreground/60 hover:text-foreground cursor-pointer transition-colors shrink-0">✕</button>
+            <button type="button" onClick={() => setSelectedEvIdx(null)} className="text-[11px] text-muted-foreground/60 hover:text-foreground cursor-pointer transition-colors shrink-0">✕</button>
           </div>
         )}
       </div>
@@ -445,7 +455,7 @@ function CommandPaletteMockup() {
           value={query}
           onChange={(e) => { setQuery(e.target.value); setActiveIdx(0); }}
           placeholder="Search emails and calendar..."
-          className="text-sm text-foreground/80 flex-1 bg-transparent outline-none placeholder:text-muted-foreground/50 caret-violet-500"
+          className="text-sm text-foreground/80 flex-1 bg-transparent outline-none placeholder:text-muted-foreground/50 caret-teal-500"
         />
         <kbd className="text-[9px] font-mono text-muted-foreground/60 bg-secondary border border-border px-1.5 py-0.5 rounded">⌘K</kbd>
       </div>
@@ -629,31 +639,31 @@ function Hero({ onSignIn, error }: { onSignIn: () => void; error: string | null 
       <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
         <div className="absolute inset-0 hero-grid opacity-60" />
         <div className="absolute top-[-12%] left-[18%] w-[540px] h-[540px] rounded-full bg-amber-300/25 blur-[130px] animate-[drift-1_19s_ease-in-out_infinite]" />
-        <div className="absolute top-[6%] right-[12%] w-[480px] h-[480px] rounded-full bg-violet-400/15 blur-[140px] animate-[drift-2_23s_ease-in-out_infinite]" />
+        <div className="absolute top-[6%] right-[12%] w-[480px] h-[480px] rounded-full bg-teal-400/15 blur-[140px] animate-[drift-2_23s_ease-in-out_infinite]" />
         <div className="absolute bottom-[-14%] left-[38%] w-[500px] h-[500px] rounded-full bg-rose-300/15 blur-[130px] animate-[drift-3_27s_ease-in-out_infinite]" />
       </div>
 
       <div className="relative z-10 flex flex-col items-center text-center max-w-4xl mx-auto">
         <div className="inline-flex items-center gap-2.5 mb-8 pl-2.5 pr-4 py-1.5 rounded-full border border-border bg-card/70 backdrop-blur-sm shadow-sm">
           <span className="relative flex size-1.5 shrink-0">
-            <span className="absolute inline-flex h-full w-full rounded-full bg-violet-500/60 animate-ping" />
-            <span className="relative inline-flex rounded-full size-1.5 bg-violet-500" />
+            <span className="absolute inline-flex h-full w-full rounded-full bg-teal-500/60 animate-ping" />
+            <span className="relative inline-flex rounded-full size-1.5 bg-teal-500" />
           </span>
           <span className="inline-block min-w-[188px] text-left text-[12.5px] font-medium text-foreground/70 font-heading">
             <Typewriter
               phrases={["Draft replies with AI", "Schedule meetings naturally", "Search your inbox instantly"]}
-              caretClassName="text-violet-500"
+              caretClassName="text-teal-500"
             />
           </span>
         </div>
 
         <h1 className="font-serif text-foreground tracking-tight leading-[1.05] text-5xl sm:text-6xl lg:text-[80px] xl:text-[88px] mb-6">
-          Email and calendar,<br />
-          <span className="italic text-muted-foreground">in one quiet workspace.</span>
+          Your AI agent for<br />
+          <span className="italic text-muted-foreground">email and calendar.</span>
         </h1>
 
-        <p className="text-base sm:text-lg text-muted-foreground max-w-lg leading-relaxed mb-10">
-          Connect Gmail and Google Calendar. Draft with AI, schedule naturally, and search everything from a single, keyboard-driven interface.
+        <p className="text-base sm:text-lg text-muted-foreground max-w-lg leading-relaxed mb-8">
+          Tsunagu connects Gmail and Google Calendar through an AI agent that drafts, schedules, and triages — and always waits for your approval before acting.
         </p>
 
         {error && (
@@ -662,12 +672,23 @@ function Hero({ onSignIn, error }: { onSignIn: () => void; error: string | null 
           </div>
         )}
 
-        <div className="flex flex-col items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-center gap-3 mb-6">
           <button type="button" onClick={onSignIn} className="flex items-center gap-2.5 bg-primary text-primary-foreground font-semibold text-sm px-7 py-3.5 rounded-xl hover:bg-primary/90 active:scale-[0.98] transition-all shadow-lg cursor-pointer">
             <RiGoogleFill className="size-4" />
-            Continue with Google
+            Get started free
           </button>
-          <p className="text-[11px] text-muted-foreground/70 font-medium">No credit card · No setup · Works with your existing Gmail</p>
+          <a href="#product" className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground border border-border px-7 py-3.5 rounded-xl hover:bg-secondary/60 transition-all cursor-pointer">
+            See how it works
+            <RiArrowRightLine className="size-4" />
+          </a>
+        </div>
+        <p className="text-[11px] text-muted-foreground/60 font-medium">No credit card · No setup · Works with your existing Gmail</p>
+
+        {/* Tech trust badges */}
+        <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 mt-8">
+          {["Corsair MCP", "OpenAI Agents", "Real-time Webhooks", "OAuth 2.0"].map((badge) => (
+            <span key={badge} className="text-[10px] font-semibold font-heading uppercase tracking-widest text-muted-foreground/50">{badge}</span>
+          ))}
         </div>
       </div>
 
@@ -769,7 +790,7 @@ function FeatureAI() {
       <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
         <div className="order-2 lg:order-1"><AIDraftMockup /></div>
         <div className="order-1 lg:order-2 max-w-lg">
-          <div className="inline-flex items-center gap-1.5 mb-6 text-[10px] font-bold uppercase tracking-[0.12em] text-violet-600 font-heading">
+          <div className="inline-flex items-center gap-1.5 mb-6 text-[10px] font-bold uppercase tracking-[0.12em] text-teal-600 font-heading">
             <RiSparkling2Fill className="size-3" />
             AI Drafting
           </div>
@@ -782,7 +803,7 @@ function FeatureAI() {
           <ul className="space-y-3">
             {["Contextual drafts based on full thread history", "One-click regenerate for a different tone or angle", "Sends through your real Gmail address", "Replies that sound like you, not like software"].map((item) => (
               <li key={item} className="flex items-start gap-2.5 text-sm text-muted-foreground">
-                <span className="size-1 rounded-full bg-violet-500/50 shrink-0 mt-[7px]" />
+                <span className="size-1 rounded-full bg-teal-500/50 shrink-0 mt-[7px]" />
                 {item}
               </li>
             ))}
@@ -898,34 +919,452 @@ function SpotlightCard({
   );
 }
 
-// ─── Section 8: Feature Grid ─────────────────────────────────────────────────
+// ─── Section 8: Feature Grid — animated demo cards ────────────────────────────
+
+function SearchFeature() {
+  const queries = ["investor update", "board prep", "Sarah deck"];
+  const results = [
+    { from: "Sarah Chen",  subj: "Q3 investor update deck",     time: "9:41 AM", c: AV_VIOLET  },
+    { from: "Marcus Reed", subj: "Investor partnership brief",  time: "Mon",     c: AV_EMERALD },
+    { from: "Alex Kim",    subj: "Board meeting agenda",        time: "Tue",     c: AV_ORANGE  },
+  ];
+  const [qIdx, setQIdx] = useState(0);
+  const [typed, setTyped] = useState("");
+  const [shown, setShown] = useState(0);
+
+  useEffect(() => {
+    let t: ReturnType<typeof setTimeout>;
+    const q = queries[qIdx];
+    setTyped(""); setShown(0);
+    let i = 0;
+    const tick = () => {
+      i++;
+      setTyped(q.slice(0, i));
+      if (i < q.length) { t = setTimeout(tick, 55); return; }
+      let r = 0;
+      const show = () => {
+        r++; setShown(r);
+        if (r < results.length) t = setTimeout(show, 180);
+        else t = setTimeout(() => setQIdx(p => (p + 1) % queries.length), 2400);
+      };
+      t = setTimeout(show, 380);
+    };
+    t = setTimeout(tick, 500);
+    return () => clearTimeout(t);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [qIdx]);
+
+  return (
+    <div className="flex flex-col h-full gap-4">
+      <div>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-teal-600 font-heading flex items-center gap-1.5 mb-2"><RiSearch2Line className="size-3" />Semantic Search</p>
+        <h3 className="font-serif text-foreground text-xl leading-snug mb-1">Find anything, instantly.</h3>
+        <p className="text-xs text-muted-foreground leading-relaxed">Plain-language search across your full inbox history.</p>
+      </div>
+      <div className="bg-background border border-border rounded-xl overflow-hidden">
+        <div className="flex items-center gap-2.5 px-4 py-3 border-b border-border">
+          <RiSearch2Line className="size-3.5 text-muted-foreground/40 shrink-0" />
+          <span className="text-sm text-foreground/80 font-mono flex-1">
+            {typed}<span className="inline-block w-px h-3.5 bg-foreground/50 ml-px align-middle animate-caret" />
+          </span>
+          <kbd className="text-[9px] font-mono bg-secondary border border-border px-1.5 py-0.5 rounded text-muted-foreground">⌘K</kbd>
+        </div>
+        <div className="divide-y divide-border">
+          {shown === 0
+            ? <div className="px-4 py-5 text-center text-[11px] text-muted-foreground/40">Searching…</div>
+            : results.slice(0, shown).map((r, i) => (
+              <div key={i} className="flex items-center gap-3 px-4 py-2.5 animate-in fade-in slide-in-from-top-1 duration-200">
+                <div className={`size-7 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${r.c}`}>{r.from[0]}</div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-medium text-foreground/80 truncate">{r.subj}</p>
+                  <p className="text-[10px] text-muted-foreground">{r.from}</p>
+                </div>
+                <span className="text-[10px] text-muted-foreground/50 font-mono shrink-0">{r.time}</span>
+              </div>
+            ))
+          }
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function WebhookFeature() {
+  const base = [
+    { from: "Notion",      subj: "Your workspace summary",    time: "Yesterday", c: AV_NEUTRAL, unread: false },
+    { from: "GitHub",      subj: "New security advisory",     time: "Mon",       c: AV_NEUTRAL, unread: false },
+  ];
+  const wave = [
+    { from: "Sarah Chen",  subj: "Just sent the revised deck", time: "Now",  c: AV_VIOLET  },
+    { from: "Marcus Reed", subj: "Can we move tomorrow's call?",time: "Now",  c: AV_EMERALD },
+    { from: "Alex Kim",    subj: "Quick question on the deck", time: "Now",  c: AV_ORANGE  },
+  ];
+  const [top, setTop] = useState<typeof wave[number] | null>(null);
+  const [wIdx, setWIdx] = useState(0);
+  const [pulse, setPulse] = useState(false);
+
+  useEffect(() => {
+    const t = setInterval(() => {
+      setPulse(true);
+      setTimeout(() => {
+        setTop(wave[wIdx % wave.length]);
+        setWIdx(i => i + 1);
+        setPulse(false);
+      }, 500);
+    }, 2800);
+    return () => clearInterval(t);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wIdx]);
+
+  const rows = top ? [{ ...top, unread: true }, ...base] : base;
+
+  return (
+    <div className="flex flex-col h-full gap-4">
+      <div>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-teal-600 font-heading flex items-center gap-1.5 mb-2">
+          <span className="relative flex size-1.5">
+            <span className={`absolute inset-0 rounded-full bg-teal-500 transition-opacity ${pulse ? "animate-ping" : ""}`} />
+            <span className="relative rounded-full size-1.5 bg-teal-500" />
+          </span>
+          Live Webhook Sync
+        </p>
+        <h3 className="font-serif text-foreground text-xl leading-snug mb-1">Email arrives in real time.</h3>
+        <p className="text-xs text-muted-foreground leading-relaxed">Corsair push — no polling, no refresh button.</p>
+      </div>
+      <div className="bg-background border border-border rounded-xl overflow-hidden divide-y divide-border">
+        {rows.map((e, i) => (
+          <div key={`${e.from}-${i}`} className={`flex items-center gap-3 px-4 py-3 ${i === 0 && e.unread ? "animate-in slide-in-from-top-2 fade-in duration-300" : ""}`}>
+            <div className={`size-7 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${e.c}`}>{e.from[0]}</div>
+            <div className="flex-1 min-w-0">
+              <p className={`text-xs truncate ${e.unread ? "font-semibold text-foreground" : "text-muted-foreground/70"}`}>{e.subj}</p>
+              <p className="text-[10px] text-muted-foreground">{e.from}</p>
+            </div>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <span className="text-[10px] text-muted-foreground/50 font-mono">{e.time}</span>
+              {e.unread && <div className="size-1.5 rounded-full bg-teal-500" />}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function KeyboardFeature() {
+  const shortcuts = [
+    { keys: ["⌘", "K"],      label: "Open command palette",  icon: RiSearch2Line       },
+    { keys: ["G", "I"],      label: "Go to inbox",            icon: RiMailLine          },
+    { keys: ["C"],           label: "Compose new email",      icon: RiSendPlaneLine     },
+    { keys: ["⌘", "↵"],     label: "Send email",             icon: RiSendPlaneLine     },
+    { keys: ["E"],           label: "Archive selected",       icon: RiInboxLine         },
+    { keys: ["?"],           label: "Show all shortcuts",     icon: RiKeyboardLine      },
+  ];
+  const [active, setActive] = useState(0);
+
+  useEffect(() => {
+    const t = setInterval(() => setActive(p => (p + 1) % shortcuts.length), 1300);
+    return () => clearInterval(t);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <div className="flex flex-col h-full gap-4">
+      <div>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-teal-600 font-heading flex items-center gap-1.5 mb-2"><RiKeyboardLine className="size-3" />Keyboard-first UX</p>
+        <h3 className="font-serif text-foreground text-xl leading-snug mb-1">Zero mouse required.</h3>
+        <p className="text-xs text-muted-foreground leading-relaxed">Every action, one keystroke away.</p>
+      </div>
+      <div className="bg-background border border-border rounded-xl overflow-hidden divide-y divide-border">
+        {shortcuts.map((s, i) => {
+          const Icon = s.icon;
+          return (
+            <div key={i} className={`flex items-center gap-3 px-4 py-2.5 transition-colors duration-300 ${i === active ? "bg-secondary" : ""}`}>
+              <Icon className={`size-3.5 shrink-0 transition-colors duration-300 ${i === active ? "text-teal-600" : "text-muted-foreground/30"}`} />
+              <span className={`text-xs flex-1 transition-colors duration-300 ${i === active ? "text-foreground font-medium" : "text-muted-foreground/60"}`}>{s.label}</span>
+              <div className="flex items-center gap-1">
+                {s.keys.map((k, j) => (
+                  <kbd key={j} className={`text-[10px] font-mono px-1.5 py-0.5 rounded border transition-all duration-300 ${i === active ? "bg-teal-500/10 border-teal-500/30 text-teal-700" : "bg-secondary border-border text-muted-foreground"}`}>{k}</kbd>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function ZeroTrustFeature() {
+  const draftText = "Hi Sarah,\n\nThank you for the revised deck — the Q3 narrative is much cleaner. Before Thursday's board meeting I'd love to walk through slides 8 and 12.\n\nAre you free Wednesday 2–4 PM?";
+  const [phase, setPhase] = useState<"typing" | "review" | "sent">("typing");
+  const [typed, setTyped] = useState("");
+  const [charIdx, setCharIdx] = useState(0);
+
+  useEffect(() => {
+    let t: ReturnType<typeof setTimeout>;
+    if (phase === "typing") {
+      if (charIdx < draftText.length) {
+        t = setTimeout(() => { setTyped(draftText.slice(0, charIdx + 1)); setCharIdx(c => c + 1); }, 16);
+      } else {
+        t = setTimeout(() => setPhase("review"), 700);
+      }
+    } else if (phase === "sent") {
+      t = setTimeout(() => { setPhase("typing"); setTyped(""); setCharIdx(0); }, 2000);
+    }
+    return () => clearTimeout(t);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, charIdx]);
+
+  return (
+    <div className="flex flex-col h-full gap-4">
+      <div>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-teal-600 font-heading flex items-center gap-1.5 mb-2"><RiSparkling2Fill className="size-3" />Zero-trust Drafts</p>
+        <h3 className="font-serif text-foreground text-xl leading-snug mb-1">AI writes. You decide.</h3>
+        <p className="text-xs text-muted-foreground leading-relaxed">Nothing sends without your explicit click.</p>
+      </div>
+      <div className="bg-background border border-border rounded-xl overflow-hidden flex flex-col">
+        <div className="px-4 py-2.5 border-b border-border flex items-center justify-between shrink-0">
+          <span className="text-[10px] text-muted-foreground/60">To: sarah@acme.com · Re: Q3 deck</span>
+          <span className="text-[10px] text-teal-700 bg-teal-500/10 border border-teal-500/20 px-2 py-0.5 rounded-full flex items-center gap-1">
+            <RiSparkling2Fill className="size-2.5" />AI Draft
+          </span>
+        </div>
+        <div className="px-4 py-3 min-h-[100px] flex-1">
+          {phase === "sent" ? (
+            <div className="flex flex-col items-center justify-center h-full gap-2 py-4">
+              <div className="size-8 rounded-full bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center">
+                <RiSendPlaneLine className="size-4 text-emerald-600" />
+              </div>
+              <p className="text-xs font-medium text-foreground/70">Sent via Gmail</p>
+            </div>
+          ) : (
+            <p className="text-[11px] text-foreground/75 leading-relaxed whitespace-pre-wrap font-mono">
+              {typed}{phase === "typing" && <span className="inline-block w-px h-3 bg-foreground/50 ml-px align-middle animate-caret" />}
+            </p>
+          )}
+        </div>
+        {phase === "review" && (
+          <div className="px-4 py-3 border-t border-border flex items-center justify-between shrink-0 animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <span className="text-[10px] text-muted-foreground/60">Review before sending</span>
+            <div className="flex gap-2">
+              <button type="button" onClick={() => { setPhase("typing"); setTyped(""); setCharIdx(0); }} className="text-[10px] text-muted-foreground px-2.5 py-1.5 rounded border border-border hover:border-foreground/20 cursor-pointer transition-colors">Regenerate</button>
+              <button type="button" onClick={() => setPhase("sent")} className="text-[10px] bg-primary text-primary-foreground font-semibold px-3 py-1.5 rounded cursor-pointer hover:bg-primary/90 transition-colors">Send</button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function CalendarFeature() {
+  const [chatVisible, setChatVisible] = useState(false);
+  const [eventVisible, setEventVisible] = useState(false);
+  const [confirmVisible, setConfirmVisible] = useState(false);
+
+  useEffect(() => {
+    const run = () => {
+      setChatVisible(false); setEventVisible(false); setConfirmVisible(false);
+      const t1 = setTimeout(() => setChatVisible(true), 500);
+      const t2 = setTimeout(() => setEventVisible(true), 1300);
+      const t3 = setTimeout(() => setConfirmVisible(true), 2100);
+      const t4 = setTimeout(run, 4500);
+      return [t1, t2, t3, t4];
+    };
+    const ts = run();
+    return () => ts.forEach(clearTimeout);
+  }, []);
+
+  const days = ["Mon", "Tue", "Wed", "Thu", "Fri"];
+
+  return (
+    <div className="flex flex-col h-full gap-4">
+      <div>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-teal-600 font-heading flex items-center gap-1.5 mb-2"><RiCalendarEventLine className="size-3" />Calendar Orchestration</p>
+        <h3 className="font-serif text-foreground text-xl leading-snug mb-1">Schedule in plain English.</h3>
+        <p className="text-xs text-muted-foreground leading-relaxed">Describe it, AI finds the slot, you confirm.</p>
+      </div>
+      <div className="bg-background border border-border rounded-xl overflow-hidden flex flex-col divide-y divide-border">
+        {chatVisible && (
+          <div className="px-4 py-3 flex items-start gap-2.5 animate-in fade-in slide-in-from-top-1 duration-200">
+            <div className="size-6 rounded-full bg-teal-500/10 border border-teal-500/20 flex items-center justify-center shrink-0 mt-0.5">
+              <RiSparkling2Fill className="size-3 text-teal-600" />
+            </div>
+            <div className="bg-secondary rounded-xl px-3 py-2">
+              <p className="text-[11px] text-foreground/80">Found a slot — Wed Jun 18, 2:00 PM. Scheduling 30-min call with Sarah.</p>
+            </div>
+          </div>
+        )}
+        <div className="p-3">
+          <div className="grid gap-1.5" style={{ gridTemplateColumns: "repeat(5,1fr)" }}>
+            {days.map((d) => <div key={d} className="text-center text-[9px] font-semibold text-muted-foreground/60 pb-1">{d}</div>)}
+            {days.map((_, di) => (
+              <div key={di} className="h-14 border border-border rounded-lg relative overflow-hidden bg-background">
+                {di === 2 && eventVisible && (
+                  <div className="absolute inset-1 rounded bg-teal-500/15 border border-teal-500/30 flex flex-col items-center justify-center animate-in zoom-in-95 fade-in duration-300">
+                    <p className="text-[8px] font-bold text-teal-700 leading-tight text-center">Call w/ Sarah</p>
+                    <p className="text-[7px] text-teal-600/70">2:00 PM</p>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+        {confirmVisible && (
+          <div className="px-4 py-3 flex items-center justify-between animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <span className="text-[10px] text-muted-foreground/60">Wed Jun 18 · 2:00 PM · 30 min</span>
+            <button type="button" className="text-[10px] bg-primary text-primary-foreground font-semibold px-3 py-1.5 rounded cursor-pointer hover:bg-primary/90 transition-colors">Confirm</button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function MCPAgentFeature() {
+  const steps = [
+    { type: "user", text: "Draft a reply to Sarah and schedule a review call this week." },
+    { type: "tool", text: 'list_emails({ query: "Sarah Q3 deck" })' },
+    { type: "tool", text: 'check_calendar({ range: "this week" })' },
+    { type: "tool", text: 'create_draft({ to: "sarah@acme.com", ... })' },
+    { type: "ai",   text: "Draft ready for review. Call booked Wed 2 PM — confirm to send invite." },
+  ];
+  const [shown, setShown] = useState(1);
+
+  useEffect(() => {
+    let t: ReturnType<typeof setTimeout>;
+    if (shown < steps.length) {
+      t = setTimeout(() => setShown(s => s + 1), 850);
+    } else {
+      t = setTimeout(() => setShown(1), 2800);
+    }
+    return () => clearTimeout(t);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shown]);
+
+  return (
+    <div className="flex flex-col h-full gap-4">
+      <div>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-teal-600 font-heading flex items-center gap-1.5 mb-2"><RiSparkling2Fill className="size-3" />MCP-powered AI Agent</p>
+        <h3 className="font-serif text-foreground text-xl leading-snug mb-1">Multi-step. One prompt.</h3>
+        <p className="text-xs text-muted-foreground leading-relaxed">OpenAI Agents SDK + Corsair MCP running in sequence.</p>
+      </div>
+      <div className="bg-background border border-border rounded-xl flex-1 flex flex-col gap-2.5 p-3 overflow-hidden">
+        {steps.slice(0, shown).map((s, i) => (
+          <div key={i} className={`flex gap-2 animate-in fade-in slide-in-from-bottom-1 duration-200 ${s.type === "user" ? "justify-end" : "justify-start"}`}>
+            {s.type === "tool" ? (
+              <div className="bg-amber-500/8 border border-amber-500/20 rounded-lg px-3 py-2 max-w-[90%]">
+                <p className="text-[10px] font-mono text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
+                  <span className="size-1.5 rounded-full bg-amber-500 shrink-0" />{s.text}
+                </p>
+              </div>
+            ) : s.type === "user" ? (
+              <div className="bg-primary text-primary-foreground rounded-2xl rounded-tr-sm px-3 py-2 max-w-[85%]">
+                <p className="text-[11px] leading-relaxed">{s.text}</p>
+              </div>
+            ) : (
+              <div className="flex items-start gap-2 max-w-[85%]">
+                <div className="size-6 rounded-full bg-teal-500/10 border border-teal-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                  <RiSparkling2Fill className="size-3 text-teal-600" />
+                </div>
+                <div className="bg-secondary rounded-2xl rounded-tl-sm px-3 py-2">
+                  <p className="text-[11px] text-foreground/80 leading-relaxed">{s.text}</p>
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 function FeatureGrid() {
-  const features = [
-    { icon: RiSearch2Line,       title: "Full-text search",   desc: "Find any email by sender, subject, keyword, or date range. Results appear instantly across your entire history." },
-    { icon: RiTimeLine,          title: "Real-time inbox",    desc: "Your inbox reflects the live state of Gmail. No manual refresh, no missed messages, no stale data." },
-    { icon: RiKeyboardLine,      title: "Keyboard-first",     desc: "Navigate, compose, archive, and schedule without reaching for the mouse. Built for people who prefer speed." },
-    { icon: RiSendPlaneLine,     title: "Direct send",        desc: "Compose and send through your own Gmail account. Recipients see mail from your real address." },
-    { icon: RiCalendarEventLine, title: "Meeting management", desc: "Create, edit, and cancel events. Send invites, check availability, and block time in seconds." },
-    { icon: RiSparkling2Fill,    title: "AI assistant",       desc: "Summarize threads, schedule meetings, draft replies, and triage your inbox in plain language." },
-  ];
   return (
     <section className="bg-secondary/30 py-32 px-6 border-t border-border">
       <div className="max-w-7xl mx-auto">
         <div className="mb-16 max-w-lg">
-          <h2 className="font-serif text-foreground text-3xl sm:text-[40px] tracking-tight leading-tight mb-4">Everything in one place.</h2>
-          <p className="text-base text-muted-foreground leading-relaxed">Tsunagu covers the full range of what you do in email and calendar, without the overhead of managing multiple apps.</p>
+          <h2 className="font-serif text-foreground text-3xl sm:text-[40px] tracking-tight leading-tight mb-4">Built different, on purpose.</h2>
+          <p className="text-base text-muted-foreground leading-relaxed">Every feature in Tsunagu is designed around one idea: the AI handles the grunt work, you make the calls.</p>
         </div>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-px rounded-2xl overflow-hidden border border-border bg-border">
-          {features.map(({ icon: Icon, title, desc }) => (
-            <SpotlightCard key={title} className="bg-card p-8 transition-colors hover:bg-secondary/30">
-              <div className="relative z-10 size-9 rounded-lg bg-secondary border border-border flex items-center justify-center mb-5 group-hover:border-[#8b5cf6]/30 transition-colors">
-                <Icon className="size-4 text-muted-foreground group-hover:text-foreground transition-colors" />
-              </div>
-              <h3 className="relative z-10 font-serif text-foreground text-lg mb-2">{title}</h3>
-              <p className="relative z-10 text-sm text-muted-foreground leading-relaxed">{desc}</p>
-            </SpotlightCard>
-          ))}
+        <div className="grid lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2 bg-card border border-border rounded-2xl p-6 min-h-[360px] flex flex-col"><SearchFeature /></div>
+          <div className="bg-card border border-border rounded-2xl p-6 min-h-[360px] flex flex-col"><WebhookFeature /></div>
+          <div className="bg-card border border-border rounded-2xl p-6 min-h-[360px] flex flex-col"><KeyboardFeature /></div>
+          <div className="lg:col-span-2 bg-card border border-border rounded-2xl p-6 min-h-[360px] flex flex-col"><ZeroTrustFeature /></div>
+          <div className="bg-card border border-border rounded-2xl p-6 min-h-[360px] flex flex-col"><CalendarFeature /></div>
+          <div className="lg:col-span-2 bg-card border border-border rounded-2xl p-6 min-h-[360px] flex flex-col"><MCPAgentFeature /></div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Section 8b: AI Workflow Animation ──────────────────────────────────────
+
+function AIWorkflow() {
+  const [activeStep, setActiveStep] = useState(0);
+
+  const steps = [
+    { label: "You type a request",     detail: "\"Schedule a follow-up with Sarah for next Tuesday at 10am\"",  color: "bg-teal-500/15 border-teal-500/30 text-teal-700 dark:text-teal-300" },
+    { label: "AI reads your calendar", detail: "Checks availability, finds conflicts, resolves attendees",        color: "bg-blue-500/15 border-blue-500/30 text-blue-700 dark:text-blue-300" },
+    { label: "Draft appears for review", detail: "Event card shows all details — you can edit any field",         color: "bg-amber-500/15 border-amber-500/30 text-amber-700 dark:text-amber-300" },
+    { label: "You confirm",            detail: "One click. Event created, invite sent through Google Calendar",    color: "bg-emerald-500/15 border-emerald-500/30 text-emerald-700 dark:text-emerald-300" },
+  ];
+
+  useEffect(() => {
+    const t = setInterval(() => setActiveStep((s) => (s + 1) % steps.length), 2200);
+    return () => clearInterval(t);
+  }, [steps.length]);
+
+  return (
+    <section className="bg-background py-32 px-6 border-t border-border">
+      <div className="max-w-7xl mx-auto">
+        <div className="max-w-2xl mx-auto text-center mb-16">
+          <div className="inline-flex items-center gap-1.5 mb-6 text-[10px] font-bold uppercase tracking-[0.12em] text-teal-600 font-heading">
+            <RiSparkling2Fill className="size-3" />
+            AI Agent Flow
+          </div>
+          <h2 className="font-serif text-foreground text-3xl sm:text-[40px] tracking-tight leading-tight mb-5">
+            The AI does the work. You stay in control.
+          </h2>
+          <p className="text-base text-muted-foreground leading-relaxed">
+            Every action goes through a preview step. You see exactly what the AI plans to do before it happens — and you decide if it does.
+          </p>
+        </div>
+
+        <div className="max-w-2xl mx-auto">
+          <div className="flex flex-col gap-3">
+            {steps.map((step, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => setActiveStep(i)}
+                className={`w-full text-left flex items-start gap-4 px-6 py-5 rounded-2xl border transition-all duration-300 cursor-pointer ${
+                  i === activeStep
+                    ? `${step.color} shadow-sm scale-[1.01]`
+                    : "bg-card border-border hover:border-foreground/20"
+                }`}
+              >
+                <div className={`size-7 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0 mt-0.5 ${
+                  i === activeStep ? "bg-foreground/10" : "bg-secondary"
+                }`}>
+                  {i + 1}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className={`text-sm font-semibold mb-0.5 ${i === activeStep ? "" : "text-foreground/70"}`}>{step.label}</p>
+                  <p className={`text-[12px] leading-relaxed ${i === activeStep ? "opacity-80" : "text-muted-foreground/50"}`}>{step.detail}</p>
+                </div>
+                {i === activeStep && (
+                  <div className="size-2 rounded-full bg-current opacity-60 shrink-0 mt-2.5 animate-pulse" />
+                )}
+              </button>
+            ))}
+          </div>
+
+          <p className="text-center text-[11px] text-muted-foreground/50 mt-6 font-medium">
+            Works for emails too — draft, review, send. The same human-in-the-loop flow.
+          </p>
         </div>
       </div>
     </section>
@@ -934,47 +1373,72 @@ function FeatureGrid() {
 
 // ─── Section 9: Testimonials ─────────────────────────────────────────────────
 
+const TESTIMONIALS_COL1 = [
+  { name: "Maria G.",      role: "Founder",              initial: "M", color: AV_VIOLET,  quote: "I used to start every morning triaging 80 emails across two apps. Tsunagu collapsed that into one focused session that takes half the time." },
+  { name: "James T.",      role: "Executive Recruiter",  initial: "J", color: AV_EMERALD, quote: "The AI drafts are genuinely good. They match my tone well enough that I send most of them without editing." },
+  { name: "Priya N.",      role: "Operations Lead",      initial: "P", color: AV_ORANGE,  quote: "Having email and calendar in one place sounds like a small thing. But the lost context from switching apps was adding up more than I realized." },
+  { name: "David K.",      role: "Product Manager",      initial: "D", color: AV_NEUTRAL, quote: "The command palette alone saved me. I used to hunt through Gmail filters for stuff I needed fast. Now it's just ⌘K and done." },
+  { name: "Rachel S.",     role: "Startup CEO",          initial: "R", color: AV_PINK,    quote: "Tsunagu actually understands context. When I ask it to schedule a follow-up, it checks my calendar and picks a time that makes sense." },
+];
+
+const TESTIMONIALS_COL2 = [
+  { name: "Ananya M.",     role: "Growth Lead",          initial: "A", color: AV_EMERALD, quote: "Real-time sync means my inbox is never stale. Events update the moment a meeting gets rescheduled — no manual refresh, no missed changes." },
+  { name: "Tom B.",        role: "Freelance Consultant",  initial: "T", color: AV_VIOLET,  quote: "Client emails used to live in my inbox and their calendar invites lived somewhere else. Tsunagu put them in the same view and it changed how I work." },
+  { name: "Sunita R.",     role: "Engineering Manager",  initial: "S", color: AV_ORANGE,  quote: "The zero-trust draft model is what won me over. Nothing sends without my explicit approval. I can actually trust the AI in my workflow." },
+  { name: "Chris L.",      role: "Investor",             initial: "C", color: AV_NEUTRAL, quote: "I get 200+ emails a day. Tsunagu's priority inbox surfaces what actually needs a reply. Everything else waits until I choose to look." },
+  { name: "Nina F.",       role: "UX Designer",          initial: "N", color: AV_PINK,    quote: "Keyboard-first design made me a convert. Tab, arrow, Enter — I handle my entire morning email routine without touching the mouse." },
+];
+
+const TESTIMONIALS_COL3 = [
+  { name: "Rajan P.",      role: "BD Manager",           initial: "R", color: AV_ORANGE,  quote: "AI scheduling is something I didn't know I needed. I describe the meeting in plain English and it finds a slot, drafts the invite, and waits for me to hit confirm." },
+  { name: "Sophie W.",     role: "COO",                  initial: "S", color: AV_EMERALD, quote: "We evaluated four email clients for our team. Tsunagu was the only one that connected Gmail and Calendar in a way that felt native, not bolted on." },
+  { name: "Marcus H.",     role: "SaaS Founder",         initial: "M", color: AV_VIOLET,  quote: "I can search emails and events from one bar. That sounds obvious but no other tool does it well. Tsunagu gets it exactly right." },
+  { name: "Leila A.",      role: "Chief of Staff",       initial: "L", color: AV_NEUTRAL, quote: "The AI reads the whole thread before drafting. It doesn't just reply to the last message — it considers the whole conversation. That context matters." },
+  { name: "Kevin T.",      role: "Head of Sales",        initial: "K", color: AV_PINK,    quote: "I was skeptical about another AI email tool. But Tsunagu actually delivers on the promise. Fewer tabs, less context switching, more focus." },
+];
+
+function TestimonialCard({ name, role, initial, color, quote }: { name: string; role: string; initial: string; color: string; quote: string }) {
+  return (
+    <div className="bg-card border border-border rounded-2xl p-5 flex flex-col gap-4 shadow-[0_4px_20px_-8px_rgba(33,30,26,0.12)]">
+      <p className="text-sm text-foreground/80 leading-relaxed">&ldquo;{quote}&rdquo;</p>
+      <div className="flex items-center gap-2.5 pt-1 border-t border-border">
+        <div className={`size-8 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0 ${color}`}>{initial}</div>
+        <div>
+          <p className="text-xs font-semibold text-foreground/80">{name}</p>
+          <p className="text-[11px] text-muted-foreground">{role}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TestimonialColumn({ items, direction }: { items: typeof TESTIMONIALS_COL1; direction: "up" | "down" }) {
+  const doubled = [...items, ...items];
+  const cls = direction === "up" ? "animate-marquee-up" : "animate-marquee-down";
+  return (
+    <div className="overflow-hidden h-[600px]">
+      <div className={`flex flex-col gap-4 ${cls}`}>
+        {doubled.map((t, i) => (
+          <TestimonialCard key={i} {...t} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function Testimonials() {
   return (
     <section className="bg-background py-32 px-6 border-t border-border">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-14">
+        <div className="mb-14 text-center">
           <h2 className="font-serif text-foreground text-3xl sm:text-[40px] tracking-tight leading-tight">From people who live in their inbox.</h2>
+          <p className="mt-4 text-base text-muted-foreground">Founders, operators, and recruiters who replaced three tools with one.</p>
         </div>
-        <div className="grid lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 bg-card border border-border rounded-2xl p-9 flex flex-col justify-between gap-10 hover:border-foreground/15 transition-colors shadow-[0_20px_50px_-30px_rgba(33,30,26,0.18)]">
-            <p className="text-2xl sm:text-3xl font-serif italic text-foreground/85 leading-snug tracking-tight">
-              &ldquo;I used to start every morning triaging 80 emails across two apps. Tsunagu collapsed that into one focused session that takes half the time.&rdquo;
-            </p>
-            <div className="flex items-center gap-3">
-              <div className="size-9 rounded-full bg-secondary border border-border flex items-center justify-center text-xs font-bold text-muted-foreground">M</div>
-              <div>
-                <p className="text-sm font-semibold text-foreground/80">Maria G.</p>
-                <p className="text-xs text-muted-foreground">Founder</p>
-              </div>
-            </div>
-          </div>
-          <div className="flex flex-col gap-6">
-            <div className="flex-1 bg-card border border-border rounded-2xl p-7 flex flex-col justify-between gap-6 hover:border-foreground/15 transition-colors">
-              <p className="text-sm text-muted-foreground leading-relaxed">&ldquo;The AI drafts are genuinely good. They match my tone well enough that I send most of them without editing.&rdquo;</p>
-              <div className="flex items-center gap-3">
-                <div className="size-8 rounded-full bg-secondary border border-border flex items-center justify-center text-[11px] font-bold text-muted-foreground">J</div>
-                <div>
-                  <p className="text-xs font-semibold text-foreground/80">James T.</p>
-                  <p className="text-[10px] text-muted-foreground">Executive Recruiter</p>
-                </div>
-              </div>
-            </div>
-            <div className="flex-1 bg-card border border-border rounded-2xl p-7 flex flex-col justify-between gap-6 hover:border-foreground/15 transition-colors">
-              <p className="text-sm text-muted-foreground leading-relaxed">&ldquo;Having email and calendar in one place sounds like a small thing. But the lost context from switching between apps was adding up to more than I realized.&rdquo;</p>
-              <div className="flex items-center gap-3">
-                <div className="size-8 rounded-full bg-secondary border border-border flex items-center justify-center text-[11px] font-bold text-muted-foreground">P</div>
-                <div>
-                  <p className="text-xs font-semibold text-foreground/80">Priya N.</p>
-                  <p className="text-[10px] text-muted-foreground">Operations Lead</p>
-                </div>
-              </div>
-            </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 [mask-image:linear-gradient(to_bottom,transparent_0%,black_12%,black_88%,transparent_100%)]">
+          <TestimonialColumn items={TESTIMONIALS_COL1} direction="up" />
+          <TestimonialColumn items={TESTIMONIALS_COL2} direction="down" />
+          <div className="hidden lg:block">
+            <TestimonialColumn items={TESTIMONIALS_COL3} direction="up" />
           </div>
         </div>
       </div>
@@ -982,22 +1446,91 @@ function Testimonials() {
   );
 }
 
-// ─── Section 10: CTA Band ────────────────────────────────────────────────────
+// ─── Section 10: Pricing ─────────────────────────────────────────────────────
 
-function CTABand({ onSignIn }: { onSignIn: () => void }) {
+function Pricing({ onSignIn }: { onSignIn: () => void }) {
+  const plans = [
+    {
+      name: "Free",
+      price: "₹0",
+      period: "forever",
+      desc: "Everything you need to get started.",
+      features: ["Gmail + Calendar connected", "AI chat — 20 requests/day", "Email drafting + scheduling", "Command palette (⌘K)", "Keyboard shortcuts"],
+      cta: "Get started free",
+      highlight: false,
+    },
+    {
+      name: "Pro",
+      price: "₹499",
+      period: "per month",
+      desc: "For people who live in their inbox.",
+      features: ["Everything in Free", "Unlimited AI requests", "Priority inbox analysis", "Real-time webhook sync", "Bring your own OpenAI key"],
+      cta: "Start Pro free for 7 days",
+      highlight: true,
+    },
+    {
+      name: "Team",
+      price: "₹999",
+      period: "per user / month",
+      desc: "For teams that move fast together.",
+      features: ["Everything in Pro", "Shared AI conversation history", "Team calendar view", "Admin dashboard", "Priority support"],
+      cta: "Contact us",
+      highlight: false,
+    },
+  ];
+
   return (
     <section id="pricing" className="bg-secondary/30 py-32 px-6 border-t border-border">
-      <div className="max-w-3xl mx-auto">
-        <div className="bg-card border border-border rounded-3xl px-8 py-16 text-center shadow-[0_30px_80px_-40px_rgba(33,30,26,0.25)]">
-          <h2 className="font-serif text-foreground text-4xl sm:text-5xl tracking-tight leading-tight mb-5">Ready to reclaim your inbox?</h2>
-          <p className="text-base text-muted-foreground mb-10 max-w-md mx-auto leading-relaxed">
-            Connect Gmail and Google Calendar in under a minute. No configuration, no migration, no setup guides.
-          </p>
-          <button type="button" onClick={onSignIn} className="inline-flex items-center gap-2.5 bg-primary text-primary-foreground font-semibold text-sm px-8 py-4 rounded-xl hover:bg-primary/90 active:scale-[0.98] transition-all shadow-lg cursor-pointer">
-            <RiGoogleFill className="size-4" />
-            Get started free
-          </button>
-          <p className="text-[11px] text-muted-foreground/60 mt-4">No credit card required</p>
+      <div className="max-w-7xl mx-auto">
+        <div className="max-w-2xl mx-auto text-center mb-16">
+          <h2 className="font-serif text-foreground text-3xl sm:text-[40px] tracking-tight leading-tight mb-4">Simple, honest pricing.</h2>
+          <p className="text-base text-muted-foreground leading-relaxed">Start free. Upgrade when you need more AI. No hidden fees, no lock-in.</p>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          {plans.map((plan) => (
+            <div
+              key={plan.name}
+              className={`relative rounded-2xl p-8 flex flex-col gap-6 transition-all ${
+                plan.highlight
+                  ? "bg-foreground text-background shadow-[0_30px_80px_-20px_rgba(33,30,26,0.35)] scale-[1.03]"
+                  : "bg-card border border-border hover:border-foreground/20"
+              }`}
+            >
+              {plan.highlight && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-teal-600 text-white text-[10px] font-bold rounded-full uppercase tracking-widest font-heading">
+                  Most popular
+                </div>
+              )}
+              <div>
+                <p className={`text-[10px] font-bold uppercase tracking-widest font-heading mb-3 ${plan.highlight ? "text-background/60" : "text-muted-foreground/60"}`}>{plan.name}</p>
+                <div className="flex items-baseline gap-1.5 mb-1">
+                  <span className="font-serif text-4xl tracking-tight">{plan.price}</span>
+                  <span className={`text-xs ${plan.highlight ? "text-background/60" : "text-muted-foreground/60"}`}>/{plan.period}</span>
+                </div>
+                <p className={`text-sm ${plan.highlight ? "text-background/70" : "text-muted-foreground"}`}>{plan.desc}</p>
+              </div>
+              <ul className="flex flex-col gap-2.5 flex-1">
+                {plan.features.map((f) => (
+                  <li key={f} className={`flex items-start gap-2.5 text-sm ${plan.highlight ? "text-background/80" : "text-muted-foreground"}`}>
+                    <span className={`mt-[5px] size-1.5 rounded-full shrink-0 ${plan.highlight ? "bg-background/50" : "bg-muted-foreground/40"}`} />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <button
+                type="button"
+                onClick={onSignIn}
+                className={`w-full py-2.5 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
+                  plan.highlight
+                    ? "bg-background text-foreground hover:bg-background/90"
+                    : "bg-foreground text-background hover:bg-foreground/90"
+                }`}
+              >
+                {plan.cta}
+              </button>
+            </div>
+          ))}
         </div>
       </div>
     </section>
@@ -1073,8 +1606,9 @@ function PageContent() {
       <CommandPaletteSpot />
       <FeatureCalendar />
       <FeatureGrid />
+      <AIWorkflow />
       <Testimonials />
-      <CTABand onSignIn={handleSignIn} />
+      <Pricing onSignIn={handleSignIn} />
       <Footer />
     </div>
   );

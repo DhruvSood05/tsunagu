@@ -31,7 +31,7 @@ import {
 import { useResizablePanel } from "@/hooks/useResizablePanel";
 
 interface CalendarContentProps {
-  user: { name?: string | null; email?: string | null; image?: string | null } | null;
+  user: { id?: string; name?: string | null; email?: string | null; image?: string | null } | null;
   gmailConnected: boolean;
   calendarConnected: boolean;
 }
@@ -90,6 +90,29 @@ export default function CalendarContent({ user, gmailConnected, calendarConnecte
     max: 560,
     direction: "left",
   });
+
+  // ── Webhook-driven calendar refresh — poll every 30s ─────────────────────
+  useEffect(() => {
+    const userId = user?.id;
+    if (!userId) return;
+    let lastChecked = new Date().toISOString();
+
+    const interval = setInterval(async () => {
+      try {
+        const qs = new URLSearchParams({ userId, since: lastChecked });
+        const res = await fetch(`/api/webhooks/calendar?${qs}`);
+        const data = await res.json();
+        lastChecked = new Date().toISOString();
+        if (!data.hasUpdate) return;
+
+        const a = api();
+        if (a) await loadEvents(a.view.activeStart.toISOString(), a.view.activeEnd.toISOString());
+      } catch {
+        // silent
+      }
+    }, 30_000);
+    return () => clearInterval(interval);
+  }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Sync notes with selected event ────────────────────────────────────────
   useEffect(() => {

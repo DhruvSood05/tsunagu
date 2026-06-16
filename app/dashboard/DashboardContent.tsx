@@ -230,27 +230,37 @@ export default function DashboardContent({
     });
   }, [emails, isSearchMode]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Auto-refresh every 60s — silently updates page 1, non-search only
+  // Webhook-driven inbox refresh — poll every 30s, only re-fetch if Corsair signals a change
   useEffect(() => {
+    if (!session?.user?.id) return;
+    const userId = session.user.id;
+    let lastChecked = new Date().toISOString();
+
     const interval = setInterval(async () => {
       if (isSearchMode || pageIndex !== 0) return;
-      const activeCat = folder === "inbox" ? activeCategory : folder;
       try {
-        const qs = new URLSearchParams({ category: activeCat });
-        const res = await fetch(`/api/emails?${qs}`);
+        const qs = new URLSearchParams({ userId, since: lastChecked });
+        const res = await fetch(`/api/webhooks/gmail?${qs}`);
         const data = await res.json();
-        if (data.messages) {
+        lastChecked = new Date().toISOString();
+        if (!data.hasUpdate) return;
+
+        // New mail detected — silently refresh page 1
+        const activeCat = folder === "inbox" ? activeCategory : folder;
+        const emailRes = await fetch(`/api/emails?${new URLSearchParams({ category: activeCat })}`);
+        const emailData = await emailRes.json();
+        if (emailData.messages) {
           const key = cacheKey("inbox", "", undefined, activeCat);
-          pageCache.set(key, { messages: data.messages, nextPageToken: data.nextPageToken ?? null });
-          setEmails(data.messages);
-          if (data.nextPageToken !== undefined) setNextPageToken(data.nextPageToken ?? null);
+          pageCache.set(key, { messages: emailData.messages, nextPageToken: emailData.nextPageToken ?? null });
+          setEmails(emailData.messages);
+          if (emailData.nextPageToken !== undefined) setNextPageToken(emailData.nextPageToken ?? null);
         }
       } catch {
-        // silent — don't surface auto-refresh errors to the user
+        // silent
       }
-    }, 60_000);
+    }, 30_000);
     return () => clearInterval(interval);
-  }, [isSearchMode, pageIndex, folder, activeCategory]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [session?.user?.id, isSearchMode, pageIndex, folder, activeCategory]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Keyboard shortcuts — J/K navigate, E archive, R reply, C compose, Esc close
   useEffect(() => {
