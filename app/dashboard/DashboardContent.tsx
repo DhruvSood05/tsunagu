@@ -11,6 +11,7 @@ import Pagination from "@/components/email/Pagination";
 import SearchBar from "@/components/email/SearchBar";
 import CommandPalette from "@/components/layout/CommandPalette";
 import KeyboardShortcutsModal from "@/components/layout/KeyboardShortcutsModal";
+import ReconnectBanner from "@/components/layout/ReconnectBanner";
 import Sidebar from "@/components/layout/Sidebar";
 import TopNav from "@/components/layout/TopNav";
 import SettingsOverlay from "@/components/layout/SettingsOverlay";
@@ -66,6 +67,7 @@ export default function DashboardContent({
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const [replyKey, setReplyKey] = useState(0);
   const [emailPriorities, setEmailPriorities] = useState<Record<string, string>>({});
+  const [gmailExpired, setGmailExpired] = useState(false);
   const analyzedIds = useRef<Set<string>>(new Set());
 
   // Resizable split pane
@@ -131,19 +133,24 @@ export default function DashboardContent({
     }
 
     try {
+      let res: Response;
       let data: any;
       if (mode === "search" && query) {
         const qs = new URLSearchParams({ q: query });
         if (token) qs.set("pageToken", token);
-        const res = await fetch(`/api/search?${qs}`);
-        data = await res.json();
+        res = await fetch(`/api/search?${qs}`);
       } else {
         const qs = new URLSearchParams();
         if (token) qs.set("pageToken", token);
         qs.set("category", activeCat);
-        const res = await fetch(`/api/emails?${qs}`);
-        data = await res.json();
+        res = await fetch(`/api/emails?${qs}`);
       }
+      data = await res.json();
+      if (res.status === 401 && data?.error === "connection_expired") {
+        setGmailExpired(true);
+        return;
+      }
+      setGmailExpired(false);
       const messages = data.messages ?? [];
       const nextToken = data.nextPageToken ?? null;
       pageCache.set(key, { messages, nextPageToken: nextToken });
@@ -436,6 +443,8 @@ export default function DashboardContent({
           gmailConnected={gmailConnected}
           onOpenPalette={() => setShowPalette(true)}
         />
+
+        {gmailExpired && <ReconnectBanner plugin="gmail" />}
 
         {/* Outer card container with margin spacing */}
         <div ref={containerRef} className="flex-1 flex overflow-hidden p-4 pt-0 gap-4">

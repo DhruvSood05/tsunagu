@@ -24,7 +24,15 @@ export async function GET(request: NextRequest) {
     redirectUri: REDIRECT_URI,
   });
 
-  const response = NextResponse.redirect(url);
+  // Force account picker + consent screen so Google always issues a refresh
+  // token. URLSearchParams encodes spaces as '+' which Google's OAuth endpoint
+  // treats as a literal plus, not a space, causing it to ignore the prompt
+  // entirely and skip the consent screen. Use %20 to be RFC 3986 safe.
+  const oauthUrl = new URL(url);
+  oauthUrl.searchParams.delete("prompt");
+  const finalUrl = oauthUrl.toString() + "&prompt=select_account%20consent";
+
+  const response = NextResponse.redirect(finalUrl);
   response.cookies.set("corsair_oauth_state", state, {
     httpOnly: true,
     sameSite: "lax",

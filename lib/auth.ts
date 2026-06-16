@@ -18,7 +18,10 @@ export const auth = betterAuth({
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    },
+      // Force the Google account picker on every sign-in so users on shared
+      // browsers or with multiple Google accounts always pick explicitly.
+      prompt: "select_account",
+    } as any,
   },
   plugins: [nextCookies()],
 });

@@ -12,6 +12,7 @@ import type {
 } from "@fullcalendar/core";
 import type { EventResizeDoneArg } from "@fullcalendar/interaction";
 
+import ReconnectBanner from "@/components/layout/ReconnectBanner";
 import Sidebar from "@/components/layout/Sidebar";
 import TopNav from "@/components/layout/TopNav";
 import SettingsOverlay from "@/components/layout/SettingsOverlay";
@@ -63,6 +64,8 @@ export default function CalendarContent({ user, gmailConnected, calendarConnecte
   const [deleting, setDeleting] = useState(false);
   const [notesValue, setNotesValue] = useState("");
   const [notesSaving, setNotesSaving] = useState(false);
+
+  const [calendarExpired, setCalendarExpired] = useState(false);
 
   // ── Create event dialog ────────────────────────────────────────────────────
   const [showCreate, setShowCreate] = useState(false);
@@ -154,6 +157,11 @@ export default function CalendarContent({ user, gmailConnected, calendarConnecte
       if (ids.length === 0) { setEvents([]); return; }
       const url = `/api/calendar/events?timeMin=${encodeURIComponent(min)}&timeMax=${encodeURIComponent(max)}&calendarIds=${encodeURIComponent(ids.join(","))}`;
       const res = await fetch(url);
+      if (res.status === 401) {
+        const data = await res.json();
+        if (data?.error === "connection_expired") { setCalendarExpired(true); return; }
+      }
+      setCalendarExpired(false);
       if (res.ok) setEvents((await res.json()).events ?? []);
     } finally {
       setLoading(false);
@@ -482,6 +490,8 @@ export default function CalendarContent({ user, gmailConnected, calendarConnecte
 
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         <TopNav user={user} gmailConnected={gmailConnected} />
+
+        {calendarExpired && <ReconnectBanner plugin="googlecalendar" />}
 
         <div className="flex-1 flex flex-col overflow-hidden p-4 pt-0 gap-4">
           <div className="bg-card border border-border/40 rounded-xl overflow-hidden shadow-xl flex flex-col flex-1">

@@ -4,6 +4,20 @@ import { getSessionCached } from "@/lib/session-cache";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 
+function isTokenError(err: any): boolean {
+  const msg = String(err?.message ?? "").toLowerCase();
+  const status = err?.status ?? err?.statusCode ?? 0;
+  return (
+    status === 401 ||
+    msg.includes("invalid_grant") ||
+    msg.includes("token expired") ||
+    msg.includes("token has been") ||
+    msg.includes("unauthorized") ||
+    msg.includes("unauthenticated") ||
+    msg.includes("401")
+  );
+}
+
 const CATEGORY_LABELS: Record<string, string[]> = {
   primary:    ["INBOX"],
   inbox:      ["INBOX"],
@@ -57,6 +71,12 @@ export async function GET(req: Request) {
     );
   } catch (err: any) {
     console.error("[api/emails]", err?.message ?? err);
+    if (isTokenError(err)) {
+      return NextResponse.json(
+        { error: "connection_expired", plugin: "gmail" },
+        { status: 401 },
+      );
+    }
     return NextResponse.json(
       { error: "Failed to fetch emails", messages: [], nextPageToken: null },
       { status: 500 },

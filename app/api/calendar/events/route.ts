@@ -3,6 +3,20 @@ import { getSessionCached } from "@/lib/session-cache";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 
+function isTokenError(err: any): boolean {
+  const msg = String(err?.message ?? "").toLowerCase();
+  const status = err?.status ?? err?.statusCode ?? 0;
+  return (
+    status === 401 ||
+    msg.includes("invalid_grant") ||
+    msg.includes("token expired") ||
+    msg.includes("token has been") ||
+    msg.includes("unauthorized") ||
+    msg.includes("unauthenticated") ||
+    msg.includes("401")
+  );
+}
+
 export async function GET(req: Request) {
   const session = await getSessionCached(await headers());
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -46,6 +60,9 @@ export async function GET(req: Request) {
     return NextResponse.json({ events: perCalendar.flat() });
   } catch (err: any) {
     console.error("[api/calendar/events GET]", err?.message ?? err);
+    if (isTokenError(err)) {
+      return NextResponse.json({ error: "connection_expired", plugin: "googlecalendar" }, { status: 401 });
+    }
     return NextResponse.json({ error: "Failed to fetch events", events: [] }, { status: 500 });
   }
 }
