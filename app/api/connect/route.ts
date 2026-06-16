@@ -12,7 +12,8 @@ export async function GET(request: NextRequest) {
   }
 
   const reqUrl = new URL(request.url);
-  const REDIRECT_URI = `${reqUrl.origin}/api/connect/callback`;
+  const baseUrl = process.env.BETTER_AUTH_URL ?? reqUrl.origin;
+  const REDIRECT_URI = `${baseUrl}/api/connect/callback`;
   const plugin = reqUrl.searchParams.get("plugin");
   if (!plugin) {
     return NextResponse.json({ error: "Missing ?plugin= param" }, { status: 400 });
