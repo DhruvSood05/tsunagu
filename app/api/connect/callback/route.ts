@@ -4,8 +4,8 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
   const reqUrl = new URL(request.url);
-  const REDIRECT_URI = `${reqUrl.origin}/api/connect/callback`;
-  const BASE = reqUrl.origin;
+  const BASE = (process.env.BETTER_AUTH_URL ?? reqUrl.origin).replace(/\/$/, "");
+  const REDIRECT_URI = `${BASE}/api/connect/callback`;
   const { searchParams } = reqUrl;
   const code = searchParams.get("code");
   const state = searchParams.get("state");
