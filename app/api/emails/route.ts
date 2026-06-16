@@ -67,7 +67,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json(
       { messages, nextPageToken: list.nextPageToken ?? null },
-      { headers: { "Cache-Control": "private, max-age=30, stale-while-revalidate=60" } },
+      { headers: { "Cache-Control": "no-store" } },
     );
   } catch (err: any) {
     console.error("[api/emails]", err?.message ?? err);
