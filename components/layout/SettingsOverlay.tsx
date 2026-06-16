@@ -14,6 +14,7 @@ import {
   RiRefreshLine,
   RiLoaderLine,
   RiRobot2Line,
+  RiLinkUnlinkM,
 } from "@remixicon/react";
 import { useEffect, useState } from "react";
 
@@ -47,6 +48,20 @@ export default function SettingsOverlay({
 
   // AI usage state
   const [aiUsage, setAiUsage] = useState<{ count: number; limit: number; unlimited: boolean; hasOwnKey: boolean } | null>(null);
+
+  const [disconnecting, setDisconnecting] = useState<"gmail" | "calendar" | null>(null);
+
+  const handleDisconnect = async (service: "gmail" | "calendar") => {
+    setDisconnecting(service);
+    try {
+      const endpoint = service === "gmail" ? "/api/gmail/disconnect" : "/api/calendar/disconnect";
+      await fetch(endpoint, { method: "POST" });
+      // Reload the page — dashboard/page.tsx will show the connect screen
+      window.location.href = "/dashboard";
+    } finally {
+      setDisconnecting(null);
+    }
+  };
 
 
   useEffect(() => {
@@ -252,43 +267,91 @@ export default function SettingsOverlay({
             <h3 className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest font-heading">Integrations</h3>
             <div className="space-y-2.5">
               {/* Gmail Connection */}
-              <div className="flex items-center justify-between p-3 border border-border/45 rounded-lg bg-background">
-                <div className="flex items-center gap-3">
-                  <div className="size-8 rounded bg-[#ea4335]/10 flex items-center justify-center text-[#ea4335]">
-                    <RiGoogleFill className="size-4" />
+              <div className="p-3 border border-border/45 rounded-lg bg-background space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="size-8 rounded bg-[#ea4335]/10 flex items-center justify-center text-[#ea4335]">
+                      <RiGoogleFill className="size-4" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-foreground">Gmail Inbox</p>
+                      <p className="text-[10px] text-muted-foreground">Manage messages and replies</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-xs font-bold text-foreground">Gmail Inbox</p>
-                    <p className="text-[10px] text-muted-foreground">Manage messages and replies</p>
-                  </div>
+                  <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider uppercase border ${
+                    gmailConnected
+                      ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
+                      : "bg-muted text-muted-foreground border-border/40"
+                  }`}>
+                    {gmailConnected ? "Active" : "Not connected"}
+                  </span>
                 </div>
-                <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider uppercase border ${
-                  gmailConnected
-                    ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
-                    : "bg-muted text-muted-foreground border-border/40"
-                }`}>
-                  {gmailConnected ? "Active" : "Linked"}
-                </span>
+                {gmailConnected ? (
+                  <button
+                    onClick={() => handleDisconnect("gmail")}
+                    disabled={disconnecting === "gmail"}
+                    className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 text-[10px] font-semibold text-rose-500 hover:text-rose-600 bg-rose-500/5 hover:bg-rose-500/10 border border-rose-500/20 rounded-md transition-all disabled:opacity-50 cursor-pointer disabled:cursor-default"
+                  >
+                    {disconnecting === "gmail" ? (
+                      <RiLoaderLine className="size-3 animate-spin" />
+                    ) : (
+                      <RiLinkUnlinkM className="size-3" />
+                    )}
+                    {disconnecting === "gmail" ? "Disconnecting…" : "Disconnect Gmail"}
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => { window.location.href = "/api/connect?plugin=gmail"; }}
+                    className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 text-[10px] font-semibold text-foreground bg-secondary/40 hover:bg-secondary/80 border border-border/30 rounded-md transition-all cursor-pointer"
+                  >
+                    <RiGoogleFill className="size-3" />
+                    Connect Gmail
+                  </button>
+                )}
               </div>
 
               {/* Google Calendar Connection */}
-              <div className="flex items-center justify-between p-3 border border-border/45 rounded-lg bg-background">
-                <div className="flex items-center gap-3">
-                  <div className="size-8 rounded bg-[#4285f4]/10 flex items-center justify-center text-[#4285f4]">
-                    <RiCalendarLine className="size-4" />
+              <div className="p-3 border border-border/45 rounded-lg bg-background space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="size-8 rounded bg-[#4285f4]/10 flex items-center justify-center text-[#4285f4]">
+                      <RiCalendarLine className="size-4" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-foreground">Google Calendar</p>
+                      <p className="text-[10px] text-muted-foreground">Sync meetings and schedules</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-xs font-bold text-foreground">Google Calendar</p>
-                    <p className="text-[10px] text-muted-foreground">Sync meetings and schedules</p>
-                  </div>
+                  <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider uppercase border ${
+                    calendarConnected
+                      ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
+                      : "bg-muted text-muted-foreground border-border/40"
+                  }`}>
+                    {calendarConnected ? "Active" : "Not connected"}
+                  </span>
                 </div>
-                <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider uppercase border ${
-                  calendarConnected
-                    ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
-                    : "bg-muted text-muted-foreground border-border/40"
-                }`}>
-                  {calendarConnected ? "Active" : "Linked"}
-                </span>
+                {calendarConnected ? (
+                  <button
+                    onClick={() => handleDisconnect("calendar")}
+                    disabled={disconnecting === "calendar"}
+                    className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 text-[10px] font-semibold text-rose-500 hover:text-rose-600 bg-rose-500/5 hover:bg-rose-500/10 border border-rose-500/20 rounded-md transition-all disabled:opacity-50 cursor-pointer disabled:cursor-default"
+                  >
+                    {disconnecting === "calendar" ? (
+                      <RiLoaderLine className="size-3 animate-spin" />
+                    ) : (
+                      <RiLinkUnlinkM className="size-3" />
+                    )}
+                    {disconnecting === "calendar" ? "Disconnecting…" : "Disconnect Calendar"}
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => { window.location.href = "/api/connect?plugin=googlecalendar"; }}
+                    className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 text-[10px] font-semibold text-foreground bg-secondary/40 hover:bg-secondary/80 border border-border/30 rounded-md transition-all cursor-pointer"
+                  >
+                    <RiCalendarLine className="size-3" />
+                    Connect Calendar
+                  </button>
+                )}
               </div>
             </div>
           </div>

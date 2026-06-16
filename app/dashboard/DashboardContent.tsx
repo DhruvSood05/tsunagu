@@ -25,11 +25,12 @@ interface FetchOptions {
   category?: Category | string;
 }
 
-// Module-level cache — survives re-renders and page navigation within the session
+// Module-level cache — survives re-renders and page navigation within the session.
+// Keyed by userId so different accounts in the same browser never share entries.
 const pageCache = new Map<string, { messages: any[]; nextPageToken: string | null }>();
 
-function cacheKey(mode: Mode, token: string, query?: string, category?: string) {
-  return `${mode}:${category ?? "inbox"}:${token}:${query ?? ""}`;
+function cacheKey(userId: string, mode: Mode, token: string, query?: string, category?: string) {
+  return `${userId}:${mode}:${category ?? "inbox"}:${token}:${query ?? ""}`;
 }
 
 export default function DashboardContent({
@@ -113,11 +114,12 @@ export default function DashboardContent({
   };
 
   const fetchPage = async ({ token, mode, query, category }: FetchOptions) => {
+    const userId = session?.user?.id ?? "";
     setError(null);
     setSelectedEmail(null);
 
     const activeCat = category || (folder === "inbox" ? activeCategory : folder);
-    const key = cacheKey(mode, token, query, activeCat);
+    const key = cacheKey(userId, mode, token, query, activeCat);
     const cached = pageCache.get(key);
     if (cached) {
       setEmails(cached.messages);
@@ -153,6 +155,12 @@ export default function DashboardContent({
       setLoading(false);
     }
   };
+
+  // Clear the page cache when the logged-in user changes so a different account
+  // never sees a previous account's cached emails.
+  useEffect(() => {
+    pageCache.clear();
+  }, [session?.user?.id]);
 
   // Load user tour preference on mount
   useEffect(() => {
@@ -250,7 +258,7 @@ export default function DashboardContent({
         const emailRes = await fetch(`/api/emails?${new URLSearchParams({ category: activeCat })}`);
         const emailData = await emailRes.json();
         if (emailData.messages) {
-          const key = cacheKey("inbox", "", undefined, activeCat);
+          const key = cacheKey(userId, "inbox", "", undefined, activeCat);
           pageCache.set(key, { messages: emailData.messages, nextPageToken: emailData.nextPageToken ?? null });
           setEmails(emailData.messages);
           if (emailData.nextPageToken !== undefined) setNextPageToken(emailData.nextPageToken ?? null);
