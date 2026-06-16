@@ -14,21 +14,6 @@ const CATEGORY_LABELS: Record<string, string[]> = {
   starred:    ["STARRED"],
 };
 
-// Run at most CONCURRENCY fetches at a time so 100 simultaneous users
-// don't fan out 2 000 connections to googleapis.com at once.
-const CONCURRENCY = 5;
-
-async function fetchInBatches<T>(
-  items: any[],
-  fn: (item: any) => Promise<T>,
-): Promise<PromiseSettledResult<T>[]> {
-  const results: PromiseSettledResult<T>[] = [];
-  for (let i = 0; i < items.length; i += CONCURRENCY) {
-    const batch = await Promise.allSettled(items.slice(i, i + CONCURRENCY).map(fn));
-    results.push(...batch);
-  }
-  return results;
-}
 
 export async function GET(req: Request) {
   const session = await getSessionCached(await headers());
@@ -56,18 +41,20 @@ export async function GET(req: Request) {
 
     const list = await tenant.gmail.api.messages.list(queryParams);
 
-    const results = await fetchInBatches(list.messages ?? [], (m) =>
-      tenant.gmail.api.messages.get({ id: m.id!, format: "metadata" }),
+    const results = await Promise.allSettled(
+      (list.messages ?? []).map((m: any) =>
+        tenant.gmail.api.messages.get({ id: m.id!, format: "metadata" }),
+      ),
     );
 
     const messages = results
-      .filter((r) => r.status === "fulfilled")
-      .map((r) => (r as PromiseFulfilledResult<any>).value);
+      .filter((r: any) => r.status === "fulfilled")
+      .map((r: any) => r.value);
 
-    return NextResponse.json({
-      messages,
-      nextPageToken: list.nextPageToken ?? null,
-    });
+    return NextResponse.json(
+      { messages, nextPageToken: list.nextPageToken ?? null },
+      { headers: { "Cache-Control": "private, max-age=30, stale-while-revalidate=60" } },
+    );
   } catch (err: any) {
     console.error("[api/emails]", err?.message ?? err);
     return NextResponse.json(
