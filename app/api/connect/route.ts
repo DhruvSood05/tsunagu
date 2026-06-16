@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
   }
 
   const reqUrl = new URL(request.url);
-  const baseUrl = process.env.BETTER_AUTH_URL ?? reqUrl.origin;
+  const baseUrl = (process.env.BETTER_AUTH_URL ?? reqUrl.origin).replace(/\/$/, "");
   const REDIRECT_URI = `${baseUrl}/api/connect/callback`;
   const plugin = reqUrl.searchParams.get("plugin");
   if (!plugin) {
