@@ -1,0 +1,493 @@
+"use client";
+
+import { useEffect, useState, useCallback } from "react";
+import Sidebar from "@/components/layout/Sidebar";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  RiUserLine,
+  RiMailLine,
+  RiCalendarLine,
+  RiSparkling2Line,
+  RiAddLine,
+  RiEditLine,
+  RiDeleteBinLine,
+  RiShieldLine,
+  RiLoader4Line,
+  RiCheckLine,
+  RiInfinityLine,
+  RiBarChartLine,
+  RiTimeLine,
+} from "@remixicon/react";
+
+interface Stats {
+  totalUsers: number;
+  aiRequestsToday: number;
+  aiRequestsThisMonth: number;
+  gmailConnected: number;
+  calendarConnected: number;
+}
+
+interface UserRow {
+  id: string;
+  name: string;
+  email: string;
+  image?: string | null;
+  createdAt: string;
+  gmailConnected: boolean;
+  calendarConnected: boolean;
+  aiToday: number;
+  aiThisMonth: number;
+  aiDailyLimit: number | null;
+  effectiveLimit: number;
+  lastActive: string | null;
+}
+
+function Avatar({ name, image }: { name: string; image?: string | null }) {
+  const [err, setErr] = useState(false);
+  const initials = name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2) || "?";
+  if (image && !err) {
+    return (
+      <img src={image} alt={initials} referrerPolicy="no-referrer" onError={() => setErr(true)}
+        className="size-8 rounded-full object-cover border border-border/40" />
+    );
+  }
+  return (
+    <div className="size-8 rounded-full bg-secondary flex items-center justify-center border border-border/40 shrink-0">
+      <span className="text-[10px] font-bold text-foreground">{initials}</span>
+    </div>
+  );
+}
+
+function StatCard({ icon: Icon, label, value, sub }: { icon: any; label: string; value: string | number; sub?: string }) {
+  return (
+    <div className="bg-card border border-border/50 rounded-xl p-5 flex flex-col gap-3">
+      <div className="flex items-center justify-between">
+        <p className="text-[10px] font-bold tracking-widest text-muted-foreground/60 uppercase font-heading">{label}</p>
+        <div className="size-8 rounded-lg bg-secondary/60 flex items-center justify-center">
+          <Icon className="size-4 text-muted-foreground" />
+        </div>
+      </div>
+      <div>
+        <p className="text-3xl font-bold text-foreground font-heading tracking-tight">{value}</p>
+        {sub && <p className="text-[11px] text-muted-foreground/60 mt-1">{sub}</p>}
+      </div>
+    </div>
+  );
+}
+
+function LimitBadge({ limit }: { limit: number }) {
+  if (limit === -1) {
+    return (
+      <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
+        <RiInfinityLine className="size-3" /> Unlimited
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-secondary text-muted-foreground border border-border/40">
+      {limit}/day
+    </span>
+  );
+}
+
+function timeAgo(iso: string | null): string {
+  if (!iso) return "Never";
+  const diff = Date.now() - new Date(iso).getTime();
+  const d = Math.floor(diff / 86400000);
+  const h = Math.floor(diff / 3600000);
+  const m = Math.floor(diff / 60000);
+  if (d > 0) return `${d}d ago`;
+  if (h > 0) return `${h}h ago`;
+  if (m > 0) return `${m}m ago`;
+  return "Just now";
+}
+
+export default function AdminContent({ currentUser }: { currentUser: { name?: string | null; email?: string | null; image?: string | null } }) {
+  const [stats, setStats] = useState<Stats | null>(null);
+  const [users, setUsers] = useState<UserRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+
+  // Edit limit dialog
+  const [editUser, setEditUser] = useState<UserRow | null>(null);
+  const [editLimit, setEditLimit] = useState<string>("10");
+  const [editSaving, setEditSaving] = useState(false);
+  const [editSuccess, setEditSuccess] = useState(false);
+
+  // Add user dialog
+  const [showAdd, setShowAdd] = useState(false);
+  const [addName, setAddName] = useState("");
+  const [addEmail, setAddEmail] = useState("");
+  const [addLimit, setAddLimit] = useState("10");
+  const [addSaving, setAddSaving] = useState(false);
+  const [addError, setAddError] = useState("");
+
+  // Delete confirm dialog
+  const [deleteUser, setDeleteUser] = useState<UserRow | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    const [s, u] = await Promise.all([
+      fetch("/api/admin/stats").then((r) => r.json()),
+      fetch("/api/admin/users").then((r) => r.json()),
+    ]);
+    setStats(s);
+    setUsers(Array.isArray(u) ? u : []);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const filteredUsers = users.filter(
+    (u) =>
+      u.name.toLowerCase().includes(search.toLowerCase()) ||
+      u.email.toLowerCase().includes(search.toLowerCase()),
+  );
+
+  const openEdit = (u: UserRow) => {
+    setEditUser(u);
+    setEditLimit(u.effectiveLimit === -1 ? "-1" : String(u.effectiveLimit));
+    setEditSuccess(false);
+  };
+
+  const saveLimit = async () => {
+    if (!editUser) return;
+    setEditSaving(true);
+    const aiDailyLimit = editLimit === "-1" ? -1 : parseInt(editLimit, 10);
+    await fetch(`/api/admin/users/${editUser.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ aiDailyLimit }),
+    });
+    setEditSaving(false);
+    setEditSuccess(true);
+    await load();
+    setTimeout(() => { setEditUser(null); setEditSuccess(false); }, 800);
+  };
+
+  const addUser = async () => {
+    setAddSaving(true);
+    setAddError("");
+    const aiDailyLimit = addLimit === "-1" ? -1 : parseInt(addLimit, 10);
+    const res = await fetch("/api/admin/users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: addName, email: addEmail, aiDailyLimit }),
+    });
+    if (!res.ok) {
+      const d = await res.json();
+      setAddError(d.error ?? "Failed");
+    } else {
+      setShowAdd(false);
+      setAddName(""); setAddEmail(""); setAddLimit("10");
+      await load();
+    }
+    setAddSaving(false);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteUser) return;
+    setDeleting(true);
+    await fetch(`/api/admin/users/${deleteUser.id}`, { method: "DELETE" });
+    setDeleting(false);
+    setDeleteUser(null);
+    await load();
+  };
+
+  return (
+    <div className="flex h-screen overflow-hidden bg-background font-sans">
+      <Sidebar user={currentUser} />
+
+      <main className="flex-1 flex flex-col overflow-hidden">
+        {/* Header */}
+        <div className="h-16 px-7 flex items-center justify-between border-b border-border/40 bg-card/60 backdrop-blur-sm shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="size-7 rounded-lg bg-primary flex items-center justify-center">
+              <RiShieldLine className="size-4 text-primary-foreground" />
+            </div>
+            <div>
+              <h1 className="text-sm font-bold text-foreground font-heading tracking-tight">Admin Dashboard</h1>
+              <p className="text-[10px] text-muted-foreground/60">Manage users and analytics</p>
+            </div>
+          </div>
+          <Button
+            size="sm"
+            onClick={() => setShowAdd(true)}
+            className="gap-1.5 h-8 text-xs font-semibold rounded-lg cursor-pointer"
+          >
+            <RiAddLine className="size-3.5" />
+            Add User
+          </Button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-7 space-y-7">
+          {/* Stats Grid */}
+          {loading ? (
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="bg-card border border-border/50 rounded-xl p-5 h-28 animate-pulse" />
+              ))}
+            </div>
+          ) : stats ? (
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <StatCard icon={RiUserLine} label="Total Users" value={stats.totalUsers} sub="Registered accounts" />
+              <StatCard icon={RiSparkling2Line} label="AI Today" value={stats.aiRequestsToday} sub="Requests across all users" />
+              <StatCard icon={RiBarChartLine} label="AI This Month" value={stats.aiRequestsThisMonth} sub="Total monthly usage" />
+              <StatCard icon={RiMailLine} label="Gmail / Calendar"
+                value={`${stats.gmailConnected} / ${stats.calendarConnected}`}
+                sub="Connected integrations" />
+            </div>
+          ) : null}
+
+          {/* Users Table */}
+          <div className="bg-card border border-border/50 rounded-xl overflow-hidden">
+            <div className="px-6 py-4 border-b border-border/40 flex items-center justify-between gap-4">
+              <h2 className="text-sm font-bold text-foreground font-heading">Users</h2>
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by name or email…"
+                className="h-8 w-64 text-xs bg-secondary/40 border border-border/40 rounded-lg px-3 outline-none focus:border-foreground/30 text-foreground placeholder:text-muted-foreground/50 transition-colors"
+              />
+            </div>
+
+            {loading ? (
+              <div className="divide-y divide-border/20">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="px-6 py-4 flex items-center gap-4 animate-pulse">
+                    <div className="size-8 rounded-full bg-secondary" />
+                    <div className="flex-1 space-y-1.5">
+                      <div className="h-3 w-32 bg-secondary rounded" />
+                      <div className="h-2.5 w-48 bg-secondary/60 rounded" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : filteredUsers.length === 0 ? (
+              <div className="px-6 py-12 text-center text-xs text-muted-foreground/50">No users found.</div>
+            ) : (
+              <div className="divide-y divide-border/20">
+                {/* Table header */}
+                <div className="px-6 py-2.5 grid grid-cols-[1fr_80px_80px_90px_100px_100px_80px] gap-4 items-center">
+                  {["User", "Gmail", "Calendar", "AI Today", "AI Month", "Rate Limit", "Actions"].map((h) => (
+                    <p key={h} className="text-[9px] font-bold tracking-widest text-muted-foreground/50 uppercase font-heading">{h}</p>
+                  ))}
+                </div>
+
+                {filteredUsers.map((u) => (
+                  <div key={u.id} className="px-6 py-3.5 grid grid-cols-[1fr_80px_80px_90px_100px_100px_80px] gap-4 items-center hover:bg-secondary/20 transition-colors group">
+                    {/* User */}
+                    <div className="flex items-center gap-3 min-w-0">
+                      <Avatar name={u.name} image={u.image} />
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold text-foreground truncate">{u.name}</p>
+                        <p className="text-[10px] text-muted-foreground/60 truncate font-mono">{u.email}</p>
+                        <p className="text-[9px] text-muted-foreground/40 mt-0.5 flex items-center gap-1">
+                          <RiTimeLine className="size-2.5 shrink-0" />
+                          {timeAgo(u.lastActive)}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Gmail */}
+                    <div>
+                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${u.gmailConnected ? "bg-blue-500/10 text-blue-600 border-blue-500/20" : "bg-secondary text-muted-foreground/40 border-border/40"}`}>
+                        {u.gmailConnected ? "✓" : "—"}
+                      </span>
+                    </div>
+
+                    {/* Calendar */}
+                    <div>
+                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${u.calendarConnected ? "bg-purple-500/10 text-purple-600 border-purple-500/20" : "bg-secondary text-muted-foreground/40 border-border/40"}`}>
+                        {u.calendarConnected ? "✓" : "—"}
+                      </span>
+                    </div>
+
+                    {/* AI Today */}
+                    <div>
+                      <p className="text-xs font-semibold text-foreground">
+                        {u.aiToday}
+                        {u.effectiveLimit !== -1 && (
+                          <span className="text-muted-foreground/50 font-normal">/{u.effectiveLimit}</span>
+                        )}
+                      </p>
+                      {u.effectiveLimit !== -1 && (
+                        <div className="mt-1 h-1 w-14 rounded-full bg-secondary overflow-hidden">
+                          <div
+                            className="h-full rounded-full bg-foreground/60 transition-all"
+                            style={{ width: `${Math.min(100, (u.aiToday / u.effectiveLimit) * 100)}%` }}
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* AI Month */}
+                    <p className="text-xs text-foreground font-semibold">{u.aiThisMonth}</p>
+
+                    {/* Rate Limit */}
+                    <LimitBadge limit={u.effectiveLimit} />
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={() => openEdit(u)}
+                        className="size-7 rounded-md flex items-center justify-center hover:bg-secondary border border-transparent hover:border-border/40 transition-all cursor-pointer"
+                        title="Edit rate limit"
+                      >
+                        <RiEditLine className="size-3.5 text-muted-foreground" />
+                      </button>
+                      <button
+                        onClick={() => setDeleteUser(u)}
+                        className="size-7 rounded-md flex items-center justify-center hover:bg-destructive/10 border border-transparent hover:border-destructive/20 transition-all cursor-pointer"
+                        title="Delete user"
+                      >
+                        <RiDeleteBinLine className="size-3.5 text-muted-foreground hover:text-destructive" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </main>
+
+      {/* Edit Limit Dialog */}
+      <Dialog open={!!editUser} onOpenChange={(o) => { if (!o) setEditUser(null); }}>
+        <DialogContent className="max-w-sm" aria-describedby={undefined}>
+          <DialogHeader>
+            <DialogTitle>Set Rate Limit</DialogTitle>
+          </DialogHeader>
+          {editUser && (
+            <div className="space-y-4 py-1">
+              <div className="flex items-center gap-3 p-3 bg-secondary/40 rounded-lg border border-border/40">
+                <Avatar name={editUser.name} image={editUser.image} />
+                <div>
+                  <p className="text-xs font-semibold text-foreground">{editUser.name}</p>
+                  <p className="text-[10px] text-muted-foreground/60 font-mono">{editUser.email}</p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <p className="text-[10px] font-bold tracking-widest text-muted-foreground/60 uppercase font-heading">Daily AI Request Limit</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {[["5", "5/day"], ["10", "10/day"], ["25", "25/day"], ["50", "50/day"], ["100", "100/day"], ["-1", "Unlimited"]].map(([val, label]) => (
+                    <button
+                      key={val}
+                      onClick={() => setEditLimit(val)}
+                      className={`h-9 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${editLimit === val ? "bg-primary text-primary-foreground border-primary" : "bg-secondary/40 text-muted-foreground border-border/40 hover:border-foreground/30 hover:text-foreground"}`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-muted-foreground/60">Custom:</span>
+                  <input
+                    type="number"
+                    value={editLimit}
+                    onChange={(e) => setEditLimit(e.target.value)}
+                    min={-1}
+                    className="flex-1 h-8 text-xs bg-secondary/40 border border-border/40 rounded-lg px-3 outline-none focus:border-foreground/30 text-foreground transition-colors"
+                    placeholder="-1 for unlimited"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => setEditUser(null)} className="cursor-pointer">Cancel</Button>
+            <Button size="sm" onClick={saveLimit} disabled={editSaving || editSuccess} className="gap-1.5 cursor-pointer">
+              {editSuccess ? <><RiCheckLine className="size-3.5" /> Saved</> : editSaving ? <><RiLoader4Line className="size-3.5 animate-spin" /> Saving…</> : "Save Limit"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add User Dialog */}
+      <Dialog open={showAdd} onOpenChange={(o) => { if (!o) { setShowAdd(false); setAddError(""); } }}>
+        <DialogContent className="max-w-sm" aria-describedby={undefined}>
+          <DialogHeader>
+            <DialogTitle>Add User</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-1">
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold tracking-widest text-muted-foreground/60 uppercase font-heading">Full Name</label>
+              <input
+                value={addName}
+                onChange={(e) => setAddName(e.target.value)}
+                placeholder="Jane Doe"
+                className="w-full h-9 text-xs bg-secondary/40 border border-border/40 rounded-lg px-3 outline-none focus:border-foreground/30 text-foreground placeholder:text-muted-foreground/40 transition-colors"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold tracking-widest text-muted-foreground/60 uppercase font-heading">Email Address</label>
+              <input
+                type="email"
+                value={addEmail}
+                onChange={(e) => setAddEmail(e.target.value)}
+                placeholder="jane@example.com"
+                className="w-full h-9 text-xs bg-secondary/40 border border-border/40 rounded-lg px-3 outline-none focus:border-foreground/30 text-foreground placeholder:text-muted-foreground/40 transition-colors"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold tracking-widest text-muted-foreground/60 uppercase font-heading">Daily AI Limit</label>
+              <div className="grid grid-cols-3 gap-2">
+                {[["10", "10/day"], ["25", "25/day"], ["-1", "Unlimited"]].map(([val, label]) => (
+                  <button
+                    key={val}
+                    onClick={() => setAddLimit(val)}
+                    className={`h-8 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${addLimit === val ? "bg-primary text-primary-foreground border-primary" : "bg-secondary/40 text-muted-foreground border-border/40 hover:border-foreground/30 hover:text-foreground"}`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              <input
+                type="number"
+                value={addLimit}
+                onChange={(e) => setAddLimit(e.target.value)}
+                min={-1}
+                className="w-full h-9 text-xs bg-secondary/40 border border-border/40 rounded-lg px-3 outline-none focus:border-foreground/30 text-foreground transition-colors"
+                placeholder="-1 for unlimited"
+              />
+            </div>
+            {addError && <p className="text-xs text-destructive font-medium">{addError}</p>}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => { setShowAdd(false); setAddError(""); }} className="cursor-pointer">Cancel</Button>
+            <Button size="sm" onClick={addUser} disabled={addSaving || !addName.trim() || !addEmail.trim()} className="gap-1.5 cursor-pointer">
+              {addSaving ? <><RiLoader4Line className="size-3.5 animate-spin" /> Adding…</> : <><RiAddLine className="size-3.5" /> Add User</>}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirm Dialog */}
+      <Dialog open={!!deleteUser} onOpenChange={(o) => { if (!o) setDeleteUser(null); }}>
+        <DialogContent className="max-w-sm" aria-describedby={undefined}>
+          <DialogHeader>
+            <DialogTitle>Delete User</DialogTitle>
+          </DialogHeader>
+          <p className="text-xs text-muted-foreground py-1">
+            This will permanently delete <span className="font-semibold text-foreground">{deleteUser?.name}</span> and all their data. This cannot be undone.
+          </p>
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => setDeleteUser(null)} className="cursor-pointer">Cancel</Button>
+            <Button variant="destructive" size="sm" onClick={confirmDelete} disabled={deleting} className="gap-1.5 cursor-pointer">
+              {deleting ? <><RiLoader4Line className="size-3.5 animate-spin" /> Deleting…</> : <><RiDeleteBinLine className="size-3.5" /> Delete</>}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

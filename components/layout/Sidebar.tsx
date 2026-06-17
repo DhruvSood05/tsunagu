@@ -14,7 +14,10 @@ import {
   RiCalendarLine,
   RiLogoutBoxLine,
   RiAddLine,
+  RiShieldLine,
 } from "@remixicon/react";
+
+const ADMIN_EMAIL = "dhruvsood1102@gmail.com";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
@@ -33,6 +36,7 @@ export default function Sidebar({
   user,
   onCompose,
 }: SidebarProps) {
+  const isAdmin = user?.email === ADMIN_EMAIL;
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -161,7 +165,7 @@ export default function Sidebar({
             href="/dashboard/ai"
             className={`relative flex items-center gap-2.5 px-2.5 py-2 text-[13px] rounded-lg transition-all duration-150 ${
               pathname === "/dashboard/ai"
-                ? "bg-card text-foreground font-semibold shadow-sm border border-[#8b5cf6]/25 before:absolute before:-left-px before:top-1/2 before:-translate-y-1/2 before:h-5 before:w-[3px] before:rounded-full before:bg-[#8b5cf6]"
+                ? "bg-card text-foreground font-semibold shadow-sm border border-[#8b5cf6]/25 before:absolute before:-left-px before:top-1/2 before:-translate-y-1/2 before:h-5 before:w-0.75 before:rounded-full before:bg-[#8b5cf6]"
                 : "text-muted-foreground hover:text-foreground hover:bg-card/60"
             }`}
           >
@@ -171,6 +175,28 @@ export default function Sidebar({
             <span>AI Assistant</span>
           </Link>
         </div>
+
+        {/* Admin Section — only visible to admin */}
+        {isAdmin && (
+          <div className="space-y-1">
+            <p className="px-2.5 py-1 text-[9px] font-bold tracking-widest text-muted-foreground/60 uppercase font-heading">
+              Admin
+            </p>
+            <Link
+              href="/dashboard/admin"
+              className={`relative flex items-center gap-2.5 px-2.5 py-2 text-[13px] rounded-lg transition-all duration-150 ${
+                pathname === "/dashboard/admin"
+                  ? "bg-card text-foreground font-semibold shadow-sm border border-border/60 before:absolute before:-left-px before:top-1/2 before:-translate-y-1/2 before:h-5 before:w-0.75 before:rounded-full before:bg-foreground"
+                  : "text-muted-foreground hover:text-foreground hover:bg-card/60"
+              }`}
+            >
+              <RiShieldLine
+                className={`size-4 shrink-0 ${pathname === "/dashboard/admin" ? "text-foreground" : "text-muted-foreground"}`}
+              />
+              <span>Dashboard</span>
+            </Link>
+          </div>
+        )}
       </div>
 
       {/* Footer: Settings · Log out · Theme */}

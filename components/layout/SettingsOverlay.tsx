@@ -199,7 +199,7 @@ export default function SettingsOverlay({
 
                     {aiUsage.count >= aiUsage.limit && (
                       <p className="text-[10px] text-muted-foreground leading-relaxed bg-rose-500/5 border border-rose-500/10 rounded-md px-3 py-2">
-                        You've reached your daily limit. Requests reset at midnight UTC.
+                        You've reached your daily limit. Requests reset at midnight IST.
                       </p>
                     )}
                   </>

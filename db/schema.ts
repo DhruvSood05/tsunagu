@@ -161,6 +161,8 @@ export const userPreferences = pgTable("user_preferences", {
     .references(() => user.id, { onDelete: "cascade" }),
   hasSeenTour: boolean("has_seen_tour").notNull().default(false),
   openaiApiKey: text("openai_api_key"),
+  // null = use global default (FREE_TIER_LIMIT), -1 = unlimited, N = custom daily cap
+  aiDailyLimit: integer("ai_daily_limit"),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
