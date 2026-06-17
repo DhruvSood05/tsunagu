@@ -421,13 +421,19 @@ export default function DashboardContent({
         {gmailExpired && <ReconnectBanner plugin="gmail" />}
 
         {/* Seamless workspace — single card, no gap between panes */}
-        <div ref={containerRef} className="flex-1 flex overflow-hidden p-4 pt-0">
+        <div ref={containerRef} className="flex-1 flex overflow-hidden p-2 md:p-4 pt-0">
           <div className="flex-1 flex min-w-0 bg-card border border-border/40 rounded-xl shadow-xl overflow-hidden">
 
-            {/* Email list pane */}
+            {/* Email list pane — hidden on mobile when detail is open */}
             <div
               ref={listPaneRef}
-              className={`flex flex-col shrink-0 relative z-20 overflow-hidden ${hasDetail ? "border-r border-border/40" : "flex-1"} ${dragging ? "" : "transition-[width] duration-200"}`}
+              className={`flex flex-col shrink-0 relative z-20 overflow-hidden
+                ${hasDetail
+                  ? "hidden md:flex border-r border-border/40"
+                  : "flex-1"
+                }
+                ${dragging ? "" : "transition-[width] duration-200"}
+              `}
               style={hasDetail ? (listWidth !== null ? { width: `${listWidth}px` } : { width: "42%" }) : {}}
             >
               {/* Card header — folder title + count */}
@@ -490,11 +496,11 @@ export default function DashboardContent({
               )}
             </div>
 
-            {/* Resize drag handle — sits flush inside the card */}
+            {/* Resize drag handle — desktop only */}
             {hasDetail && (
               <div
                 onMouseDown={handleDragStart}
-                className="w-1.5 shrink-0 cursor-col-resize hover:bg-primary/10 active:bg-primary/20 transition-colors duration-150 flex items-center justify-center group z-30"
+                className="hidden md:flex w-1.5 shrink-0 cursor-col-resize hover:bg-primary/10 active:bg-primary/20 transition-colors duration-150 items-center justify-center group z-30"
                 title="Drag to resize"
               >
                 <div className="w-px h-8 rounded-full bg-border/70 group-hover:bg-primary/50 transition-colors" />
@@ -504,6 +510,15 @@ export default function DashboardContent({
             {/* Email Reading Detail Pane */}
             {hasDetail && (
               <div className="flex-1 min-w-0 overflow-hidden flex flex-col">
+                {/* Mobile: back button to return to list */}
+                <div className="md:hidden flex items-center gap-2 px-4 py-2.5 border-b border-border/40 shrink-0 bg-card/60">
+                  <button
+                    onClick={() => setSelectedEmail(null)}
+                    className="flex items-center gap-1.5 text-[13px] font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                  >
+                    ← Back to inbox
+                  </button>
+                </div>
                 {detailLoading ? (
                   <div className="p-8 space-y-6 flex-1 flex flex-col">
                     <div className="flex gap-4 items-start shrink-0">

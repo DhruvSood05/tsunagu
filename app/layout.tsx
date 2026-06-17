@@ -1,22 +1,25 @@
 import type { Metadata } from "next";
-import { Inter, Space_Grotesk } from "next/font/google";
+import { Inter, Outfit } from "next/font/google";
+import { GeistSans } from "geist/font/sans";
 import { ThemeProvider } from "@/lib/theme/ThemeProvider";
 import "./globals.css";
 
-const inter = Inter({
-  variable: "--font-sans",
-  subsets: ["latin"],
-});
-
-const spaceGrotesk = Space_Grotesk({
-  variable: "--font-display",
+const outfit = Outfit({
+  variable: "--font-outfit",
   subsets: ["latin"],
   weight: ["600", "700"],
 });
 
+const interEmail = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+  weight: ["400", "500"],
+});
+
 export const metadata: Metadata = {
   title: "Tsunagu | Premium AI-Powered Email Workspace",
-  description: "Seamlessly manage your Gmail messages, generate AI drafts, and organize calendar schedules in a high-end minimalist productivity workspace.",
+  description:
+    "Seamlessly manage your Gmail messages, generate AI drafts, and organize calendar schedules in a high-end minimalist productivity workspace.",
 };
 
 export default function RootLayout({
@@ -27,10 +30,10 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${spaceGrotesk.variable} h-full antialiased`}
+      className={`${GeistSans.variable} ${outfit.variable} ${interEmail.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col bg-background text-foreground transition-colors duration-200">
+      <body className="min-h-full flex flex-col bg-background text-foreground transition-colors duration-200 font-sans">
         <ThemeProvider defaultTheme="dark" storageKey="tsunagu-theme">
           {children}
         </ThemeProvider>

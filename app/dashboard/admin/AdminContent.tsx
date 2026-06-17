@@ -311,7 +311,7 @@ export default function AdminContent({ currentUser }: { currentUser: { name?: st
           </Button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        <div className="flex-1 overflow-y-auto p-3 md:p-6 space-y-6">
 
           {/* ── Stat Cards ── */}
           {loading ? (
@@ -535,7 +535,8 @@ export default function AdminContent({ currentUser }: { currentUser: { name?: st
             ) : filteredUsers.length === 0 ? (
               <div className="px-6 py-12 text-center text-xs text-muted-foreground/50">No users found.</div>
             ) : (
-              <div className="divide-y divide-border/20">
+              <div className="overflow-x-auto">
+              <div className="min-w-180 divide-y divide-border/20">
                 {/* Table header */}
                 <div className="px-6 py-2.5 grid grid-cols-[1fr_80px_80px_110px_100px_100px_80px] gap-4 items-center bg-secondary/20">
                   {["User", "Gmail", "Calendar", "AI Today", "AI Month", "Rate Limit", "Actions"].map((h) => (
@@ -618,6 +619,7 @@ export default function AdminContent({ currentUser }: { currentUser: { name?: st
                     </div>
                   </div>
                 ))}
+              </div>
               </div>
             )}
           </div>

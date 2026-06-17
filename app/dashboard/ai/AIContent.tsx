@@ -50,7 +50,11 @@ export default function AIContent({ user, gmailConnected, calendarConnected }: A
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  // Default closed on mobile — desktop gets it open
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  useEffect(() => {
+    setSidebarOpen(window.innerWidth >= 768);
+  }, []);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -299,7 +303,7 @@ export default function AIContent({ user, gmailConnected, calendarConnected }: A
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         <TopNav user={user} gmailConnected={gmailConnected} />
 
-        <div className="flex-1 flex overflow-hidden p-4 pt-0 gap-4">
+        <div className="flex-1 flex overflow-hidden p-2 md:p-4 pt-0 gap-2 md:gap-4">
 
           {/* Session History Sidebar */}
           {sidebarOpen && (

@@ -7,32 +7,48 @@ import { useTheme } from "@/lib/theme/ThemeProvider";
 import Link from "next/link";
 import TsunaguLogo from "@/components/ui/TsunaguLogo";
 import {
-  RiGoogleFill,
-  RiArrowRightLine,
-  RiMailLine,
-  RiCalendarLine,
-  RiSparkling2Fill,
-  RiSearch2Line,
-  RiKeyboardLine,
-  RiTimeLine,
-  RiInboxLine,
-  RiCalendarEventLine,
-  RiSendPlaneLine,
-  RiSunLine,
-  RiMoonLine,
-} from "@remixicon/react";
+  ArrowRight,
+  Mail,
+  Calendar,
+  Sparkles,
+  Search,
+  Keyboard,
+  Inbox,
+  CalendarDays,
+  Send,
+  Sun,
+  Moon,
+} from "lucide-react";
 
-// ─── Warm editorial design language ───────────────────────────────────────────
-// Canvas: warm paper (--background)  Cards: white (--card)
-// Headlines: Instrument Serif (font-sans)  Labels: clean sans (font-heading)
-// Accent: teal #14b8a6 — reserved for AI moments only
-//
-// Avatar pastels (tuned for light surfaces)
-const AV_VIOLET  = "bg-violet-500/12 text-violet-600 dark:bg-violet-500/18 dark:text-violet-400";
-const AV_EMERALD = "bg-emerald-500/12 text-emerald-600 dark:bg-emerald-500/18 dark:text-emerald-400";
-const AV_ORANGE  = "bg-orange-500/12 text-orange-600 dark:bg-orange-500/18 dark:text-orange-400";
-const AV_PINK    = "bg-pink-500/12 text-pink-600 dark:bg-pink-500/18 dark:text-pink-400";
-const AV_NEUTRAL = "bg-secondary text-muted-foreground";
+function GoogleIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        fill="currentColor"
+        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+      />
+      <path
+        fill="currentColor"
+        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+      />
+      <path
+        fill="currentColor"
+        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+      />
+      <path
+        fill="currentColor"
+        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+      />
+    </svg>
+  );
+}
+
+// ─── Japanese Ink — warm muted avatars (no rainbow AI pastels) ───────────────
+const AV_A = "bg-foreground/[0.06] text-foreground/75 border border-border/50";
+const AV_B = "bg-foreground/[0.09] text-foreground/80 border border-border/60";
+const AV_C = "bg-secondary text-muted-foreground border border-border/40";
+const AV_D = "bg-foreground/[0.04] text-foreground/65 border border-border/40";
+const AV_NEUTRAL = "bg-secondary text-muted-foreground border border-border/40";
 
 // ─── Typewriter ───────────────────────────────────────────────────────────────
 
@@ -87,10 +103,10 @@ function DashboardMockup() {
   const [activeRow, setActiveRow] = useState(0);
 
   const emails = [
-    { from: "Sarah Chen",  subj: "Q3 investor update deck",  av: "SC", c: AV_VIOLET,  time: "9:41 AM",   addr: "sarah@acme.com",     unread: true,  body: ["Hi — attached are the revised slides with updated financial projections and the go-to-market narrative. Key changes on slides 8 and 12 address the concerns raised last quarter.", "Let me know if you want to hop on a call before Thursday's board presentation. I'm free 2–4 PM."] },
-    { from: "Marcus Reed", subj: "Re: Partnership proposal", av: "MR", c: AV_EMERALD, time: "8:15 AM",   addr: "marcus@ventures.co", unread: true,  body: ["Thanks for sending the proposal. The terms look reasonable overall.", "Two things worth discussing: the exclusivity clause and the revenue share model. Are you free this week?"] },
-    { from: "Alex Kim",    subj: "Quick sync tomorrow?",     av: "AK", c: AV_ORANGE,  time: "Yesterday", addr: "alex@studio.io",     unread: false, body: ["Do you have 20 minutes to sync tomorrow? I want to walk through the updated design before we present to the client.", "Happy to jump on a call around 2 PM if that works."] },
-    { from: "Design team", subj: "Figma comments on v3",    av: "DT", c: AV_PINK,    time: "Mon",       addr: "design@company.io",  unread: false, body: ["Left a few comments on the v3 mockups in Figma. Nothing major — mostly spacing adjustments on the dashboard header.", "Let me know when you're ready to review."] },
+    { from: "Sarah Chen",  subj: "Q3 investor update deck",  av: "SC", c: AV_A,  time: "9:41 AM",   addr: "sarah@acme.com",     unread: true,  body: ["Hi — attached are the revised slides with updated financial projections and the go-to-market narrative. Key changes on slides 8 and 12 address the concerns raised last quarter.", "Let me know if you want to hop on a call before Thursday's board presentation. I'm free 2–4 PM."] },
+    { from: "Marcus Reed", subj: "Re: Partnership proposal", av: "MR", c: AV_B, time: "8:15 AM",   addr: "marcus@ventures.co", unread: true,  body: ["Thanks for sending the proposal. The terms look reasonable overall.", "Two things worth discussing: the exclusivity clause and the revenue share model. Are you free this week?"] },
+    { from: "Alex Kim",    subj: "Quick sync tomorrow?",     av: "AK", c: AV_C,  time: "Yesterday", addr: "alex@studio.io",     unread: false, body: ["Do you have 20 minutes to sync tomorrow? I want to walk through the updated design before we present to the client.", "Happy to jump on a call around 2 PM if that works."] },
+    { from: "Design team", subj: "Figma comments on v3",    av: "DT", c: AV_D,    time: "Mon",       addr: "design@company.io",  unread: false, body: ["Left a few comments on the v3 mockups in Figma. Nothing major — mostly spacing adjustments on the dashboard header.", "Let me know when you're ready to review."] },
   ];
 
   const active = emails[activeRow];
@@ -128,9 +144,9 @@ function DashboardMockup() {
             </div>
           ))}
           <div className="mt-auto pt-3 border-t border-border">
-            <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-primary/8 border border-primary/20">
-              <RiSparkling2Fill className="size-3.5 text-primary shrink-0" />
-              <span className="text-[12px] font-medium text-primary">AI Assistant</span>
+            <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-ai-muted border border-ai">
+              <Sparkles className="size-3.5 text-ai shrink-0" strokeWidth={1.75} />
+              <span className="text-[12px] font-medium text-ai">AI Assistant</span>
             </div>
           </div>
         </div>
@@ -178,12 +194,12 @@ function DashboardMockup() {
             ))}
           </div>
           <div className="px-6 py-3.5 border-t border-border shrink-0">
-            <div className="flex items-center gap-2.5 bg-primary/8 border border-primary/25 rounded-xl px-4 py-3">
-              <RiSparkling2Fill className="size-4 text-primary shrink-0" />
+            <div className="flex items-center gap-2.5 bg-ai-muted border border-ai rounded-xl px-4 py-3">
+              <Sparkles className="size-4 text-ai shrink-0" strokeWidth={1.75} />
               <Typewriter
                 phrases={["Draft a reply with AI…", "Summarize this thread…", "Schedule a follow-up…"]}
-                className="text-[12px] text-primary/80"
-                caretClassName="text-primary"
+                className="text-[12px] text-ai/90"
+                caretClassName="text-ai"
               />
             </div>
           </div>
@@ -198,10 +214,10 @@ function EmailListMockup() {
   const [readIds, setReadIds] = useState<Set<number>>(new Set());
 
   const emails = [
-    { from: "Sarah Chen",  subj: "Q3 investor update deck",  snippet: "I have attached the revised slides...",  time: "9:41 AM",   unread: true,  c: AV_VIOLET },
-    { from: "Marcus Reed", subj: "Re: Partnership proposal", snippet: "Thanks for sending this over...",          time: "8:15 AM",   unread: true,  c: AV_EMERALD },
+    { from: "Sarah Chen",  subj: "Q3 investor update deck",  snippet: "I have attached the revised slides...",  time: "9:41 AM",   unread: true,  c: AV_A },
+    { from: "Marcus Reed", subj: "Re: Partnership proposal", snippet: "Thanks for sending this over...",          time: "8:15 AM",   unread: true,  c: AV_B },
     { from: "Notion",      subj: "Your workspace summary",   snippet: "Here are highlights from this week...",   time: "Yesterday", unread: false, c: AV_NEUTRAL },
-    { from: "Alex Kim",    subj: "Quick sync tomorrow?",     snippet: "Hey, do you have 20 minutes to...",       time: "Yesterday", unread: false, c: AV_ORANGE },
+    { from: "Alex Kim",    subj: "Quick sync tomorrow?",     snippet: "Hey, do you have 20 minutes to...",       time: "Yesterday", unread: false, c: AV_C },
     { from: "GitHub",      subj: "New security advisory",    snippet: "A vulnerability has been reported...",    time: "Mon",       unread: false, c: AV_NEUTRAL },
   ];
 
@@ -243,7 +259,7 @@ function EmailListMockup() {
                 <p className={`text-[11px] truncate ${!isRead ? "font-medium text-foreground/80" : "text-muted-foreground/60"}`}>{e.subj}</p>
                 <p className="text-[10px] text-muted-foreground/50 truncate mt-0.5">{e.snippet}</p>
               </div>
-              {!isRead && <div className="size-1.5 rounded-full bg-blue-500 shrink-0" />}
+              {!isRead && <div className="size-1.5 rounded-full bg-primary shrink-0" />}
             </button>
           );
         })}
@@ -290,7 +306,7 @@ function AIDraftMockup() {
       <div className="bg-card border border-border rounded-2xl overflow-hidden flex items-center justify-center shadow-[0_30px_70px_-30px_rgba(0,0,0,0.22)] dark:shadow-[0_30px_70px_-30px_rgba(0,0,0,0.60)]" style={{ minHeight: 268 }}>
         <div className="text-center py-10">
           <div className="size-10 rounded-full bg-emerald-500/12 border border-emerald-500/25 flex items-center justify-center mx-auto mb-3">
-            <RiSendPlaneLine className="size-4 text-emerald-600" />
+            <Send className="size-4 text-emerald-600" strokeWidth={1.75} />
           </div>
           <p className="text-sm font-semibold text-foreground/80">Message sent</p>
           <p className="text-[10px] text-muted-foreground/60 mt-1">Delivered via Gmail</p>
@@ -303,8 +319,8 @@ function AIDraftMockup() {
     <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-[0_30px_70px_-30px_rgba(0,0,0,0.22)] dark:shadow-[0_30px_70px_-30px_rgba(0,0,0,0.60)]">
       <div className="px-4 py-3 border-b border-border flex items-center justify-between">
         <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground">New Message</span>
-        <span className="text-[10px] text-blue-600 dark:text-blue-400 bg-blue-500/10 border border-blue-500/25 px-2.5 py-0.5 rounded-full font-medium flex items-center gap-1.5">
-          <RiSparkling2Fill className="size-2.5" />
+        <span className="text-[10px] text-ai bg-ai-muted border border-ai px-2.5 py-0.5 rounded-full font-medium flex items-center gap-1.5">
+          <Sparkles className="size-2.5" strokeWidth={1.75} />
           AI Draft{draftIdx > 0 ? ` v${draftIdx + 1}` : ""}
         </span>
       </div>
@@ -345,11 +361,11 @@ function CalendarMockup() {
   const days = ["Mon 16", "Tue 17", "Wed 18", "Thu 19", "Fri 20"];
   const times = ["9 AM", "10 AM", "11 AM", "12 PM", "1 PM"];
   const events = [
-    { day: 0, start: 1, len: 1, title: "1:1 Sarah",     c: "bg-violet-500/15 border-violet-500/30 text-violet-700 dark:text-violet-300", time: "10:00 AM", info: "Zoom · 30 min" },
-    { day: 1, start: 0, len: 2, title: "Investor call", c: "bg-blue-500/15 border-blue-500/30 text-blue-700 dark:text-blue-300",        time: "9:00 AM",  info: "Google Meet · Marcus Reed" },
-    { day: 2, start: 2, len: 1, title: "Design review", c: "bg-emerald-500/15 border-emerald-500/30 text-emerald-700 dark:text-emerald-300", time: "11:00 AM", info: "With design team" },
-    { day: 3, start: 3, len: 1, title: "Standup",       c: "bg-orange-500/15 border-orange-500/30 text-orange-700 dark:text-orange-300", time: "12:00 PM", info: "Daily sync" },
-    { day: 4, start: 0, len: 3, title: "All-hands",     c: "bg-pink-500/15 border-pink-500/30 text-pink-700 dark:text-pink-300",        time: "9:00 AM",  info: "Main conference room" },
+    { day: 0, start: 1, len: 1, title: "1:1 Sarah",     c: "bg-foreground/[0.06] border-border text-foreground/80", time: "10:00 AM", info: "Zoom · 30 min" },
+    { day: 1, start: 0, len: 2, title: "Investor call", c: "bg-primary/10 border-primary/25 text-foreground/85",        time: "9:00 AM",  info: "Google Meet · Marcus Reed" },
+    { day: 2, start: 2, len: 1, title: "Design review", c: "bg-foreground/[0.05] border-border text-foreground/75", time: "11:00 AM", info: "With design team" },
+    { day: 3, start: 3, len: 1, title: "Standup",       c: "bg-foreground/[0.04] border-border text-foreground/70", time: "12:00 PM", info: "Daily sync" },
+    { day: 4, start: 0, len: 3, title: "All-hands",     c: "bg-foreground/[0.07] border-border text-foreground/80",        time: "9:00 AM",  info: "Main conference room" },
   ];
 
   const sel = selectedEvIdx !== null ? events[selectedEvIdx] : null;
@@ -425,10 +441,10 @@ function CommandPaletteMockup() {
   const [activeIdx, setActiveIdx] = useState(0);
 
   const emailData = [
-    { from: "Sarah Chen",  subj: "Q3 investor update deck",      time: "9:41 AM",   c: AV_VIOLET },
-    { from: "Marcus Reed", subj: "Investor partnership proposal", time: "Mon",       c: AV_EMERALD },
+    { from: "Sarah Chen",  subj: "Q3 investor update deck",      time: "9:41 AM",   c: AV_A },
+    { from: "Marcus Reed", subj: "Investor partnership proposal", time: "Mon",       c: AV_B },
     { from: "Notion",      subj: "Your workspace summary",        time: "Yesterday", c: AV_NEUTRAL },
-    { from: "Alex Kim",    subj: "Quick sync tomorrow?",          time: "Yesterday", c: AV_ORANGE },
+    { from: "Alex Kim",    subj: "Quick sync tomorrow?",          time: "Yesterday", c: AV_C },
     { from: "GitHub",      subj: "New security advisory",         time: "Mon",       c: AV_NEUTRAL },
   ];
 
@@ -451,12 +467,12 @@ function CommandPaletteMockup() {
   return (
     <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-[0_40px_100px_-30px_rgba(0,0,0,0.32)] dark:shadow-[0_40px_100px_-30px_rgba(0,0,0,0.72)] max-w-xl mx-auto">
       <div className="flex items-center gap-3 px-4 py-3.5 border-b border-border">
-        <RiSearch2Line className="size-4 text-muted-foreground/60 shrink-0" />
+        <Search className="size-4 text-muted-foreground/60 shrink-0" strokeWidth={1.75} />
         <input
           value={query}
           onChange={(e) => { setQuery(e.target.value); setActiveIdx(0); }}
           placeholder="Search emails and calendar..."
-          className="text-sm text-foreground/80 flex-1 bg-transparent outline-none placeholder:text-muted-foreground/50 caret-blue-500"
+          className="text-sm text-foreground/80 flex-1 bg-transparent outline-none placeholder:text-muted-foreground/50 caret-primary"
         />
         <kbd className="text-[9px] font-mono text-muted-foreground/60 bg-secondary border border-border px-1.5 py-0.5 rounded">⌘K</kbd>
       </div>
@@ -464,7 +480,7 @@ function CommandPaletteMockup() {
         {filteredEmails.length > 0 && (
           <div>
             <div className="px-4 pt-2.5 pb-1 text-[9px] font-bold uppercase tracking-[0.1em] text-muted-foreground/60 flex items-center gap-1.5">
-              <RiMailLine className="size-2.5" /> Emails
+              <Mail className="size-2.5" strokeWidth={1.75} /> Emails
             </div>
             {filteredEmails.map((r, i) => {
               const isActive = i === activeIdx;
@@ -485,15 +501,15 @@ function CommandPaletteMockup() {
         {filteredCal.length > 0 && (
           <div>
             <div className={`px-4 pt-2.5 pb-1 text-[9px] font-bold uppercase tracking-[0.1em] text-muted-foreground/60 flex items-center gap-1.5 ${filteredEmails.length > 0 ? "border-t border-border mt-1" : ""}`}>
-              <RiCalendarLine className="size-2.5" /> Calendar
+              <Calendar className="size-2.5" strokeWidth={1.75} /> Calendar
             </div>
             {filteredCal.map((ev, i) => {
               const flatIdx = filteredEmails.length + i;
               const isActive = flatIdx === activeIdx;
               return (
                 <button key={i} type="button" onMouseEnter={() => setActiveIdx(flatIdx)} className={`w-full text-left flex items-center gap-3 px-4 py-2.5 transition-colors cursor-pointer ${isActive ? "bg-secondary" : "hover:bg-secondary/50"}`}>
-                  <div className="size-7 rounded-full bg-blue-500/12 text-blue-600 flex items-center justify-center shrink-0">
-                    <RiCalendarEventLine className="size-3.5" />
+                  <div className="size-7 rounded-full bg-primary/12 text-ai flex items-center justify-center shrink-0">
+                    <CalendarDays className="size-3.5" strokeWidth={1.75} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs text-foreground/80 font-medium">{ev.title}</p>
@@ -547,9 +563,9 @@ function NavThemeToggle({ scrolled }: { scrolled: boolean }) {
       className={`${size} flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-all duration-300 active:scale-90 cursor-pointer shrink-0`}
     >
       {isDark ? (
-        <RiSunLine className="size-4 text-amber-400" />
+        <Sun className="size-4 text-amber-400" strokeWidth={1.75} />
       ) : (
-        <RiMoonLine className="size-4 text-indigo-500" />
+        <Moon className="size-4 text-muted-foreground" strokeWidth={1.75} />
       )}
     </button>
   );
@@ -585,7 +601,7 @@ function Nav({ onSignIn }: { onSignIn: () => void }) {
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 hover:opacity-70 transition-opacity shrink-0">
           <TsunaguLogo className={`text-primary transition-all duration-300 ${scrolled ? "size-6" : "size-8"}`} />
-          <span className="font-semibold text-base tracking-tight text-foreground font-sans">Tsunagu</span>
+          <span className="font-semibold text-base tracking-tight text-foreground font-display">Tsunagu</span>
         </Link>
 
         {/* Center links */}
@@ -617,7 +633,7 @@ function Nav({ onSignIn }: { onSignIn: () => void }) {
             }`}
           >
             Get started
-            <RiArrowRightLine className="size-3.5" />
+            <ArrowRight className="size-3.5" strokeWidth={1.75} />
           </button>
         </div>
       </nav>
@@ -633,9 +649,9 @@ function Hero({ onSignIn, error }: { onSignIn: () => void; error: string | null 
       {/* Premium animated background */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
         <div className="absolute inset-0 hero-grid opacity-60" />
-        <div className="absolute top-[-12%] left-[18%] w-[540px] h-[540px] rounded-full bg-indigo-500/20 blur-[130px] animate-[drift-1_19s_ease-in-out_infinite]" />
-        <div className="absolute top-[6%] right-[12%] w-[480px] h-[480px] rounded-full bg-blue-500/15 blur-[140px] animate-[drift-2_23s_ease-in-out_infinite]" />
-        <div className="absolute bottom-[-14%] left-[38%] w-[500px] h-[500px] rounded-full bg-violet-500/12 blur-[130px] animate-[drift-3_27s_ease-in-out_infinite]" />
+        <div className="absolute top-[-12%] left-[18%] w-[540px] h-[540px] rounded-full bg-primary/10 blur-[130px] animate-[drift-1_19s_ease-in-out_infinite]" />
+        <div className="absolute top-[6%] right-[12%] w-[480px] h-[480px] rounded-full bg-primary/6 blur-[140px] animate-[drift-2_23s_ease-in-out_infinite]" />
+        <div className="absolute bottom-[-14%] left-[38%] w-[500px] h-[500px] rounded-full bg-foreground/[0.03] blur-[130px] animate-[drift-3_27s_ease-in-out_infinite]" />
       </div>
 
       <div className="relative z-10 flex flex-col items-center text-center max-w-4xl mx-auto">
@@ -655,9 +671,9 @@ function Hero({ onSignIn, error }: { onSignIn: () => void; error: string | null 
           </span>
         </div>
 
-        <h1 className="hero-line hero-d1 font-display font-bold text-foreground tracking-tight leading-[1.05] text-5xl sm:text-6xl lg:text-[80px] xl:text-[88px] mb-6">
+        <h1 className="hero-line hero-d1 font-display font-bold text-foreground tracking-tight leading-[1.05] text-5xl sm:text-6xl lg:text-[72px] xl:text-[80px] mb-6">
           Your AI agent for<br />
-          <span className="bg-gradient-to-r from-primary via-violet-400 to-primary bg-clip-text text-transparent">email and calendar.</span>
+          <span className="text-primary">email and calendar.</span>
         </h1>
 
         <p className="hero-line hero-d2 text-base sm:text-lg text-muted-foreground max-w-lg leading-relaxed mb-8">
@@ -679,12 +695,12 @@ function Hero({ onSignIn, error }: { onSignIn: () => void; error: string | null 
           >
             {/* Shimmer highlight */}
             <span className="animate-shimmer pointer-events-none absolute inset-0 w-1/3 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-            <RiGoogleFill className="size-4 relative z-10" />
+            <GoogleIcon className="size-4 relative z-10" />
             <span className="relative z-10">Get started free</span>
           </button>
           <a href="#product" className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground border border-border px-7 py-3.5 rounded-xl hover:bg-secondary/60 transition-all cursor-pointer">
             See how it works
-            <RiArrowRightLine className="size-4" />
+            <ArrowRight className="size-4" strokeWidth={1.75} />
           </a>
         </div>
         <p className="hero-line hero-d4 text-[11px] text-muted-foreground/60 font-medium">No credit card · No setup · Works with your existing Gmail</p>
@@ -764,7 +780,7 @@ function FeatureInbox() {
       <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
         <div className="max-w-lg">
           <div className="inline-flex items-center gap-1.5 mb-6 text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground font-heading">
-            <RiInboxLine className="size-3" />
+            <Inbox className="size-3" strokeWidth={1.75} />
             Unified Inbox
           </div>
           <h2 className="font-sans font-bold text-foreground text-3xl sm:text-[40px] tracking-tight leading-[1.1] mb-5">
@@ -796,8 +812,8 @@ function FeatureAI() {
       <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
         <div className="order-2 lg:order-1"><AIDraftMockup /></div>
         <div className="order-1 lg:order-2 max-w-lg">
-          <div className="inline-flex items-center gap-1.5 mb-6 text-[10px] font-bold uppercase tracking-[0.12em] text-blue-500 font-heading">
-            <RiSparkling2Fill className="size-3" />
+          <div className="inline-flex items-center gap-1.5 mb-6 text-[10px] font-bold uppercase tracking-[0.12em] text-ai font-heading">
+            <Sparkles className="size-3 text-ai" strokeWidth={1.75} />
             AI Drafting
           </div>
           <h2 className="font-sans font-bold text-foreground text-3xl sm:text-[40px] tracking-tight leading-[1.1] mb-5">
@@ -809,7 +825,7 @@ function FeatureAI() {
           <ul className="space-y-3">
             {["Contextual drafts based on full thread history", "One-click regenerate for a different tone or angle", "Sends through your real Gmail address", "Replies that sound like you, not like software"].map((item) => (
               <li key={item} className="flex items-start gap-2.5 text-sm text-muted-foreground">
-                <span className="size-1 rounded-full bg-blue-500/50 shrink-0 mt-[7px]" />
+                <span className="size-1 rounded-full bg-primary/50 shrink-0 mt-[7px]" />
                 {item}
               </li>
             ))}
@@ -828,7 +844,7 @@ function CommandPaletteSpot() {
       <div className="max-w-7xl mx-auto">
         <div className="max-w-2xl mx-auto text-center mb-14">
           <div className="inline-flex items-center gap-1.5 mb-6 text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground font-heading">
-            <RiKeyboardLine className="size-3" />
+            <Keyboard className="size-3" strokeWidth={1.75} />
             Command Palette
           </div>
           <h2 className="font-sans font-bold text-foreground text-3xl sm:text-[40px] tracking-tight leading-tight mb-5">
@@ -862,7 +878,7 @@ function FeatureCalendar() {
       <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
         <div className="max-w-lg">
           <div className="inline-flex items-center gap-1.5 mb-6 text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground font-heading">
-            <RiCalendarLine className="size-3" />
+            <Calendar className="size-3" strokeWidth={1.75} />
             Calendar
           </div>
           <h2 className="font-sans font-bold text-foreground text-3xl sm:text-[40px] tracking-tight leading-[1.1] mb-5">
@@ -917,7 +933,7 @@ function SpotlightCard({
         className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
         style={{
           background:
-            "radial-gradient(240px circle at var(--mx) var(--my), color-mix(in oklab, #3b82f6 13%, transparent), transparent 72%)",
+            "radial-gradient(240px circle at var(--mx) var(--my), color-mix(in oklab, var(--primary) 12%, transparent), transparent 72%)",
         }}
       />
       {children}
@@ -930,9 +946,9 @@ function SpotlightCard({
 function SearchFeature() {
   const queries = ["investor update", "board prep", "Sarah deck"];
   const results = [
-    { from: "Sarah Chen",  subj: "Q3 investor update deck",     time: "9:41 AM", c: AV_VIOLET  },
-    { from: "Marcus Reed", subj: "Investor partnership brief",  time: "Mon",     c: AV_EMERALD },
-    { from: "Alex Kim",    subj: "Board meeting agenda",        time: "Tue",     c: AV_ORANGE  },
+    { from: "Sarah Chen",  subj: "Q3 investor update deck",     time: "9:41 AM", c: AV_A  },
+    { from: "Marcus Reed", subj: "Investor partnership brief",  time: "Mon",     c: AV_B },
+    { from: "Alex Kim",    subj: "Board meeting agenda",        time: "Tue",     c: AV_C  },
   ];
   const [qIdx, setQIdx] = useState(0);
   const [typed, setTyped] = useState("");
@@ -963,13 +979,13 @@ function SearchFeature() {
   return (
     <div className="flex flex-col h-full gap-4">
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-widest text-blue-500 font-heading flex items-center gap-1.5 mb-2"><RiSearch2Line className="size-3" />Semantic Search</p>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-ai font-heading flex items-center gap-1.5 mb-2"><Search className="size-3" strokeWidth={1.75} />Semantic Search</p>
         <h3 className="font-sans font-bold text-foreground text-xl leading-snug mb-1">Find anything, instantly.</h3>
         <p className="text-xs text-muted-foreground leading-relaxed">Plain-language search across your full inbox history.</p>
       </div>
       <div className="bg-background border border-border rounded-xl overflow-hidden">
         <div className="flex items-center gap-2.5 px-4 py-3 border-b border-border">
-          <RiSearch2Line className="size-3.5 text-muted-foreground/40 shrink-0" />
+          <Search className="size-3.5 text-muted-foreground/40 shrink-0" strokeWidth={1.75} />
           <span className="text-sm text-foreground/80 font-mono flex-1">
             {typed}<span className="inline-block w-px h-3.5 bg-foreground/50 ml-px align-middle animate-caret" />
           </span>
@@ -1001,9 +1017,9 @@ function WebhookFeature() {
     { from: "GitHub",      subj: "New security advisory",     time: "Mon",       c: AV_NEUTRAL, unread: false },
   ];
   const wave = [
-    { from: "Sarah Chen",  subj: "Just sent the revised deck", time: "Now",  c: AV_VIOLET  },
-    { from: "Marcus Reed", subj: "Can we move tomorrow's call?",time: "Now",  c: AV_EMERALD },
-    { from: "Alex Kim",    subj: "Quick question on the deck", time: "Now",  c: AV_ORANGE  },
+    { from: "Sarah Chen",  subj: "Just sent the revised deck", time: "Now",  c: AV_A  },
+    { from: "Marcus Reed", subj: "Can we move tomorrow's call?",time: "Now",  c: AV_B },
+    { from: "Alex Kim",    subj: "Quick question on the deck", time: "Now",  c: AV_C  },
   ];
   const [top, setTop] = useState<typeof wave[number] | null>(null);
   const [wIdx, setWIdx] = useState(0);
@@ -1027,10 +1043,10 @@ function WebhookFeature() {
   return (
     <div className="flex flex-col h-full gap-4">
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-widest text-blue-500 font-heading flex items-center gap-1.5 mb-2">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-ai font-heading flex items-center gap-1.5 mb-2">
           <span className="relative flex size-1.5">
-            <span className={`absolute inset-0 rounded-full bg-blue-500 transition-opacity ${pulse ? "animate-ping" : ""}`} />
-            <span className="relative rounded-full size-1.5 bg-blue-500" />
+            <span className={`absolute inset-0 rounded-full bg-primary transition-opacity ${pulse ? "animate-ping" : ""}`} />
+            <span className="relative rounded-full size-1.5 bg-primary" />
           </span>
           Live Webhook Sync
         </p>
@@ -1047,7 +1063,7 @@ function WebhookFeature() {
             </div>
             <div className="flex items-center gap-1.5 shrink-0">
               <span className="text-[10px] text-muted-foreground/50 font-mono">{e.time}</span>
-              {e.unread && <div className="size-1.5 rounded-full bg-blue-500" />}
+              {e.unread && <div className="size-1.5 rounded-full bg-primary" />}
             </div>
           </div>
         ))}
@@ -1058,12 +1074,12 @@ function WebhookFeature() {
 
 function KeyboardFeature() {
   const shortcuts = [
-    { keys: ["⌘", "K"],      label: "Open command palette",  icon: RiSearch2Line       },
-    { keys: ["G", "I"],      label: "Go to inbox",            icon: RiMailLine          },
-    { keys: ["C"],           label: "Compose new email",      icon: RiSendPlaneLine     },
-    { keys: ["⌘", "↵"],     label: "Send email",             icon: RiSendPlaneLine     },
-    { keys: ["E"],           label: "Archive selected",       icon: RiInboxLine         },
-    { keys: ["?"],           label: "Show all shortcuts",     icon: RiKeyboardLine      },
+    { keys: ["⌘", "K"],      label: "Open command palette",  icon: Search       },
+    { keys: ["G", "I"],      label: "Go to inbox",            icon: Mail          },
+    { keys: ["C"],           label: "Compose new email",      icon: Send     },
+    { keys: ["⌘", "↵"],     label: "Send email",             icon: Send     },
+    { keys: ["E"],           label: "Archive selected",       icon: Inbox         },
+    { keys: ["?"],           label: "Show all shortcuts",     icon: Keyboard      },
   ];
   const [active, setActive] = useState(0);
 
@@ -1076,7 +1092,7 @@ function KeyboardFeature() {
   return (
     <div className="flex flex-col h-full gap-4">
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-widest text-blue-500 font-heading flex items-center gap-1.5 mb-2"><RiKeyboardLine className="size-3" />Keyboard-first UX</p>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-ai font-heading flex items-center gap-1.5 mb-2"><Keyboard className="size-3" strokeWidth={1.75} />Keyboard-first UX</p>
         <h3 className="font-sans font-bold text-foreground text-xl leading-snug mb-1">Zero mouse required.</h3>
         <p className="text-xs text-muted-foreground leading-relaxed">Every action, one keystroke away.</p>
       </div>
@@ -1085,11 +1101,11 @@ function KeyboardFeature() {
           const Icon = s.icon;
           return (
             <div key={i} className={`flex items-center gap-3 px-4 py-2.5 transition-colors duration-300 ${i === active ? "bg-secondary" : ""}`}>
-              <Icon className={`size-3.5 shrink-0 transition-colors duration-300 ${i === active ? "text-blue-500" : "text-muted-foreground/30"}`} />
+              <Icon className={`size-3.5 shrink-0 transition-colors duration-300 ${i === active ? "text-ai" : "text-muted-foreground/30"}`} strokeWidth={1.75} />
               <span className={`text-xs flex-1 transition-colors duration-300 ${i === active ? "text-foreground font-medium" : "text-muted-foreground/60"}`}>{s.label}</span>
               <div className="flex items-center gap-1">
                 {s.keys.map((k, j) => (
-                  <kbd key={j} className={`text-[10px] font-mono px-1.5 py-0.5 rounded border transition-all duration-300 ${i === active ? "bg-blue-500/10 border-blue-500/30 text-blue-700 dark:text-blue-400" : "bg-secondary border-border text-muted-foreground"}`}>{k}</kbd>
+                  <kbd key={j} className={`text-[10px] font-mono px-1.5 py-0.5 rounded border transition-all duration-300 ${i === active ? "bg-ai-muted border-ai text-ai" : "bg-secondary border-border text-muted-foreground"}`}>{k}</kbd>
                 ))}
               </div>
             </div>
@@ -1124,22 +1140,22 @@ function ZeroTrustFeature() {
   return (
     <div className="flex flex-col h-full gap-4">
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-widest text-blue-500 font-heading flex items-center gap-1.5 mb-2"><RiSparkling2Fill className="size-3" />Zero-trust Drafts</p>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-ai font-heading flex items-center gap-1.5 mb-2"><Sparkles className="size-3 text-ai" strokeWidth={1.75} />Zero-trust Drafts</p>
         <h3 className="font-sans font-bold text-foreground text-xl leading-snug mb-1">AI writes. You decide.</h3>
         <p className="text-xs text-muted-foreground leading-relaxed">Nothing sends without your explicit click.</p>
       </div>
       <div className="bg-background border border-border rounded-xl overflow-hidden flex flex-col">
         <div className="px-4 py-2.5 border-b border-border flex items-center justify-between shrink-0">
           <span className="text-[10px] text-muted-foreground/60">To: sarah@acme.com · Re: Q3 deck</span>
-          <span className="text-[10px] text-blue-700 dark:text-blue-300 bg-blue-500/10 dark:bg-blue-500/15 border border-blue-500/20 dark:border-blue-500/30 px-2 py-0.5 rounded-full flex items-center gap-1">
-            <RiSparkling2Fill className="size-2.5" />AI Draft
+          <span className="text-[10px] text-ai bg-primary/10 dark:bg-primary/15 border border-ai dark:border-ai px-2 py-0.5 rounded-full flex items-center gap-1">
+            <Sparkles className="size-2.5" strokeWidth={1.75} />AI Draft
           </span>
         </div>
         <div className="px-4 py-3 min-h-[100px] flex-1">
           {phase === "sent" ? (
             <div className="flex flex-col items-center justify-center h-full gap-2 py-4">
               <div className="size-8 rounded-full bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center">
-                <RiSendPlaneLine className="size-4 text-emerald-600" />
+                <Send className="size-4 text-emerald-600" strokeWidth={1.75} />
               </div>
               <p className="text-xs font-medium text-foreground/70">Sent via Gmail</p>
             </div>
@@ -1186,15 +1202,15 @@ function CalendarFeature() {
   return (
     <div className="flex flex-col h-full gap-4">
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-widest text-blue-500 font-heading flex items-center gap-1.5 mb-2"><RiCalendarEventLine className="size-3" />Calendar Orchestration</p>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-ai font-heading flex items-center gap-1.5 mb-2"><CalendarDays className="size-3" strokeWidth={1.75} />Calendar Orchestration</p>
         <h3 className="font-sans font-bold text-foreground text-xl leading-snug mb-1">Schedule in plain English.</h3>
         <p className="text-xs text-muted-foreground leading-relaxed">Describe it, AI finds the slot, you confirm.</p>
       </div>
       <div className="bg-background border border-border rounded-xl overflow-hidden flex flex-col divide-y divide-border">
         {chatVisible && (
           <div className="px-4 py-3 flex items-start gap-2.5 animate-in fade-in slide-in-from-top-1 duration-200">
-            <div className="size-6 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0 mt-0.5">
-              <RiSparkling2Fill className="size-3 text-blue-500" />
+            <div className="size-6 rounded-full bg-primary/10 border border-ai flex items-center justify-center shrink-0 mt-0.5">
+              <Sparkles className="size-3 text-ai" strokeWidth={1.75} />
             </div>
             <div className="bg-secondary rounded-xl px-3 py-2">
               <p className="text-[11px] text-foreground/80">Found a slot — Wed Jun 18, 2:00 PM. Scheduling 30-min call with Sarah.</p>
@@ -1207,9 +1223,9 @@ function CalendarFeature() {
             {days.map((_, di) => (
               <div key={di} className="h-14 border border-border rounded-lg relative overflow-hidden bg-background">
                 {di === 2 && eventVisible && (
-                  <div className="absolute inset-1 rounded bg-blue-500/15 border border-blue-500/30 flex flex-col items-center justify-center animate-in zoom-in-95 fade-in duration-300">
-                    <p className="text-[8px] font-bold text-blue-700 dark:text-blue-300 leading-tight text-center">Call w/ Sarah</p>
-                    <p className="text-[7px] text-blue-500/70 dark:text-blue-400/70">2:00 PM</p>
+                  <div className="absolute inset-1 rounded bg-primary/15 border border-ai flex flex-col items-center justify-center animate-in zoom-in-95 fade-in duration-300">
+                    <p className="text-[8px] font-bold text-ai leading-tight text-center">Call w/ Sarah</p>
+                    <p className="text-[7px] text-muted-foreground/70">2:00 PM</p>
                   </div>
                 )}
               </div>
@@ -1251,7 +1267,7 @@ function MCPAgentFeature() {
   return (
     <div className="flex flex-col h-full gap-4">
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-widest text-blue-500 font-heading flex items-center gap-1.5 mb-2"><RiSparkling2Fill className="size-3" />MCP-powered AI Agent</p>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-ai font-heading flex items-center gap-1.5 mb-2"><Sparkles className="size-3 text-ai" strokeWidth={1.75} />MCP-powered AI Agent</p>
         <h3 className="font-sans font-bold text-foreground text-xl leading-snug mb-1">Multi-step. One prompt.</h3>
         <p className="text-xs text-muted-foreground leading-relaxed">OpenAI Agents SDK + Corsair MCP running in sequence.</p>
       </div>
@@ -1270,8 +1286,8 @@ function MCPAgentFeature() {
               </div>
             ) : (
               <div className="flex items-start gap-2 max-w-[85%]">
-                <div className="size-6 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0 mt-0.5">
-                  <RiSparkling2Fill className="size-3 text-blue-500" />
+                <div className="size-6 rounded-full bg-primary/10 border border-ai flex items-center justify-center shrink-0 mt-0.5">
+                  <Sparkles className="size-3 text-ai" strokeWidth={1.75} />
                 </div>
                 <div className="bg-secondary rounded-2xl rounded-tl-sm px-3 py-2">
                   <p className="text-[11px] text-foreground/80 leading-relaxed">{s.text}</p>
@@ -1312,10 +1328,10 @@ function AIWorkflow() {
   const [activeStep, setActiveStep] = useState(0);
 
   const steps = [
-    { label: "You type a request",     detail: "\"Schedule a follow-up with Sarah for next Tuesday at 10am\"",  color: "bg-blue-500/15 border-blue-500/30 text-blue-700 dark:text-blue-300" },
-    { label: "AI reads your calendar", detail: "Checks availability, finds conflicts, resolves attendees",        color: "bg-blue-500/15 border-blue-500/30 text-blue-700 dark:text-blue-300" },
+    { label: "You type a request",     detail: "\"Schedule a follow-up with Sarah for next Tuesday at 10am\"",  color: "bg-primary/15 border-ai text-ai" },
+    { label: "AI reads your calendar", detail: "Checks availability, finds conflicts, resolves attendees",        color: "bg-primary/15 border-ai text-ai" },
     { label: "Draft appears for review", detail: "Event card shows all details — you can edit any field",         color: "bg-amber-500/15 border-amber-500/30 text-amber-700 dark:text-amber-300" },
-    { label: "You confirm",            detail: "One click. Event created, invite sent through Google Calendar",    color: "bg-emerald-500/15 border-emerald-500/30 text-emerald-700 dark:text-emerald-300" },
+    { label: "You confirm",            detail: "One click. Event created, invite sent through Google Calendar",    color: "bg-emerald-500/10 border-emerald-500/25 text-emerald-700 dark:text-emerald-400" },
   ];
 
   useEffect(() => {
@@ -1327,8 +1343,8 @@ function AIWorkflow() {
     <section className="bg-background py-32 px-6 border-t border-border">
       <div className="max-w-7xl mx-auto">
         <div className="max-w-2xl mx-auto text-center mb-16">
-          <div className="inline-flex items-center gap-1.5 mb-6 text-[10px] font-bold uppercase tracking-[0.12em] text-blue-500 font-heading">
-            <RiSparkling2Fill className="size-3" />
+          <div className="inline-flex items-center gap-1.5 mb-6 text-[10px] font-bold uppercase tracking-[0.12em] text-ai font-heading">
+            <Sparkles className="size-3 text-ai" strokeWidth={1.75} />
             AI Agent Flow
           </div>
           <h2 className="font-sans font-bold text-foreground text-3xl sm:text-[40px] tracking-tight leading-tight mb-5">
@@ -1380,27 +1396,27 @@ function AIWorkflow() {
 // ─── Section 9: Testimonials ─────────────────────────────────────────────────
 
 const TESTIMONIALS_COL1 = [
-  { name: "Maria G.",      role: "Founder",              initial: "M", color: AV_VIOLET,  quote: "I used to start every morning triaging 80 emails across two apps. Tsunagu collapsed that into one focused session that takes half the time." },
-  { name: "James T.",      role: "Executive Recruiter",  initial: "J", color: AV_EMERALD, quote: "The AI drafts are genuinely good. They match my tone well enough that I send most of them without editing." },
-  { name: "Priya N.",      role: "Operations Lead",      initial: "P", color: AV_ORANGE,  quote: "Having email and calendar in one place sounds like a small thing. But the lost context from switching apps was adding up more than I realized." },
+  { name: "Maria G.",      role: "Founder",              initial: "M", color: AV_A,  quote: "I used to start every morning triaging 80 emails across two apps. Tsunagu collapsed that into one focused session that takes half the time." },
+  { name: "James T.",      role: "Executive Recruiter",  initial: "J", color: AV_B, quote: "The AI drafts are genuinely good. They match my tone well enough that I send most of them without editing." },
+  { name: "Priya N.",      role: "Operations Lead",      initial: "P", color: AV_C,  quote: "Having email and calendar in one place sounds like a small thing. But the lost context from switching apps was adding up more than I realized." },
   { name: "David K.",      role: "Product Manager",      initial: "D", color: AV_NEUTRAL, quote: "The command palette alone saved me. I used to hunt through Gmail filters for stuff I needed fast. Now it's just ⌘K and done." },
-  { name: "Rachel S.",     role: "Startup CEO",          initial: "R", color: AV_PINK,    quote: "Tsunagu actually understands context. When I ask it to schedule a follow-up, it checks my calendar and picks a time that makes sense." },
+  { name: "Rachel S.",     role: "Startup CEO",          initial: "R", color: AV_D,    quote: "Tsunagu actually understands context. When I ask it to schedule a follow-up, it checks my calendar and picks a time that makes sense." },
 ];
 
 const TESTIMONIALS_COL2 = [
-  { name: "Ananya M.",     role: "Growth Lead",          initial: "A", color: AV_EMERALD, quote: "Real-time sync means my inbox is never stale. Events update the moment a meeting gets rescheduled — no manual refresh, no missed changes." },
-  { name: "Tom B.",        role: "Freelance Consultant",  initial: "T", color: AV_VIOLET,  quote: "Client emails used to live in my inbox and their calendar invites lived somewhere else. Tsunagu put them in the same view and it changed how I work." },
-  { name: "Sunita R.",     role: "Engineering Manager",  initial: "S", color: AV_ORANGE,  quote: "The zero-trust draft model is what won me over. Nothing sends without my explicit approval. I can actually trust the AI in my workflow." },
+  { name: "Ananya M.",     role: "Growth Lead",          initial: "A", color: AV_B, quote: "Real-time sync means my inbox is never stale. Events update the moment a meeting gets rescheduled — no manual refresh, no missed changes." },
+  { name: "Tom B.",        role: "Freelance Consultant",  initial: "T", color: AV_A,  quote: "Client emails used to live in my inbox and their calendar invites lived somewhere else. Tsunagu put them in the same view and it changed how I work." },
+  { name: "Sunita R.",     role: "Engineering Manager",  initial: "S", color: AV_C,  quote: "The zero-trust draft model is what won me over. Nothing sends without my explicit approval. I can actually trust the AI in my workflow." },
   { name: "Chris L.",      role: "Investor",             initial: "C", color: AV_NEUTRAL, quote: "I get 200+ emails a day. Tsunagu's priority inbox surfaces what actually needs a reply. Everything else waits until I choose to look." },
-  { name: "Nina F.",       role: "UX Designer",          initial: "N", color: AV_PINK,    quote: "Keyboard-first design made me a convert. Tab, arrow, Enter — I handle my entire morning email routine without touching the mouse." },
+  { name: "Nina F.",       role: "UX Designer",          initial: "N", color: AV_D,    quote: "Keyboard-first design made me a convert. Tab, arrow, Enter — I handle my entire morning email routine without touching the mouse." },
 ];
 
 const TESTIMONIALS_COL3 = [
-  { name: "Rajan P.",      role: "BD Manager",           initial: "R", color: AV_ORANGE,  quote: "AI scheduling is something I didn't know I needed. I describe the meeting in plain English and it finds a slot, drafts the invite, and waits for me to hit confirm." },
-  { name: "Sophie W.",     role: "COO",                  initial: "S", color: AV_EMERALD, quote: "We evaluated four email clients for our team. Tsunagu was the only one that connected Gmail and Calendar in a way that felt native, not bolted on." },
-  { name: "Marcus H.",     role: "SaaS Founder",         initial: "M", color: AV_VIOLET,  quote: "I can search emails and events from one bar. That sounds obvious but no other tool does it well. Tsunagu gets it exactly right." },
+  { name: "Rajan P.",      role: "BD Manager",           initial: "R", color: AV_C,  quote: "AI scheduling is something I didn't know I needed. I describe the meeting in plain English and it finds a slot, drafts the invite, and waits for me to hit confirm." },
+  { name: "Sophie W.",     role: "COO",                  initial: "S", color: AV_B, quote: "We evaluated four email clients for our team. Tsunagu was the only one that connected Gmail and Calendar in a way that felt native, not bolted on." },
+  { name: "Marcus H.",     role: "SaaS Founder",         initial: "M", color: AV_A,  quote: "I can search emails and events from one bar. That sounds obvious but no other tool does it well. Tsunagu gets it exactly right." },
   { name: "Leila A.",      role: "Chief of Staff",       initial: "L", color: AV_NEUTRAL, quote: "The AI reads the whole thread before drafting. It doesn't just reply to the last message — it considers the whole conversation. That context matters." },
-  { name: "Kevin T.",      role: "Head of Sales",        initial: "K", color: AV_PINK,    quote: "I was skeptical about another AI email tool. But Tsunagu actually delivers on the promise. Fewer tabs, less context switching, more focus." },
+  { name: "Kevin T.",      role: "Head of Sales",        initial: "K", color: AV_D,    quote: "I was skeptical about another AI email tool. But Tsunagu actually delivers on the promise. Fewer tabs, less context switching, more focus." },
 ];
 
 function TestimonialCard({ name, role, initial, color, quote }: { name: string; role: string; initial: string; color: string; quote: string }) {
@@ -1499,12 +1515,12 @@ function Pricing({ onSignIn }: { onSignIn: () => void }) {
               key={plan.name}
               className={`relative rounded-2xl p-8 flex flex-col gap-6 transition-all ${
                 plan.highlight
-                  ? "bg-foreground text-background shadow-[0_30px_80px_-20px_rgba(0,0,0,0.35)] dark:shadow-[0_30px_80px_-20px_rgba(129,140,248,0.30)] scale-[1.03]"
+                  ? "bg-foreground text-background shadow-[0_30px_80px_-20px_rgba(0,0,0,0.45)] scale-[1.03]"
                   : "bg-card border border-border hover:border-foreground/20"
               }`}
             >
               {plan.highlight && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-blue-600 text-white text-[10px] font-bold rounded-full uppercase tracking-widest font-heading">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-primary text-primary-foreground text-[10px] font-bold rounded-full uppercase tracking-widest font-heading">
                   Most popular
                 </div>
               )}
@@ -1547,15 +1563,15 @@ function Pricing({ onSignIn }: { onSignIn: () => void }) {
 
 function Footer() {
   return (
-    <footer className="bg-secondary/40 dark:bg-white/[0.028] border-t border-border px-6 pt-16 pb-10">
+    <footer className="bg-footer text-muted-foreground border-t border-border px-6 pt-16 pb-10">
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-10 mb-16">
           <div className="col-span-2 sm:col-span-1">
             <Link href="/" className="flex items-center gap-2 mb-4 hover:opacity-70 transition-opacity">
               <TsunaguLogo className="size-7 text-primary" />
-              <span className="font-semibold text-base tracking-tight text-foreground font-sans">Tsunagu</span>
+              <span className="font-semibold text-base tracking-tight text-[#f8f7f4] font-display">Tsunagu</span>
             </Link>
-            <p className="text-xs text-muted-foreground leading-relaxed max-w-44">AI-native email and calendar workspace for people who move fast.</p>
+            <p className="text-xs text-[#a1a1aa] leading-relaxed max-w-44">AI-native email and calendar workspace for people who move fast.</p>
           </div>
           {[
             { label: "Product", links: ["Features", "Changelog", "Roadmap"] },
@@ -1563,18 +1579,18 @@ function Footer() {
             { label: "Legal",   links: ["Privacy", "Terms", "Security"] },
           ].map(({ label, links }) => (
             <div key={label}>
-              <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground/60 mb-4 font-heading">{label}</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#8f8f8f] mb-4 font-heading">{label}</p>
               <ul className="space-y-2.5">
                 {links.map((link) => (
-                  <li key={link}><a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">{link}</a></li>
+                  <li key={link}><a href="#" className="text-sm text-[#a1a1aa] hover:text-[#f8f7f4] transition-colors">{link}</a></li>
                 ))}
               </ul>
             </div>
           ))}
         </div>
         <div className="border-t border-border pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-[11px] text-muted-foreground/60">© 2026 Tsunagu. All rights reserved.</p>
-          <p className="text-[11px] text-muted-foreground/40">Built for people who actually ship.</p>
+          <p className="text-[11px] text-[#8f8f8f]">© 2026 Tsunagu. All rights reserved.</p>
+          <p className="text-[11px] text-[#6f6f6f]">Built for people who actually ship.</p>
         </div>
       </div>
     </footer>

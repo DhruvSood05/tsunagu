@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import ThemeToggle from "./ThemeToggle";
 import {
@@ -31,73 +32,48 @@ interface SidebarProps {
   calendarConnected?: boolean;
 }
 
-export default function Sidebar({
-  user,
-  onCompose,
-}: SidebarProps) {
+export default function Sidebar({ user, onCompose }: SidebarProps) {
   const isAdmin = user?.email === ADMIN_EMAIL;
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const currentFolder = searchParams.get("folder") ?? "inbox";
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Listen for toggle event fired by TopNav hamburger
+  useEffect(() => {
+    const handler = () => setMobileOpen((v) => !v);
+    window.addEventListener("toggle-mobile-sidebar", handler);
+    return () => window.removeEventListener("toggle-mobile-sidebar", handler);
+  }, []);
+
+  // Close on route change
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
 
   const mainFolders = [
-    {
-      id: "inbox",
-      href: "/dashboard?folder=inbox",
-      label: "Inbox",
-      icon: RiInboxLine,
-    },
-    {
-      id: "sent",
-      href: "/dashboard?folder=sent",
-      label: "Sent",
-      icon: RiSendPlane2Line,
-    },
-    {
-      id: "drafts",
-      href: "/dashboard/drafts",
-      label: "Drafts",
-      icon: RiDraftLine,
-    },
-    {
-      id: "archive",
-      href: "/dashboard?folder=archive",
-      label: "Archive",
-      icon: RiArchiveLine,
-    },
-    {
-      id: "starred",
-      href: "/dashboard?folder=starred",
-      label: "Starred",
-      icon: RiStarLine,
-    },
-    {
-      id: "calendar",
-      href: "/dashboard/calendar",
-      label: "Calendar",
-      icon: RiCalendarLine,
-    },
+    { id: "inbox",   href: "/dashboard?folder=inbox",   label: "Inbox",    icon: RiInboxLine },
+    { id: "sent",    href: "/dashboard?folder=sent",    label: "Sent",     icon: RiSendPlane2Line },
+    { id: "drafts",  href: "/dashboard/drafts",         label: "Drafts",   icon: RiDraftLine },
+    { id: "archive", href: "/dashboard?folder=archive", label: "Archive",  icon: RiArchiveLine },
+    { id: "starred", href: "/dashboard?folder=starred", label: "Starred",  icon: RiStarLine },
+    { id: "calendar",href: "/dashboard/calendar",       label: "Calendar", icon: RiCalendarLine },
   ];
 
-  return (
-    <aside id="tour-sidebar" className="w-56 shrink-0 border-r border-sidebar-border flex flex-col bg-sidebar h-full z-10 select-none font-sans">
-      {/* Workspace Logo */}
+  const sidebarContent = (
+    <>
+      {/* Logo */}
       <div className="h-16 flex items-center px-5 border-b border-sidebar-border shrink-0">
-        <Link
-          href="/dashboard"
-          className="flex items-center gap-2.5 hover:opacity-85 transition-opacity"
-        >
+        <Link href="/dashboard" className="flex items-center gap-2.5 hover:opacity-85 transition-opacity">
           <TsunaguLogo className="size-7 text-primary" />
-          <span className="font-semibold text-lg tracking-tight text-foreground leading-none">
-            Tsunagu
-          </span>
+          <span className="font-semibold text-lg tracking-tight text-foreground leading-none">Tsunagu</span>
         </Link>
       </div>
 
-      {/* Action Compose */}
+      {/* Compose */}
       <div id="tour-compose" className="px-4 py-3.5 shrink-0">
         <Button
-          onClick={onCompose}
+          onClick={() => { onCompose?.(); setMobileOpen(false); }}
           className="w-full justify-center gap-1.5 py-2 h-9.5 text-[13px] font-semibold rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-all active:scale-[0.98] shadow-sm cursor-pointer"
           size="sm"
         >
@@ -106,23 +82,13 @@ export default function Sidebar({
         </Button>
       </div>
 
-      {/* Navigation Folders */}
+      {/* Nav */}
       <div className="flex-1 overflow-y-auto px-3 py-2 space-y-5">
-        {/* Folders Section */}
         <div className="space-y-2">
-          <p className="px-2.5 py-1 text-[9px] font-bold tracking-widest text-muted-foreground/60 uppercase font-heading">
-            Workspace
-          </p>
+          <p className="px-2.5 py-1 text-[9px] font-bold tracking-widest text-muted-foreground/60 uppercase font-heading">Workspace</p>
           {mainFolders.map(({ id, href, label, icon: Icon }) => {
-            const isPage =
-              id === "drafts" || id === "calendar"
-                ? pathname === `/dashboard/${id}`
-                : pathname === "/dashboard";
-            const active =
-              id === "drafts" || id === "calendar"
-                ? isPage
-                : isPage && currentFolder === id;
-
+            const isPage = id === "drafts" || id === "calendar" ? pathname === `/dashboard/${id}` : pathname === "/dashboard";
+            const active = id === "drafts" || id === "calendar" ? isPage : isPage && currentFolder === id;
             return (
               <Link
                 key={id}
@@ -134,9 +100,7 @@ export default function Sidebar({
                 }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <Icon
-                    className={`size-4 shrink-0 ${active ? "text-foreground" : "text-muted-foreground"}`}
-                  />
+                  <Icon className={`size-4 shrink-0 ${active ? "text-foreground" : "text-muted-foreground"}`} />
                   <span>{label}</span>
                 </div>
               </Link>
@@ -144,11 +108,8 @@ export default function Sidebar({
           })}
         </div>
 
-        {/* AI & Features Section */}
         <div className="space-y-1">
-          <p className="px-2.5 py-1 text-[9px] font-bold tracking-widest text-muted-foreground/60 uppercase font-heading">
-            AI Features
-          </p>
+          <p className="px-2.5 py-1 text-[9px] font-bold tracking-widest text-muted-foreground/60 uppercase font-heading">AI Features</p>
           <Link
             id="tour-ai-link"
             href="/dashboard/ai"
@@ -158,19 +119,14 @@ export default function Sidebar({
                 : "text-muted-foreground hover:text-foreground hover:bg-card/60"
             }`}
           >
-            <RiSparkling2Fill
-              className={`size-4 shrink-0 ${pathname === "/dashboard/ai" ? "text-primary" : "text-muted-foreground"}`}
-            />
+            <RiSparkling2Fill className={`size-4 shrink-0 ${pathname === "/dashboard/ai" ? "text-primary" : "text-muted-foreground"}`} />
             <span>AI Assistant</span>
           </Link>
         </div>
 
-        {/* Admin Section — only visible to admin */}
         {isAdmin && (
           <div className="space-y-1">
-            <p className="px-2.5 py-1 text-[9px] font-bold tracking-widest text-muted-foreground/60 uppercase font-heading">
-              Admin
-            </p>
+            <p className="px-2.5 py-1 text-[9px] font-bold tracking-widest text-muted-foreground/60 uppercase font-heading">Admin</p>
             <Link
               href="/dashboard/admin"
               className={`relative flex items-center gap-2.5 px-2.5 py-2 text-[13px] rounded-lg transition-all duration-150 ${
@@ -179,16 +135,14 @@ export default function Sidebar({
                   : "text-muted-foreground hover:text-foreground hover:bg-card/60"
               }`}
             >
-              <RiShieldLine
-                className={`size-4 shrink-0 ${pathname === "/dashboard/admin" ? "text-foreground" : "text-muted-foreground"}`}
-              />
+              <RiShieldLine className={`size-4 shrink-0 ${pathname === "/dashboard/admin" ? "text-foreground" : "text-muted-foreground"}`} />
               <span>Dashboard</span>
             </Link>
           </div>
         )}
       </div>
 
-      {/* Footer: Settings · Theme */}
+      {/* Footer */}
       <div id="tour-settings" className="px-3 py-3 border-t border-sidebar-border shrink-0">
         <div className="flex items-center gap-1.5">
           <Link
@@ -205,6 +159,31 @@ export default function Sidebar({
           <ThemeToggle />
         </div>
       </div>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* Mobile backdrop */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 md:hidden"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
+      {/* Desktop: normal sidebar. Mobile: slide-in overlay drawer */}
+      <aside
+        id="tour-sidebar"
+        className={`
+          w-56 shrink-0 border-r border-sidebar-border flex flex-col bg-sidebar h-full z-50 select-none font-sans
+          md:relative md:translate-x-0 md:flex
+          fixed inset-y-0 left-0 transition-transform duration-300
+          ${mobileOpen ? "flex translate-x-0" : "-translate-x-full md:translate-x-0"}
+        `}
+      >
+        {sidebarContent}
+      </aside>
+    </>
   );
 }

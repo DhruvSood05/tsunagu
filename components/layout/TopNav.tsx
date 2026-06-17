@@ -9,6 +9,7 @@ import {
   RiSearchLine,
   RiLogoutBoxLine,
   RiGoogleFill,
+  RiMenuLine,
 } from "@remixicon/react";
 import NotificationBell from "@/components/notifications/NotificationBell";
 
@@ -55,8 +56,18 @@ export default function TopNav({ user, onOpenPalette, gmailConnected = false }: 
     : user?.email?.[0]?.toUpperCase() ?? "?";
 
   return (
-    <header className="h-16 border-b border-border/40 bg-background/80 backdrop-blur-md flex items-center justify-between px-6 shrink-0 z-40 select-none font-sans">
-      {/* Left: Workspace Switcher */}
+    <header className="h-16 border-b border-border/40 bg-background/80 backdrop-blur-md flex items-center justify-between px-4 md:px-6 shrink-0 z-40 select-none font-sans">
+      {/* Left: Hamburger (mobile) + Workspace Switcher */}
+      <div className="flex items-center gap-1.5">
+        {/* Hamburger — mobile only */}
+        <button
+          className="md:hidden size-8 flex items-center justify-center rounded-lg text-foreground/60 hover:text-foreground hover:bg-secondary/80 transition-all cursor-pointer"
+          onClick={() => window.dispatchEvent(new Event("toggle-mobile-sidebar"))}
+          aria-label="Open menu"
+        >
+          <RiMenuLine className="size-5" />
+        </button>
+
       <div ref={workspaceRef} className="relative">
         <button
           onClick={() => setWorkspaceOpen(!workspaceOpen)}
@@ -99,9 +110,10 @@ export default function TopNav({ user, onOpenPalette, gmailConnected = false }: 
           </div>
         )}
       </div>
+      </div>{/* end left group */}
 
-      {/* Center: Command Palette Trigger */}
-      <div className="flex-1 max-w-md mx-6">
+      {/* Center: Command Palette Trigger — hidden on mobile */}
+      <div className="hidden md:flex flex-1 max-w-md mx-6">
         <button
           onClick={onOpenPalette}
           className="w-full h-9 flex items-center justify-between px-3.5 rounded-lg bg-secondary/50 hover:bg-secondary/80 border border-border/40 hover:border-border transition-all duration-150 text-muted-foreground hover:text-foreground text-xs cursor-pointer"
