@@ -1,18 +1,46 @@
 import { processWebhook } from "corsair";
 import { corsair, db } from "@/db";
-import { webhookEvents } from "@/db/schema";
+import { corsairAccounts, corsairIntegrations, webhookEvents } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
+import { inngest } from "@/lib/inngest";
 
-// Receives real-time Google Calendar push notifications via Corsair
+async function getCalendarTenants(): Promise<string[]> {
+  const rows = await db
+    .select({ tenantId: corsairAccounts.tenantId })
+    .from(corsairAccounts)
+    .innerJoin(corsairIntegrations, eq(corsairAccounts.integrationId, corsairIntegrations.id))
+    .where(eq(corsairIntegrations.name, "googlecalendar"));
+  return [...new Set(rows.map((r) => r.tenantId))];
+}
+
 export async function POST(request: Request) {
   try {
     const headers = Object.fromEntries(request.headers);
     const body = await request.json().catch(() => ({}));
-    const result = await processWebhook(corsair, headers, body);
-    return result.response as unknown as Response;
+
+    const channelId = headers["x-goog-channel-id"] ?? "";
+    const resourceState = headers["x-goog-resource-state"] ?? "";
+
+    // Find all users who have Calendar connected
+    const tenantIds = await getCalendarTenants();
+
+    for (const tenantId of tenantIds) {
+      try {
+        await processWebhook(corsair, headers, body, { tenantId });
+      } catch {
+        // individual tenant failure shouldn't block others
+      }
+
+      await inngest.send({
+        name: "tsunagu/calendar.event.changed",
+        data: { userId: tenantId, channelId, resourceState },
+      });
+    }
+
+    return new Response(JSON.stringify({ ok: true }), { status: 200 });
   } catch (err: any) {
-    console.error("[webhooks/calendar]", err?.message ?? err);
-    return new Response(JSON.stringify({ error: "Internal error" }), { status: 500 });
+    console.error("[webhooks/calendar POST]", err?.message ?? err);
+    return new Response(JSON.stringify({ ok: true }), { status: 200 });
   }
 }
 

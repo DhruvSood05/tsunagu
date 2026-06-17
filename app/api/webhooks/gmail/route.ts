@@ -1,18 +1,69 @@
 import { processWebhook } from "corsair";
 import { corsair, db } from "@/db";
-import { webhookEvents } from "@/db/schema";
+import { user, webhookEvents } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
+import { inngest } from "@/lib/inngest";
 
-// Receives real-time Gmail push notifications via Corsair
+function decodePubSubEmailAddress(body: any): { emailAddress: string; historyId: string } | null {
+  try {
+    const data = body?.message?.data;
+    if (!data) return null;
+    const decoded = JSON.parse(Buffer.from(data, "base64").toString("utf-8"));
+    return {
+      emailAddress: decoded.emailAddress ?? "",
+      historyId: String(decoded.historyId ?? ""),
+    };
+  } catch {
+    return null;
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const headers = Object.fromEntries(request.headers);
     const body = await request.json().catch(() => ({}));
-    const result = await processWebhook(corsair, headers, body);
-    return result.response as unknown as Response;
+
+    // Decode who this notification is for
+    const parsed = decodePubSubEmailAddress(body);
+    if (!parsed?.emailAddress) {
+      // Can't route — still acknowledge to avoid Pub/Sub retry storm
+      return new Response(JSON.stringify({ ok: true }), { status: 200 });
+    }
+
+    // Look up the Tsunagu user who owns this Gmail address
+    const [userRow] = await db
+      .select({ id: user.id })
+      .from(user)
+      .where(eq(user.email, parsed.emailAddress))
+      .limit(1);
+
+    const tenantId = userRow?.id ?? null;
+
+    // processWebhook with tenantId so webhookHooks.after gets the right userId
+    await processWebhook(
+      corsair,
+      headers,
+      body,
+      tenantId ? { tenantId } : undefined,
+    );
+
+    // Fire Inngest event for background processing
+    if (tenantId) {
+      await inngest.send({
+        name: "tsunagu/gmail.message.received",
+        data: {
+          userId: tenantId,
+          emailAddress: parsed.emailAddress,
+          historyId: parsed.historyId,
+        },
+      });
+    }
+
+    return new Response(JSON.stringify({ ok: true }), { status: 200 });
   } catch (err: any) {
-    console.error("[webhooks/gmail]", err?.message ?? err);
-    return new Response(JSON.stringify({ error: "Internal error" }), { status: 500 });
+    console.error("[webhooks/gmail POST]", err?.message ?? err);
+    // Still return 200 so Pub/Sub doesn't retry indefinitely
+    return new Response(JSON.stringify({ ok: true }), { status: 200 });
   }
 }
 
