@@ -1,6 +1,7 @@
 import { processOAuthCallback } from "corsair/oauth";
 import { corsair } from "@/db/index";
 import { inngest } from "@/lib/inngest";
+import { registerGmailWatch, registerCalendarWatch } from "@/lib/register-watch";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
@@ -31,11 +32,22 @@ export async function GET(request: NextRequest) {
       redirectUri: REDIRECT_URI,
     });
 
-    // Notify Inngest so we know a watch needs to be registered for this user
-    await inngest.send({
+    // Register the Google watch immediately — don't rely on Inngest being reachable
+    if (plugin === "gmail") {
+      registerGmailWatch(tenantId).catch((e) =>
+        console.error("[connect] Gmail watch registration failed:", e?.message)
+      );
+    } else if (plugin === "googlecalendar") {
+      registerCalendarWatch(tenantId).catch((e) =>
+        console.error("[connect] Calendar watch registration failed:", e?.message)
+      );
+    }
+
+    // Also notify Inngest (best-effort, non-critical)
+    inngest.send({
       name: "tsunagu/plugin.connected",
       data: { tenantId, plugin },
-    }).catch(() => {}); // non-critical — don't fail the redirect if Inngest is down
+    }).catch(() => {});
 
     const res = NextResponse.redirect(`${BASE}/dashboard`);
     res.cookies.delete("corsair_oauth_state");
