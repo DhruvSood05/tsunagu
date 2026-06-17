@@ -3,8 +3,9 @@ export const maxDuration = 60;
 import { Agent, run, tool } from "@openai/agents";
 import { OpenAIAgentsProvider } from "@corsair-dev/mcp";
 import { corsair, db } from "@/db";
-import { chatMessages, chatSessions, aiUsage } from "@/db/schema";
-import { eq, and, sql } from "drizzle-orm";
+import { chatMessages, chatSessions } from "@/db/schema";
+import { eq } from "drizzle-orm";
+import { checkAndIncrementUsage } from "@/lib/ai-rate-limit";
 import { getSessionCached } from "@/lib/session-cache";
 import { buildRawEmail } from "@/lib/mime";
 import { headers } from "next/headers";
@@ -62,29 +63,12 @@ export async function POST(req: Request) {
   const userEmail = session.user.email ?? "";
   const userName = session.user.name ?? userEmail;
 
-  // Rate limiting: 10 AI requests/day for all users except the owner
-  const FREE_TIER_LIMIT = 10;
-  const isOwner = userEmail === "dhruvsood1102@gmail.com";
-  if (!isOwner) {
-    const today = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" }); // YYYY-MM-DD IST
-    const [usage] = await db
-      .select({ requestCount: aiUsage.requestCount })
-      .from(aiUsage)
-      .where(and(eq(aiUsage.userId, session.user.id), eq(aiUsage.date, today)));
-    const count = usage?.requestCount ?? 0;
-    if (count >= FREE_TIER_LIMIT) {
-      return new Response(
-        JSON.stringify({ error: "rate_limited", count, limit: FREE_TIER_LIMIT }),
-        { status: 429, headers: { "Content-Type": "application/json" } }
-      );
-    }
-    await db
-      .insert(aiUsage)
-      .values({ userId: session.user.id, date: today, requestCount: 1 })
-      .onConflictDoUpdate({
-        target: [aiUsage.userId, aiUsage.date],
-        set: { requestCount: sql`${aiUsage.requestCount} + 1` },
-      });
+  const usage = await checkAndIncrementUsage(session.user.id, userEmail);
+  if (!usage.allowed) {
+    return new Response(
+      JSON.stringify({ error: "rate_limited", count: usage.count, limit: usage.limit }),
+      { status: 429, headers: { "Content-Type": "application/json" } },
+    );
   }
 
   const now = new Date();

@@ -1,12 +1,21 @@
 import { corsair } from "@/db";
 import { getSessionCached } from "@/lib/session-cache";
 import { decodeEmailBody, getHeader } from "@/lib/email";
+import { checkAndIncrementUsage } from "@/lib/ai-rate-limit";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   const session = await getSessionCached(await headers());
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const usage = await checkAndIncrementUsage(session.user.id, session.user.email ?? "");
+  if (!usage.allowed) {
+    return NextResponse.json(
+      { error: "rate_limited", count: usage.count, limit: usage.limit },
+      { status: 429 },
+    );
+  }
 
   try {
     const { emailId, prompt } = await req.json();

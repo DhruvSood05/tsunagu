@@ -68,7 +68,6 @@ export default function DashboardContent({
   const [replyKey, setReplyKey] = useState(0);
   const [emailPriorities, setEmailPriorities] = useState<Record<string, string>>({});
   const [gmailExpired, setGmailExpired] = useState(false);
-  const analyzedIds = useRef<Set<string>>(new Set());
 
   // Resizable split pane
   const containerRef = useRef<HTMLDivElement>(null);
@@ -219,31 +218,6 @@ export default function DashboardContent({
     return () => window.removeEventListener("keydown", handle);
   }, [router]);
 
-  // Batch-analyze up to 5 unread emails for AI priority badges
-  useEffect(() => {
-    if (!emails.length || isSearchMode) return;
-    const unread = emails
-      .filter((e) => e.labelIds?.includes("UNREAD") && !analyzedIds.current.has(e.id))
-      .slice(0, 5);
-    if (!unread.length) return;
-    unread.forEach(async (email) => {
-      analyzedIds.current.add(email.id);
-      try {
-        const res = await fetch("/api/ai/analyze-email", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ emailId: email.id }),
-        });
-        if (!res.ok) return;
-        const data = await res.json();
-        if (data.priority) {
-          setEmailPriorities((prev) => ({ ...prev, [email.id]: data.priority }));
-        }
-      } catch {
-        // silent — priority badge is non-critical
-      }
-    });
-  }, [emails, isSearchMode]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Webhook-driven inbox refresh — poll every 30s, only re-fetch if Corsair signals a change
   useEffect(() => {
@@ -558,6 +532,9 @@ export default function DashboardContent({
                   onDelete={handleEmailDeleted}
                   onArchive={handleArchiveEmail}
                   replyKey={replyKey}
+                  onAnalyzed={(emailId, priority) =>
+                    setEmailPriorities((prev) => ({ ...prev, [emailId]: priority }))
+                  }
                 />
               )}
             </div>

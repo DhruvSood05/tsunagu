@@ -29,6 +29,7 @@ interface EmailDetailProps {
   onDelete: () => void;
   onArchive?: () => void;
   replyKey?: number;
+  onAnalyzed?: (emailId: string, priority: string) => void;
 }
 
 interface CalendarOption {
@@ -56,7 +57,7 @@ function SenderAvatar({ url, initials }: { url?: string; initials: string }) {
   );
 }
 
-export default function EmailDetail({ email, onClose, onDelete, onArchive, replyKey }: EmailDetailProps) {
+export default function EmailDetail({ email, onClose, onDelete, onArchive, replyKey, onAnalyzed }: EmailDetailProps) {
   const { theme } = useTheme();
   const [showReply, setShowReply] = useState(false);
   const [showForward, setShowForward] = useState(false);
@@ -151,27 +152,38 @@ export default function EmailDetail({ email, onClose, onDelete, onArchive, reply
     setShowAddEvent(false);
   }, [replyKey]);
 
-  // Load AI Analysis on mount or email select
+  // Reset AI data when a different email is opened
   useEffect(() => {
-    if (!email?.id) {
-      setAiData(null);
-      return;
-    }
+    setAiData(null);
+  }, [email?.id]);
+
+  const handleSummarize = async () => {
+    if (!email?.id || aiLoading) return;
     setAiLoading(true);
     setAiData(null);
-    fetch("/api/ai/analyze-email", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ emailId: email.id })
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error();
-        return res.json();
-      })
-      .then((data) => setAiData(data))
-      .catch((err) => console.error("AI Analysis failed:", err))
-      .finally(() => setAiLoading(false));
-  }, [email?.id]);
+    try {
+      const res = await fetch("/api/ai/analyze-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ emailId: email.id }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        if (res.status === 429) {
+          setAiData({ _rateLimited: true, limit: err.limit ?? 10 });
+          return;
+        }
+        throw new Error();
+      }
+      const data = await res.json();
+      setAiData(data);
+      if (data.priority) onAnalyzed?.(email.id, data.priority);
+    } catch {
+      // leave aiData null so button stays visible
+    } finally {
+      setAiLoading(false);
+    }
+  };
 
   // Load calendars when add-event panel opens
   useEffect(() => {
@@ -492,6 +504,11 @@ export default function EmailDetail({ email, onClose, onDelete, onArchive, reply
               <Skeleton className="h-4 w-full bg-secondary/60 animate-pulse rounded-md" />
               <Skeleton className="h-3 w-2/3 bg-secondary/40 animate-pulse rounded-md" />
             </div>
+          ) : aiData?._rateLimited ? (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground/60">
+              <RiSparkling2Line className="size-3.5" />
+              <span>Daily AI limit reached ({aiData.limit} requests/day).</span>
+            </div>
           ) : aiData ? (
             <AISummaryCard
               summary={aiData.summary}
@@ -504,10 +521,13 @@ export default function EmailDetail({ email, onClose, onDelete, onArchive, reply
               replyGenerating={replyGenerating}
             />
           ) : (
-            <div className="flex items-center gap-2 text-xs text-muted-foreground/60">
-              <RiSparkling2Line className="size-3.5" />
-              <span>AI summaries unavailable.</span>
-            </div>
+            <button
+              onClick={handleSummarize}
+              className="flex items-center gap-2 text-xs text-muted-foreground/70 hover:text-foreground transition-colors cursor-pointer group"
+            >
+              <RiSparkling2Line className="size-3.5 group-hover:text-foreground" />
+              <span className="font-medium">Summarize with AI</span>
+            </button>
           )}
         </div>
 
