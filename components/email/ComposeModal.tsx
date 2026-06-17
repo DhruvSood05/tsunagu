@@ -5,12 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import {
-  RiAttachmentLine,
-  RiCloseLine,
-  RiDraftLine,
-  RiSendPlaneLine,
-  RiSubtractLine,
-} from "@remixicon/react";
+  Paperclip,
+  X,
+  FileText,
+  Send,
+  Minus,
+} from "lucide-react";
 
 interface ComposeModalProps {
   onClose: () => void;
@@ -162,7 +162,7 @@ export default function ComposeModal({ onClose, initialTo = "", initialSubject =
         onMouseDown={onHeaderDown}
         className={`flex items-center justify-between px-4.5 py-3 bg-secondary/85 shrink-0 select-none ${minimized ? "cursor-default" : "cursor-grab active:cursor-grabbing"}`}
       >
-        <span className="text-xs font-semibold text-foreground truncate pr-2 font-heading">
+        <span className="text-[13px] font-semibold text-foreground truncate pr-2 font-heading">
           {subject.trim() ? subject : "New Message"}
         </span>
 
@@ -176,7 +176,7 @@ export default function ComposeModal({ onClose, initialTo = "", initialSubject =
             onClick={toggleMinimize}
             className="text-muted-foreground hover:text-foreground hover:bg-secondary size-6 rounded-lg cursor-pointer"
           >
-            <RiSubtractLine className="size-3.5" />
+            <Minus className="size-3.5" strokeWidth={1.75} />
           </Button>
           {/* Close */}
           <Button
@@ -187,7 +187,7 @@ export default function ComposeModal({ onClose, initialTo = "", initialSubject =
             onClick={onClose}
             className="text-muted-foreground hover:text-foreground hover:bg-secondary size-6 rounded-lg cursor-pointer"
           >
-            <RiCloseLine className="size-4" />
+            <X className="size-4" strokeWidth={1.75} />
           </Button>
         </div>
       </div>
@@ -217,7 +217,7 @@ export default function ComposeModal({ onClose, initialTo = "", initialSubject =
                 placeholder="recipient@example.com"
                 type="email"
                 autoFocus={!initialTo}
-                className="h-8 text-xs border-0 rounded-none px-0 shadow-none focus-visible:ring-0 bg-transparent"
+                className="h-8 text-[13px] border-0 rounded-none px-0 shadow-none focus-visible:ring-0 bg-transparent"
               />
             </div>
 
@@ -230,7 +230,7 @@ export default function ComposeModal({ onClose, initialTo = "", initialSubject =
                 onChange={(e) => setSubject(e.target.value)}
                 placeholder="Subject"
                 autoFocus={!!initialTo}
-                className="h-8 text-xs border-0 rounded-none px-0 shadow-none focus-visible:ring-0 bg-transparent"
+                className="h-8 text-[13px] border-0 rounded-none px-0 shadow-none focus-visible:ring-0 bg-transparent"
               />
             </div>
           </div>
@@ -240,7 +240,7 @@ export default function ComposeModal({ onClose, initialTo = "", initialSubject =
             value={body}
             onChange={(e) => setBody(e.target.value)}
             placeholder="Write your message…"
-            className="flex-1 px-5 py-4 text-xs text-foreground resize-none outline-none bg-transparent placeholder:text-muted-foreground/45 leading-relaxed"
+            className="flex-1 px-5 py-4 text-[13px] text-foreground resize-none outline-none bg-transparent placeholder:text-muted-foreground/45 leading-relaxed"
             style={{ minHeight: 240 }}
           />
 
@@ -250,7 +250,7 @@ export default function ComposeModal({ onClose, initialTo = "", initialSubject =
           <div className="px-4.5 py-3.5 flex items-center justify-between gap-2 shrink-0 bg-secondary/15">
             {/* Attach */}
             <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer hover:text-foreground transition-colors select-none">
-              <RiAttachmentLine className="size-4" />
+              <Paperclip className="size-4" strokeWidth={1.75} />
               <input
                 type="file"
                 multiple
@@ -279,9 +279,9 @@ export default function ComposeModal({ onClose, initialTo = "", initialSubject =
                 variant="outline"
                 size="sm"
                 onClick={handleSaveDraft}
-                className="h-9 px-3.5 gap-1.5 text-xs font-semibold rounded-lg cursor-pointer border border-border/60 hover:border-border transition-all"
+                className="h-9 px-3.5 gap-1.5 text-[13px] font-semibold rounded-lg cursor-pointer border border-border/60 hover:border-border transition-all"
               >
-                <RiDraftLine className="size-3.5" />
+                <FileText className="size-3.5" strokeWidth={1.75} />
                 Save Draft
               </Button>
 
@@ -289,9 +289,9 @@ export default function ComposeModal({ onClose, initialTo = "", initialSubject =
                 type="submit"
                 size="sm"
                 disabled={sending || !to.trim() || !subject.trim() || !body.trim()}
-                className="h-9 px-4.5 gap-1.5 text-xs font-semibold rounded-lg cursor-pointer"
+                className="h-9 px-4.5 gap-1.5 text-[13px] font-semibold rounded-lg cursor-pointer bg-foreground text-background hover:bg-foreground/90 shadow-sm"
               >
-                <RiSendPlaneLine className="size-3.5" />
+                <Send className="size-3.5" strokeWidth={1.75} />
                 {sending ? "Sending…" : "Send"}
               </Button>
             </div>

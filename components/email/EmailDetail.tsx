@@ -9,20 +9,19 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useTheme } from "@/lib/theme/ThemeProvider";
 import AISummaryCard from "@/components/ai/AISummaryCard";
 import {
-  RiArrowLeftLine,
-  RiArrowRightLine,
-  RiReplyLine,
-  RiDeleteBinLine,
-  RiAttachmentLine,
-  RiSendPlaneLine,
-  RiCalendarEventLine,
-  RiCheckLine,
-  RiSparkling2Line,
-  RiSparkling2Fill,
-  RiAlertLine,
-  RiShareForwardLine,
-  RiArchiveLine,
-} from "@remixicon/react";
+  ArrowLeft,
+  ArrowRight,
+  Reply,
+  Trash2,
+  Paperclip,
+  Send,
+  Calendar,
+  Check,
+  Sparkles,
+  AlertCircle,
+  Forward,
+  Archive,
+} from "lucide-react";
 
 interface EmailDetailProps {
   email: any;
@@ -412,7 +411,7 @@ export default function EmailDetail({ email, onClose, onDelete, onArchive, reply
       {/* Toolbar */}
       <div className="flex items-center justify-between px-4 py-2.5 border-b border-border/40 shrink-0 bg-card/60 backdrop-blur-sm gap-3">
         <Button variant="ghost" size="icon-sm" onClick={onClose} title="Close reading panel (Esc)" className="hover:bg-secondary rounded-lg cursor-pointer shrink-0">
-          <RiArrowLeftLine className="size-4 text-muted-foreground" />
+          <ArrowLeft className="size-4 text-muted-foreground" strokeWidth={1.75} />
         </Button>
         <div className="flex items-center gap-1.5 flex-wrap">
           <Button
@@ -421,7 +420,7 @@ export default function EmailDetail({ email, onClose, onDelete, onArchive, reply
             onClick={showAddEvent ? () => setShowAddEvent(false) : openAddEvent}
             className="gap-1.5 rounded-lg text-xs px-3 h-8 font-medium cursor-pointer text-muted-foreground hover:text-foreground"
           >
-            <RiCalendarEventLine className="size-3.5" />
+            <Calendar className="size-3.5" strokeWidth={1.75} />
             Calendar
           </Button>
           <Button
@@ -430,7 +429,7 @@ export default function EmailDetail({ email, onClose, onDelete, onArchive, reply
             onClick={showForward ? () => setShowForward(false) : openForward}
             className="gap-1.5 rounded-lg text-xs px-3 h-8 font-medium cursor-pointer text-muted-foreground hover:text-foreground"
           >
-            <RiShareForwardLine className="size-3.5" />
+            <Forward className="size-3.5" strokeWidth={1.75} />
             Forward
           </Button>
           <Button
@@ -440,7 +439,7 @@ export default function EmailDetail({ email, onClose, onDelete, onArchive, reply
             className="gap-1.5 rounded-lg text-xs px-3 h-8 font-medium cursor-pointer text-muted-foreground hover:text-foreground"
             title="Reply (R)"
           >
-            <RiReplyLine className="size-3.5" />
+            <Reply className="size-3.5" strokeWidth={1.75} />
             Reply
           </Button>
           <div className="w-px h-4 bg-border/60 mx-0.5" />
@@ -452,7 +451,7 @@ export default function EmailDetail({ email, onClose, onDelete, onArchive, reply
             className="gap-1.5 rounded-lg text-xs px-3 h-8 font-medium cursor-pointer text-muted-foreground hover:text-foreground"
             title={isArchived ? "Move back to Inbox" : "Archive (E)"}
           >
-            <RiArchiveLine className="size-3.5" />
+            <Archive className="size-3.5" strokeWidth={1.75} />
             {archiving ? (isArchived ? "Moving…" : "Archiving…") : (isArchived ? "Unarchive" : "Archive")}
           </Button>
           <Button
@@ -462,7 +461,7 @@ export default function EmailDetail({ email, onClose, onDelete, onArchive, reply
             disabled={deleting}
             className="gap-1.5 rounded-lg text-xs px-3 h-8 font-medium cursor-pointer text-rose-500/70 hover:text-rose-500 hover:bg-rose-500/8"
           >
-            <RiDeleteBinLine className="size-3.5" />
+            <Trash2 className="size-3.5" strokeWidth={1.75} />
             {deleting ? "Deleting…" : "Trash"}
           </Button>
         </div>
@@ -498,7 +497,7 @@ export default function EmailDetail({ email, onClose, onDelete, onArchive, reply
           {aiLoading ? (
             <div className="flex items-center gap-3 px-4 py-3.5 rounded-xl bg-primary/6 border border-primary/15">
               <div className="size-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                <RiSparkling2Fill className="size-4 text-primary animate-pulse" />
+                <Sparkles className="size-4 text-primary animate-pulse" strokeWidth={1.75} fill="currentColor" />
               </div>
               <div className="flex-1 space-y-2 min-w-0">
                 <div className="text-xs font-semibold text-foreground">Analyzing with AI…</div>
@@ -510,7 +509,7 @@ export default function EmailDetail({ email, onClose, onDelete, onArchive, reply
             </div>
           ) : aiData?._rateLimited ? (
             <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-secondary/60 border border-border/40">
-              <RiAlertLine className="size-4 text-muted-foreground/60 shrink-0" />
+              <AlertCircle className="size-4 text-muted-foreground/60 shrink-0" strokeWidth={1.75} />
               <span className="text-xs text-muted-foreground/70">Daily AI limit reached ({aiData.limit} analyses/day).</span>
             </div>
           ) : aiData ? (
@@ -530,13 +529,13 @@ export default function EmailDetail({ email, onClose, onDelete, onArchive, reply
               className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/6 hover:bg-primary/10 border border-primary/15 hover:border-primary/30 transition-all duration-150 cursor-pointer group text-left"
             >
               <div className="size-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0 group-hover:bg-primary/15 transition-colors">
-                <RiSparkling2Fill className="size-4 text-primary" />
+                <Sparkles className="size-4 text-primary" strokeWidth={1.75} fill="currentColor" />
               </div>
               <div className="flex flex-col min-w-0 flex-1">
                 <span className="text-[13px] font-semibold text-foreground leading-tight">Summarize with AI</span>
                 <span className="text-[11px] text-muted-foreground leading-tight mt-0.5">Priority · category · suggested replies</span>
               </div>
-              <RiArrowRightLine className="size-4 text-muted-foreground/40 shrink-0 group-hover:text-primary group-hover:translate-x-0.5 transition-all duration-150" />
+              <ArrowRight className="size-4 text-muted-foreground/40 shrink-0 group-hover:text-primary group-hover:translate-x-0.5 transition-all duration-150" strokeWidth={1.75} />
             </button>
           )}
         </div>
@@ -545,7 +544,7 @@ export default function EmailDetail({ email, onClose, onDelete, onArchive, reply
         {detected.isLikelyEvent && !showAddEvent && (
           <div className="px-6 py-2 bg-secondary/30 border-b border-border/40 shrink-0 flex items-center justify-between gap-3 animate-in slide-in-from-top-1">
             <div className="flex items-center gap-2 min-w-0">
-              <RiCalendarEventLine className="size-4 text-foreground/80 shrink-0" />
+              <Calendar className="size-4 text-foreground/80 shrink-0" strokeWidth={1.75} />
               <p className="text-xs text-muted-foreground truncate font-medium">
                 This email looks like a meeting invite
               </p>
@@ -656,7 +655,7 @@ export default function EmailDetail({ email, onClose, onDelete, onArchive, reply
               )}
               {addStatus === "success" && (
                 <span className="text-xs text-emerald-500 font-semibold flex items-center gap-1 mr-1">
-                  <RiCheckLine className="size-4" />
+                  <Check className="size-4" strokeWidth={1.75} />
                   Added to Schedule
                 </span>
               )}
@@ -666,7 +665,7 @@ export default function EmailDetail({ email, onClose, onDelete, onArchive, reply
                 disabled={addingEvent || !eventTitle.trim() || !eventDate || addStatus === "success"}
                 className="gap-1.5 rounded-md px-3.5 py-2 text-xs font-semibold cursor-pointer"
               >
-                <RiCalendarEventLine className="size-3.5" />
+                <Calendar className="size-3.5" strokeWidth={1.75} />
                 {addingEvent ? "Scheduling" : "Schedule Event"}
               </Button>
             </div>
@@ -700,7 +699,7 @@ export default function EmailDetail({ email, onClose, onDelete, onArchive, reply
             />
             <div className="px-6 py-3.5 border-t border-border/30 flex items-center justify-between gap-3 bg-secondary/10">
               <label className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground cursor-pointer transition-colors select-none">
-                <RiAttachmentLine className="size-4" />
+                <Paperclip className="size-4" strokeWidth={1.75} />
                 <input type="file" multiple onChange={(e) => setForwardFiles(e.target.files)} className="hidden" />
                 <span className="text-[11px] font-medium">
                   {forwardFiles && forwardFiles.length > 0 ? `${forwardFiles.length} attached` : "Attach files"}
@@ -712,7 +711,7 @@ export default function EmailDetail({ email, onClose, onDelete, onArchive, reply
                 )}
                 {forwardStatus === "sent" && (
                   <span className="text-xs text-emerald-500 font-semibold flex items-center gap-1 mr-1">
-                    <RiCheckLine className="size-4" />
+                    <Check className="size-4" strokeWidth={1.75} />
                     Forwarded!
                   </span>
                 )}
@@ -726,9 +725,9 @@ export default function EmailDetail({ email, onClose, onDelete, onArchive, reply
                 <Button
                   type="submit"
                   disabled={forwardSending || !forwardTo.trim() || !forwardBody.trim()}
-                  className="gap-1.5 rounded-md px-3.5 py-2 text-xs font-semibold cursor-pointer"
+                  className="gap-1.5 rounded-md px-3.5 py-2 text-xs font-semibold bg-foreground text-background hover:bg-foreground/90 cursor-pointer shadow-sm"
                 >
-                  <RiSendPlaneLine className="size-3.5" />
+                  <Send className="size-3.5" strokeWidth={1.75} />
                   {forwardSending ? "Forwarding" : "Forward"}
                 </Button>
               </div>
@@ -743,7 +742,7 @@ export default function EmailDetail({ email, onClose, onDelete, onArchive, reply
 
           {/* Custom AI Drafting Prompt Field inside Compose */}
           <div className="mx-6 mt-3.5 h-10 px-3 bg-secondary/40 border border-border rounded-md flex items-center gap-2">
-            <RiSparkling2Fill className="size-3.5 text-muted-foreground shrink-0" />
+            <Sparkles className="size-3.5 text-muted-foreground shrink-0" strokeWidth={1.75} />
             <input
               value={aiPrompt}
               onChange={(e) => setAiPrompt(e.target.value)}
@@ -781,7 +780,7 @@ export default function EmailDetail({ email, onClose, onDelete, onArchive, reply
               {replyGenerating && (
                 <div className="absolute inset-0 bg-background/70 backdrop-blur-xs flex items-center justify-center z-10">
                   <div className="flex flex-col items-center gap-2">
-                    <RiSparkling2Fill className="size-6 text-foreground animate-spin" />
+                    <Sparkles className="size-6 text-foreground animate-spin" strokeWidth={1.75} />
                     <span className="text-xs text-foreground font-semibold">Tsunagu AI is writing reply...</span>
                   </div>
                 </div>
@@ -797,7 +796,7 @@ export default function EmailDetail({ email, onClose, onDelete, onArchive, reply
 
             <div className="px-6 py-3.5 border-t border-border/30 flex items-center justify-between gap-3 bg-secondary/10">
               <label className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground cursor-pointer transition-colors select-none">
-                <RiAttachmentLine className="size-4" />
+                <Paperclip className="size-4" strokeWidth={1.75} />
                 <input type="file" multiple onChange={(e) => setFiles(e.target.files)} className="hidden" />
                 <span className="text-[11px] font-medium">
                   {files && files.length > 0 ? `${files.length} attached` : "Attach files"}
@@ -821,9 +820,9 @@ export default function EmailDetail({ email, onClose, onDelete, onArchive, reply
                 <Button
                   type="submit"
                   disabled={sending || !replyBody.trim()}
-                  className="gap-1.5 rounded-md px-3.5 py-2 text-xs font-semibold cursor-pointer"
+                  className="gap-1.5 rounded-md px-3.5 py-2 text-xs font-semibold bg-foreground text-background hover:bg-foreground/90 cursor-pointer shadow-sm"
                 >
-                  <RiSendPlaneLine className="size-3.5" />
+                  <Send className="size-3.5" strokeWidth={1.75} />
                   {sending ? "Sending" : "Send Response"}
                 </Button>
               </div>

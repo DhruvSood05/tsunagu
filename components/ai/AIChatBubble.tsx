@@ -1,10 +1,7 @@
 "use client";
 
 import ReactMarkdown from "react-markdown";
-import {
-  RiSparkling2Fill,
-  RiUser3Line,
-} from "@remixicon/react";
+import { Sparkles, User } from "lucide-react";
 import type { Message } from "@/types/ai";
 import EmailDraftCard from "./EmailDraftCard";
 import EventCard from "./EventCard";
@@ -17,20 +14,20 @@ export default function AIChatBubble({ message }: AIChatBubbleProps) {
   const isUser = message.role === "user";
 
   return (
-    <div className={`flex gap-2.5 ${isUser ? "justify-end" : "justify-start"} font-sans w-full`}>
+    <div className={`flex gap-3 ${isUser ? "justify-end" : "justify-start"} font-sans select-none w-full`}>
       {!isUser && (
-        <div className="size-8 rounded-xl bg-linear-to-br from-primary/20 to-primary/8 flex items-center justify-center border border-primary/20 shrink-0 shadow-sm mt-0.5 animate-in fade-in duration-200">
-          <RiSparkling2Fill className="size-3.5 text-primary" />
+        <div className="size-7 rounded-full bg-ai-surface flex items-center justify-center border border-ai/15 shrink-0 shadow-sm mt-1 animate-in fade-in duration-200">
+          <Sparkles className="size-3.5 text-ai" strokeWidth={1.75} />
         </div>
       )}
-
-      <div className={`flex flex-col gap-2 max-w-[78%] ${isUser ? "items-end" : "items-start"}`}>
+      
+      <div className={`flex-1 min-w-0 flex flex-col ${isUser ? "items-end order-first" : "items-start"}`}>
         {(message.role === "user" || message.content || !message.artifacts?.length) && (
           <div
-            className={`px-4 py-3 text-[13px] leading-[1.65] transition-colors duration-150 ${
+            className={`max-w-[80%] px-4 py-3 rounded-2xl text-[13px] leading-[1.65] shadow-sm transition-colors duration-150 ${
               isUser
-                ? "bg-primary text-primary-foreground font-medium rounded-[18px] rounded-tr-[5px] shadow-[0_4px_20px_rgba(99,102,241,0.28)] dark:shadow-[0_4px_20px_rgba(99,102,241,0.22)]"
-                : "bg-card text-foreground border border-border/40 rounded-[18px] rounded-tl-[5px] shadow-[0_2px_16px_rgba(0,0,0,0.07)] dark:shadow-[0_2px_16px_rgba(0,0,0,0.28)]"
+                ? "bg-primary text-primary-foreground font-medium rounded-tr-sm"
+                : "bg-ai-surface/50 text-foreground border border-ai/10 rounded-tl-sm"
             }`}
           >
             {message.role === "assistant" && !message.content ? (
@@ -43,8 +40,9 @@ export default function AIChatBubble({ message }: AIChatBubbleProps) {
           </div>
         )}
 
+        {/* Structured artifacts — drafted/sent emails and created events */}
         {!isUser && message.artifacts && message.artifacts.length > 0 && (
-          <div className="w-full flex flex-col gap-3">
+          <div className="w-full flex flex-col mt-3 gap-3">
             {message.artifacts.map((artifact, i) =>
               artifact.kind === "email" ? (
                 <EmailDraftCard key={i} email={artifact} />
@@ -57,8 +55,8 @@ export default function AIChatBubble({ message }: AIChatBubbleProps) {
       </div>
 
       {isUser && (
-        <div className="size-8 rounded-xl bg-secondary flex items-center justify-center border border-border/30 shrink-0 shadow-sm mt-0.5 animate-in fade-in duration-200">
-          <RiUser3Line className="size-3.5 text-foreground/60" />
+        <div className="size-7 rounded-full bg-secondary flex items-center justify-center border border-border/30 shrink-0 shadow-sm mt-1 animate-in fade-in duration-200">
+          <User className="size-3.5 text-foreground/70" strokeWidth={1.75} />
         </div>
       )}
     </div>
@@ -87,16 +85,16 @@ function MarkdownMessage({ content }: { content: string }) {
               </pre>
             );
           }
-          return <code className="bg-secondary/60 border border-border/20 rounded-md px-1.5 py-0.5 text-[11px] font-mono text-primary">{children}</code>;
+          return <code className="bg-secondary/60 border border-border/20 rounded-md px-1.5 py-0.5 text-[11px] font-mono text-ai">{children}</code>;
         },
         pre: ({ children }) => <>{children}</>,
         a: ({ href, children }) => (
-          <a href={href} target="_blank" rel="noreferrer" className="text-primary hover:text-primary/80 underline underline-offset-2 font-medium transition-colors">
+          <a href={href} target="_blank" rel="noreferrer" className="text-ai hover:text-ai/80 underline underline-offset-2 font-medium transition-colors">
             {children}
           </a>
         ),
         blockquote: ({ children }) => (
-          <blockquote className="border-l-2 border-primary/30 pl-3.5 text-foreground/60 italic my-2.5">{children}</blockquote>
+          <blockquote className="border-l-2 border-ai/20 pl-3.5 text-foreground/60 italic my-2.5">{children}</blockquote>
         ),
         hr: () => <hr className="border-border/15 my-3.5" />,
       }}
@@ -108,11 +106,11 @@ function MarkdownMessage({ content }: { content: string }) {
 
 function TypingIndicator() {
   return (
-    <span className="flex gap-1.5 items-center h-5 py-1 select-none">
+    <span className="flex gap-1.5 items-center h-5 py-1.5 select-none">
       {[0, 1, 2].map((i) => (
         <span
           key={i}
-          className="size-1.5 rounded-full bg-primary/40 animate-bounce"
+          className="size-1.5 rounded-full bg-ai/40 animate-bounce"
           style={{ animationDelay: `${i * 150}ms`, animationDuration: "800ms" }}
         />
       ))}

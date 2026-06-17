@@ -1,19 +1,19 @@
 "use client";
 
 import {
-  RiMailLine,
-  RiMegaphoneLine,
-  RiGroupLine,
-  RiBellLine,
-} from "@remixicon/react";
+  Mail,
+  Megaphone,
+  Users,
+  Bell,
+} from "lucide-react";
 
 export type Category = "primary" | "promotions" | "social" | "updates";
 
 const TABS: { id: Category; label: string; icon: React.ElementType }[] = [
-  { id: "primary",    label: "Primary",    icon: RiMailLine },
-  { id: "promotions", label: "Promotions", icon: RiMegaphoneLine },
-  { id: "social",     label: "Social",     icon: RiGroupLine },
-  { id: "updates",    label: "Updates",    icon: RiBellLine },
+  { id: "primary",    label: "Primary",    icon: Mail },
+  { id: "promotions", label: "Promotions", icon: Megaphone },
+  { id: "social",     label: "Social",     icon: Users },
+  { id: "updates",    label: "Updates",    icon: Bell },
 ];
 
 interface CategoryTabsProps {
@@ -40,7 +40,7 @@ export default function CategoryTabs({ active, onChange, loading }: CategoryTabs
                   : "text-muted-foreground hover:text-foreground hover:bg-card/50 border border-transparent"
               }`}
             >
-              <Icon className={`size-3.5 shrink-0 transition-colors ${isActive ? "text-foreground" : "text-muted-foreground/60"}`} />
+              <Icon className={`size-3.5 shrink-0 transition-colors ${isActive ? "text-foreground" : "text-muted-foreground/60"}`} strokeWidth={1.75} />
               {label}
             </button>
           );

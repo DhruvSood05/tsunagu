@@ -7,14 +7,15 @@ import SettingsOverlay from "@/components/layout/SettingsOverlay";
 import AIChatBubble from "@/components/ai/AIChatBubble";
 import { Button } from "@/components/ui/button";
 import {
-  RiSendPlaneLine,
-  RiSparkling2Fill,
-  RiAddLine,
-  RiDeleteBinLine,
-  RiChatHistoryLine,
-  RiMenuFoldLine,
-  RiMenuUnfoldLine,
-} from "@remixicon/react";
+  Send,
+  Sparkles,
+  Plus,
+  Trash2,
+  History,
+  PanelLeftClose,
+  PanelLeft,
+  MessageSquare,
+} from "lucide-react";
 import type { Message, ChatArtifact } from "@/types/ai";
 
 interface ChatSession {
@@ -309,18 +310,18 @@ export default function AIContent({ user, gmailConnected, calendarConnected }: A
           {sidebarOpen && (
             <div
               id="tour-ai-sessions"
-              className="w-56 shrink-0 bg-card border border-border/40 rounded-2xl overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.08)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.32)] flex flex-col"
+              className="w-56 shrink-0 bg-card border border-border/40 rounded-2xl overflow-hidden shadow-lg flex flex-col"
             >
               <div className="px-3 py-3 border-b border-border/40 flex items-center justify-between bg-card/60 backdrop-blur-sm shrink-0">
                 <div className="flex items-center gap-1.5">
-                  <RiChatHistoryLine className="size-3.5 text-muted-foreground" />
+                  <History className="size-3.5 text-muted-foreground" strokeWidth={1.75} />
                   <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">History</span>
                 </div>
                 <button
                   onClick={() => setSidebarOpen(false)}
                   className="size-6 flex items-center justify-center rounded-lg text-muted-foreground/40 hover:text-foreground hover:bg-secondary/60 transition-all cursor-pointer"
                 >
-                  <RiMenuFoldLine className="size-3.5" />
+                  <PanelLeftClose className="size-3.5" strokeWidth={1.75} />
                 </button>
               </div>
 
@@ -329,7 +330,7 @@ export default function AIContent({ user, gmailConnected, calendarConnected }: A
                   onClick={createNewSession}
                   className="w-full flex items-center gap-2 px-2.5 py-2 text-xs font-semibold text-foreground bg-secondary/40 hover:bg-secondary/80 border border-border/30 rounded-xl transition-all cursor-pointer"
                 >
-                  <RiAddLine className="size-3.5 shrink-0" />
+                  <Plus className="size-3.5 shrink-0" strokeWidth={2} />
                   New Chat
                 </button>
               </div>
@@ -344,12 +345,13 @@ export default function AIContent({ user, gmailConnected, calendarConnected }: A
                   <button
                     key={s.id}
                     onClick={() => loadSession(s.id)}
-                    className={`group w-full flex items-center gap-1.5 px-2.5 py-2 rounded-xl text-left transition-all cursor-pointer ${
+                    className={`group w-full flex items-center gap-2 px-2.5 py-2 rounded-xl text-left transition-all cursor-pointer ${
                       activeSessionId === s.id
                         ? "bg-secondary text-foreground"
                         : "text-muted-foreground hover:text-foreground hover:bg-secondary/40"
                     }`}
                   >
+                    <MessageSquare className="size-3 shrink-0 opacity-50" strokeWidth={2} />
                     <div className="flex-1 min-w-0">
                       <p className="text-[11px] font-medium truncate leading-tight">{s.title}</p>
                       <p className="text-[9px] text-muted-foreground/50 mt-0.5 font-mono">
@@ -360,7 +362,7 @@ export default function AIContent({ user, gmailConnected, calendarConnected }: A
                       onClick={(e) => deleteSession(e, s.id)}
                       className="shrink-0 opacity-0 group-hover:opacity-100 size-5 flex items-center justify-center rounded-lg text-muted-foreground/40 hover:text-rose-500 transition-all cursor-pointer"
                     >
-                      <RiDeleteBinLine className="size-3" />
+                      <Trash2 className="size-3" strokeWidth={1.75} />
                     </button>
                   </button>
                 ))}
@@ -371,7 +373,7 @@ export default function AIContent({ user, gmailConnected, calendarConnected }: A
           {/* Main Chat Area */}
           <div
             id="tour-ai-chat"
-            className="flex-1 bg-card border border-border/40 rounded-2xl overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.08)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.32)] flex flex-col relative min-w-0"
+            className="flex-1 bg-card border border-border/40 rounded-2xl overflow-hidden shadow-lg flex flex-col relative min-w-0"
           >
             {/* Inner Header */}
             <div className="px-5 py-3.5 border-b border-border/40 shrink-0 flex items-center justify-between bg-card/70 backdrop-blur-sm relative z-10">
@@ -381,19 +383,19 @@ export default function AIContent({ user, gmailConnected, calendarConnected }: A
                     onClick={() => setSidebarOpen(true)}
                     className="size-7 flex items-center justify-center rounded-xl text-muted-foreground/40 hover:text-foreground hover:bg-secondary/60 transition-all cursor-pointer"
                   >
-                    <RiMenuUnfoldLine className="size-3.5" />
+                    <PanelLeft className="size-3.5" strokeWidth={1.75} />
                   </button>
                 )}
-                <div className="size-7 rounded-xl bg-linear-to-br from-primary/20 to-primary/8 border border-primary/20 flex items-center justify-center">
-                  <RiSparkling2Fill className="size-3.5 text-primary animate-pulse-glow" />
+                <div className="size-7 rounded-full bg-ai-surface border border-ai/15 flex items-center justify-center">
+                  <Sparkles className="size-3.5 text-ai" strokeWidth={1.75} />
                 </div>
-                <h1 className="text-xs font-bold text-foreground tracking-wide">AI Assistant</h1>
+                <h1 className="text-[13px] font-bold text-foreground tracking-wide">AI Assistant</h1>
               </div>
               <button
                 onClick={createNewSession}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-semibold text-muted-foreground hover:text-foreground bg-secondary/40 hover:bg-secondary/80 border border-border/30 rounded-xl transition-all cursor-pointer"
               >
-                <RiAddLine className="size-3" />
+                <Plus className="size-3" strokeWidth={2} />
                 New Chat
               </button>
             </div>
@@ -401,15 +403,15 @@ export default function AIContent({ user, gmailConnected, calendarConnected }: A
             {/* Messages Area */}
             <div className="flex-1 overflow-y-auto px-5 py-5 space-y-4">
               {loadingMessages ? (
-                <div className="flex flex-col items-center justify-center h-full gap-3 text-muted-foreground/40">
-                  <RiChatHistoryLine className="size-7 animate-pulse" />
+               <div className="flex flex-col items-center justify-center h-full gap-3 text-muted-foreground/40">
+                  <History className="size-7 animate-pulse" strokeWidth={1.5} />
                   <p className="text-xs">Loading conversation…</p>
                 </div>
               ) : isEmpty ? (
                 <div className="flex flex-col items-center justify-center h-full gap-8 max-w-2xl mx-auto text-center py-10">
                   <div className="flex flex-col items-center gap-4">
-                    <div className="size-14 rounded-2xl bg-linear-to-br from-primary/20 to-primary/8 border border-primary/20 flex items-center justify-center shadow-[0_8px_24px_rgba(99,102,241,0.18)]">
-                      <RiSparkling2Fill className="size-6 text-primary" />
+                    <div className="size-14 rounded-full bg-ai-surface border border-ai/20 flex items-center justify-center shadow-md">
+                      <Sparkles className="size-6 text-ai" strokeWidth={1.75} />
                     </div>
                     <div className="space-y-2">
                       <h2 className="text-2xl font-bold text-foreground tracking-tight leading-tight">
@@ -447,7 +449,7 @@ export default function AIContent({ user, gmailConnected, calendarConnected }: A
             {/* Input Bar */}
             <div className="px-5 py-4 border-t border-border/40 shrink-0 bg-card/70 backdrop-blur-sm relative z-10">
               <form onSubmit={handleSubmit} className="max-w-3xl mx-auto">
-                <div className="flex items-end gap-2 bg-secondary/30 border border-border/50 focus-within:border-primary/30 focus-within:bg-secondary/50 focus-within:ring-2 focus-within:ring-primary/8 rounded-2xl pl-4 pr-2 py-2 shadow-sm transition-all duration-200">
+                <div className="flex items-end gap-2 bg-secondary/30 border border-border/50 focus-within:border-ai/30 focus-within:bg-secondary/50 focus-within:ring-2 focus-within:ring-ai/8 rounded-2xl pl-4 pr-2 py-2 shadow-sm transition-all duration-200">
                   <textarea
                     ref={inputRef}
                     value={input}
@@ -456,16 +458,16 @@ export default function AIContent({ user, gmailConnected, calendarConnected }: A
                     placeholder="Ask about your emails or calendar…"
                     rows={1}
                     disabled={streaming}
-                    className="flex-1 text-[13px] text-foreground bg-transparent outline-none resize-none placeholder:text-muted-foreground/40 leading-relaxed max-h-36 overflow-y-auto disabled:opacity-50 py-1.5"
+                    className="flex-1 text-[13px] text-foreground bg-transparent outline-none resize-none placeholder:text-muted-foreground/40 leading-relaxed max-h-36 overflow-y-auto disabled:opacity-50 py-1.5 caret-ai"
                     style={{ fieldSizing: "content" } as any}
                   />
                   <Button
                     type="submit"
                     size="icon-sm"
                     disabled={!input.trim() || streaming}
-                    className="shrink-0 mb-0.5 rounded-xl size-8 cursor-pointer disabled:opacity-30 shadow-[0_2px_8px_rgba(99,102,241,0.30)]"
+                    className="shrink-0 mb-0.5 rounded-xl size-8 cursor-pointer disabled:opacity-30 bg-foreground hover:bg-foreground/90 text-background shadow-md"
                   >
-                    <RiSendPlaneLine className="size-4" />
+                    <Send className="size-4" strokeWidth={1.75} />
                   </Button>
                 </div>
                 <p className="text-[10px] text-muted-foreground/40 text-center mt-2">

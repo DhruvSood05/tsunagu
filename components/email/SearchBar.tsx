@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
-import { RiSearchLine, RiCloseLine } from "@remixicon/react";
+import { Search, X } from "lucide-react";
 
 interface SearchBarProps {
   onSearch: (q: string) => void;
@@ -26,7 +26,7 @@ export default function SearchBar({ onSearch, onClear }: SearchBarProps) {
 
   return (
     <div className="relative flex items-center w-full font-sans select-none">
-      <RiSearchLine className="absolute left-3.5 size-4 text-muted-foreground/60 pointer-events-none" />
+      <Search className="absolute left-3.5 size-4 text-muted-foreground/60 pointer-events-none" strokeWidth={1.75} />
       <Input
         id="workspace-search-input"
         value={value}
@@ -39,7 +39,7 @@ export default function SearchBar({ onSearch, onClear }: SearchBarProps) {
           onClick={() => { setValue(""); lastFired.current = ""; onClear(); }}
           className="absolute right-3 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
         >
-          <RiCloseLine className="size-4" />
+          <X className="size-4" strokeWidth={1.75} />
         </button>
       )}
     </div>

@@ -3,6 +3,7 @@
 import type { CalendarInfo } from "@/types/calendar";
 import { COLOR_SWATCHES } from "@/constants/calendar";
 import { Calendar } from "@/components/ui/calendar";
+import { MoreHorizontal } from "lucide-react";
 
 interface CalendarSidebarListProps {
   calendars: CalendarInfo[];
@@ -26,7 +27,7 @@ export default function CalendarSidebarList({
   onDateSelect,
 }: CalendarSidebarListProps) {
   return (
-    <div className="w-60 shrink-0 border-r border-border/30 flex flex-col  overflow-y-auto bg-background font-sans select-none ">
+    <div className="w-60 shrink-0 border-r border-border/30 flex flex-col overflow-y-auto bg-background font-sans select-none">
       <div className="px-5 pt-5 pb-4">
         <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-muted-foreground/50 mb-3 font-heading">
           Calendars
@@ -72,29 +73,11 @@ export default function CalendarSidebarList({
                     {/* Color picker trigger — only visible on hover */}
                     <button
                       type="button"
-                      title="Change color"
-                      onClick={() =>
-                        onOpenColorPicker(pickerOpen ? null : cal.id)
-                      }
+                      title="Options"
+                      onClick={() => onOpenColorPicker(pickerOpen ? null : cal.id)}
                       className="size-5 shrink-0 flex items-center justify-center rounded opacity-0 group-hover:opacity-50 hover:opacity-100! hover:bg-secondary transition-all text-muted-foreground cursor-pointer"
                     >
-                      <svg
-                        viewBox="0 0 16 16"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        className="size-3"
-                      >
-                        <circle
-                          cx="8"
-                          cy="8"
-                          r="2.5"
-                          fill="currentColor"
-                          stroke="none"
-                        />
-                        <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M11.54 4.46l1.41-1.41M3.05 12.95l1.41-1.41" />
-                      </svg>
+                      <MoreHorizontal className="size-3.5" strokeWidth={1.75} />
                     </button>
                   </div>
 

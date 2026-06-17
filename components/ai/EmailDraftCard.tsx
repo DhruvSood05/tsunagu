@@ -2,15 +2,15 @@
 
 import { useState, useEffect } from "react";
 import {
-  RiMailSendLine,
-  RiDraftLine,
-  RiLoaderLine,
-  RiAlertLine,
-  RiCheckDoubleLine,
-  RiCloseLine,
-  RiAddLine,
-  RiPencilLine,
-} from "@remixicon/react";
+  Send,
+  FileText,
+  Loader2,
+  AlertCircle,
+  CheckCheck,
+  X,
+  Plus,
+  Pencil,
+} from "lucide-react";
 import type { ChatArtifact } from "@/types/ai";
 
 type EmailArtifact = Extract<ChatArtifact, { kind: "email" }>;
@@ -59,18 +59,18 @@ export default function EmailDraftCard({ email }: { email: EmailArtifact }) {
   const isSaved = status === "saved";
 
   return (
-    <div className="mt-3 w-full max-w-[620px] rounded-2xl overflow-hidden border border-border/60 bg-card shadow-[0_4px_24px_rgba(0,0,0,0.08)] dark:shadow-[0_4px_24px_rgba(0,0,0,0.32)] animate-in fade-in slide-in-from-bottom-2 duration-200">
+    <div className="mt-3 w-full max-w-[620px] rounded-2xl overflow-hidden border border-border/60 bg-card shadow-sm dark:shadow-[0_4px_24px_rgba(0,0,0,0.22)] animate-in fade-in slide-in-from-bottom-2 duration-200">
 
       {/* ── Header ── */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border/50 bg-secondary/20 dark:bg-secondary/10">
         <div className="flex items-center gap-2.5">
-          <div className="size-7 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+          <div className="size-7 rounded-lg bg-ai-surface border border-ai/20 flex items-center justify-center shrink-0">
             {isSent ? (
-              <RiCheckDoubleLine className="size-3.5 text-emerald-500" />
+              <CheckCheck className="size-3.5 text-emerald-500" strokeWidth={2} />
             ) : isSaved ? (
-              <RiDraftLine className="size-3.5 text-sky-500" />
+              <FileText className="size-3.5 text-sky-500" strokeWidth={1.75} />
             ) : (
-              <RiPencilLine className="size-3.5 text-primary" />
+              <Pencil className="size-3.5 text-ai" strokeWidth={1.75} />
             )}
           </div>
           <span className="text-[12px] font-semibold text-foreground">
@@ -83,10 +83,10 @@ export default function EmailDraftCard({ email }: { email: EmailArtifact }) {
             ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/25"
             : isSaved
             ? "bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/25"
-            : "bg-primary/8 text-primary border-primary/20"
+            : "bg-ai/8 text-ai border-ai/20"
         }`}>
           <span className={`size-1.5 rounded-full ${
-            isSent ? "bg-emerald-500" : isSaved ? "bg-sky-500" : "bg-primary animate-pulse"
+            isSent ? "bg-emerald-500" : isSaved ? "bg-sky-500" : "bg-ai animate-pulse"
           }`} />
           {isSent ? "Delivered" : isSaved ? "In Drafts" : "✨ AI Draft"}
         </span>
@@ -108,7 +108,7 @@ export default function EmailDraftCard({ email }: { email: EmailArtifact }) {
                 onChange={(e) => setTo(e.target.value)}
                 disabled={busy}
                 placeholder="recipient@example.com"
-                className="w-full text-[13px] text-foreground bg-transparent outline-none placeholder:text-muted-foreground/40 disabled:opacity-50"
+                className="w-full text-[13px] text-foreground bg-transparent outline-none placeholder:text-muted-foreground/40 disabled:opacity-50 caret-ai"
               />
             )}
           </div>
@@ -117,7 +117,7 @@ export default function EmailDraftCard({ email }: { email: EmailArtifact }) {
               onClick={() => setShowCc(true)}
               className="shrink-0 flex items-center gap-1 text-[10.5px] font-medium text-muted-foreground/50 hover:text-muted-foreground transition-colors cursor-pointer"
             >
-              <RiAddLine className="size-3" />
+              <Plus className="size-3" strokeWidth={2} />
               CC
             </button>
           )}
@@ -137,7 +137,7 @@ export default function EmailDraftCard({ email }: { email: EmailArtifact }) {
                   onChange={(e) => setCc(e.target.value)}
                   disabled={busy}
                   placeholder="cc@example.com, another@example.com"
-                  className="w-full text-[13px] text-foreground bg-transparent outline-none placeholder:text-muted-foreground/40 disabled:opacity-50"
+                  className="w-full text-[13px] text-foreground bg-transparent outline-none placeholder:text-muted-foreground/40 disabled:opacity-50 caret-ai"
                 />
               )}
             </div>
@@ -146,7 +146,7 @@ export default function EmailDraftCard({ email }: { email: EmailArtifact }) {
                 onClick={() => { setShowCc(false); setCc(""); }}
                 className="shrink-0 text-muted-foreground/40 hover:text-muted-foreground transition-colors cursor-pointer"
               >
-                <RiCloseLine className="size-3.5" />
+                <X className="size-3.5" strokeWidth={2} />
               </button>
             )}
           </div>
@@ -165,7 +165,7 @@ export default function EmailDraftCard({ email }: { email: EmailArtifact }) {
                 onChange={(e) => setSubject(e.target.value)}
                 disabled={busy}
                 placeholder="Subject line"
-                className="w-full text-[13px] font-medium text-foreground bg-transparent outline-none placeholder:text-muted-foreground/40 disabled:opacity-50"
+                className="w-full text-[13px] font-medium text-foreground bg-transparent outline-none placeholder:text-muted-foreground/40 disabled:opacity-50 caret-ai"
               />
             )}
           </div>
@@ -185,7 +185,7 @@ export default function EmailDraftCard({ email }: { email: EmailArtifact }) {
             disabled={busy}
             placeholder="Write your message here…"
             rows={6}
-            className="w-full text-[13px] leading-relaxed text-foreground bg-transparent outline-none resize-none placeholder:text-muted-foreground/40 disabled:opacity-50 min-h-[120px]"
+            className="w-full text-[13px] leading-relaxed text-foreground bg-transparent outline-none resize-none placeholder:text-muted-foreground/40 disabled:opacity-50 min-h-[120px] caret-ai"
           />
         )}
       </div>
@@ -193,7 +193,7 @@ export default function EmailDraftCard({ email }: { email: EmailArtifact }) {
       {/* ── Error ── */}
       {status === "error" && (
         <div className="mx-4 mb-3 flex items-center gap-2 text-[12px] text-rose-600 dark:text-rose-400 bg-rose-500/8 border border-rose-500/20 rounded-xl px-3.5 py-2.5">
-          <RiAlertLine className="size-3.5 shrink-0" />
+          <AlertCircle className="size-3.5 shrink-0" strokeWidth={1.75} />
           <span>{errorMsg || "Failed to process. Please try again."}</span>
         </div>
       )}
@@ -214,9 +214,9 @@ export default function EmailDraftCard({ email }: { email: EmailArtifact }) {
               className="flex items-center gap-1.5 px-3.5 py-1.5 text-[12px] font-medium rounded-xl text-muted-foreground hover:text-foreground border border-border/60 hover:border-border hover:bg-secondary/60 disabled:opacity-40 transition-all cursor-pointer"
             >
               {status === "saving" ? (
-                <RiLoaderLine className="size-3.5 animate-spin" />
+                <Loader2 className="size-3.5 animate-spin" strokeWidth={1.75} />
               ) : (
-                <RiDraftLine className="size-3.5" />
+                <FileText className="size-3.5" strokeWidth={1.75} />
               )}
               {status === "saving" ? "Saving…" : "Save Draft"}
             </button>
@@ -224,12 +224,12 @@ export default function EmailDraftCard({ email }: { email: EmailArtifact }) {
             <button
               onClick={() => submit("send")}
               disabled={busy || !to.trim()}
-              className="flex items-center gap-1.5 px-4 py-1.5 text-[12px] font-semibold rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground disabled:opacity-40 shadow-sm shadow-primary/20 transition-all cursor-pointer"
+              className="flex items-center gap-1.5 px-4 py-1.5 text-[12px] font-semibold rounded-xl bg-foreground hover:bg-foreground/90 text-background disabled:opacity-40 shadow-sm transition-all cursor-pointer"
             >
               {status === "sending" ? (
-                <RiLoaderLine className="size-3.5 animate-spin" />
+                <Loader2 className="size-3.5 animate-spin" strokeWidth={1.75} />
               ) : (
-                <RiMailSendLine className="size-3.5" />
+                <Send className="size-3.5" strokeWidth={1.75} />
               )}
               {status === "sending" ? "Sending…" : "Send"}
             </button>

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import EmailRow from "./EmailRow";
 import { Skeleton } from "@/components/ui/skeleton";
-import { RiInboxLine, RiSearchLine, RiDeleteBinLine } from "@remixicon/react";
+import { Inbox, Search, Trash2 } from "lucide-react";
 
 interface EmailListProps {
   emails: any[];
@@ -18,7 +18,7 @@ interface EmailListProps {
 
 export function EmailListSkeleton() {
   return (
-    <div className="divide-y divide-border/20 font-sans">
+    <div className="font-sans">
       {Array.from({ length: 6 }).map((_, i) => (
         <div key={i} className="flex items-start gap-3 px-4 py-4.5 bg-card">
           <div className="pt-1 shrink-0">
@@ -76,18 +76,18 @@ export default function EmailList({
       <div className="flex flex-col items-center justify-center h-full py-20 gap-3 text-muted-foreground/80 font-sans select-none">
         {isSearchMode ? (
           <>
-            <RiSearchLine className="size-8 opacity-20" />
-            <div className="text-center space-y-1">
-              <p className="text-lg font-semibold text-foreground tracking-tight">No results found</p>
-              <p className="text-xs text-muted-foreground/80">No emails match &quot;{searchQuery}&quot;</p>
+            <Search className="size-8 text-muted-foreground/30" strokeWidth={1.5} />
+            <div className="text-center space-y-1.5">
+              <p className="text-[14px] font-medium font-heading text-foreground tracking-tight">No results found</p>
+              <p className="text-[12px] font-email text-muted-foreground">No emails match &quot;{searchQuery}&quot;</p>
             </div>
           </>
         ) : (
           <>
-            <RiInboxLine className="size-8 opacity-20" />
-            <div className="text-center space-y-1">
-              <p className="text-lg font-semibold text-foreground tracking-tight">Your inbox is empty</p>
-              <p className="text-xs text-muted-foreground/80">Connect Gmail using the sidebar link</p>
+            <Inbox className="size-8 text-muted-foreground/30" strokeWidth={1.5} />
+            <div className="text-center space-y-1.5">
+              <p className="text-[14px] font-medium font-heading text-foreground tracking-tight">Your inbox is empty</p>
+              <p className="text-[12px] font-email text-muted-foreground">You're all caught up.</p>
             </div>
           </>
         )}
@@ -96,11 +96,11 @@ export default function EmailList({
   }
 
   return (
-    <div className="divide-y divide-border/20">
+    <div>
       {/* Bulk action bar — appears when rows are checked */}
       {checkedIds.size > 0 && (
-        <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-2.5 bg-card/95 backdrop-blur-sm border-b border-border/40 shadow-sm animate-in slide-in-from-top-1 duration-150">
-          <span className="text-xs font-semibold text-foreground">
+        <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-2.5 bg-secondary/95 dark:bg-[#1a1a1c]/95 backdrop-blur-sm border-b border-border shadow-sm animate-in slide-in-from-top-1 duration-150">
+          <span className="text-[13px] font-semibold text-foreground">
             {checkedIds.size} selected
           </span>
           <button
@@ -108,7 +108,7 @@ export default function EmailList({
             disabled={bulkDeleting}
             className="flex items-center gap-1.5 text-xs font-semibold text-rose-500 hover:text-rose-400 disabled:opacity-50 transition-colors cursor-pointer"
           >
-            <RiDeleteBinLine className="size-3.5" />
+            <Trash2 className="size-3.5" strokeWidth={1.75} />
             {bulkDeleting ? "Deleting…" : `Delete ${checkedIds.size}`}
           </button>
         </div>

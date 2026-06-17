@@ -1,9 +1,9 @@
 "use client";
 
 import {
-  RiCalendarEventLine, RiCloseLine, RiDeleteBin6Line, RiExternalLinkLine,
-  RiGroupLine, RiMapPinLine, RiPencilLine, RiTimeLine,
-} from "@remixicon/react";
+  Calendar, X, Trash2, ExternalLink,
+  Users, MapPin, Pencil, Clock,
+} from "lucide-react";
 import type { CalendarEvent, CalendarInfo, EditEventForm, Priority } from "@/types/calendar";
 import { GCAL_COLORS, GCAL_DEFAULT, PRIORITY_CONFIG, RESPONSE_LABELS } from "@/constants/calendar";
 import { formatTime, formatDateMed, parseDescription } from "@/lib/calendar-helpers";
@@ -84,7 +84,7 @@ export default function EventDetailPanel({
               value={editForm.title}
               onChange={(e) => onEditFormChange({ title: e.target.value })}
               placeholder="Event title"
-              className="flex-1 min-w-0 text-xs font-semibold bg-transparent border-b border-border/60 focus:border-foreground/45 focus:outline-none pb-0.5 transition-colors placeholder:text-muted-foreground/35 font-heading"
+              className="flex-1 min-w-0 text-[15px] font-semibold bg-transparent border-b border-border/60 focus:border-foreground/45 focus:outline-none pb-0.5 transition-colors placeholder:text-muted-foreground/35 font-heading"
             />
           ) : (
             <h2 className="flex-1 min-w-0 text-lg font-semibold leading-snug line-clamp-2 text-foreground tracking-tight">
@@ -98,14 +98,14 @@ export default function EventDetailPanel({
                 className="size-6 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/80 transition-all cursor-pointer"
                 title="Edit"
               >
-                <RiPencilLine className="size-3.5" />
+                <Pencil className="size-3.5" strokeWidth={1.75} />
               </button>
             )}
             <button
               onClick={onClose}
               className="size-6 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/80 transition-all cursor-pointer"
             >
-              <RiCloseLine className="size-3.5" />
+              <X className="size-3.5" strokeWidth={1.75} />
             </button>
           </div>
         </div>
@@ -117,30 +117,30 @@ export default function EventDetailPanel({
             {editMode ? (
               <div className="space-y-2.5">
                 <div className="flex items-center gap-3">
-                  <RiCalendarEventLine className="size-4 text-muted-foreground/60 shrink-0" />
+                  <Calendar className="size-4 text-muted-foreground/60 shrink-0" strokeWidth={1.75} />
                   <input
                     type="date"
                     value={editForm.date}
                     onChange={(e) => onEditFormChange({ date: e.target.value })}
-                    className="flex-1 text-xs bg-secondary/40 rounded-lg px-2.5 h-9 border border-border/40 focus:border-foreground/30 focus:outline-none transition-colors"
+                    className="flex-1 text-[13px] bg-secondary/40 rounded-lg px-2.5 h-9 border border-border/40 focus:border-foreground/30 focus:outline-none transition-colors"
                   />
                 </div>
                 {selected.start?.dateTime && (
                   <div className="flex items-center gap-3">
-                    <RiTimeLine className="size-4 text-muted-foreground/60 shrink-0" />
+                    <Clock className="size-4 text-muted-foreground/60 shrink-0" strokeWidth={1.75} />
                     <div className="flex items-center gap-2 flex-1">
                       <input
                         type="time"
                         value={editForm.startTime}
                         onChange={(e) => onEditFormChange({ startTime: e.target.value })}
-                        className="flex-1 text-xs bg-secondary/40 rounded-lg px-2.5 h-9 border border-border/40 focus:border-foreground/30 focus:outline-none transition-colors"
+                        className="flex-1 text-[13px] bg-secondary/40 rounded-lg px-2.5 h-9 border border-border/40 focus:border-foreground/30 focus:outline-none transition-colors"
                       />
                       <span className="text-[10px] text-muted-foreground/40">–</span>
                       <input
                         type="time"
                         value={editForm.endTime}
                         onChange={(e) => onEditFormChange({ endTime: e.target.value })}
-                        className="flex-1 text-xs bg-secondary/40 rounded-lg px-2.5 h-9 border border-border/40 focus:border-foreground/30 focus:outline-none transition-colors"
+                        className="flex-1 text-[13px] bg-secondary/40 rounded-lg px-2.5 h-9 border border-border/40 focus:border-foreground/30 focus:outline-none transition-colors"
                       />
                     </div>
                   </div>
@@ -149,8 +149,8 @@ export default function EventDetailPanel({
             ) : (
               <div className="space-y-2">
                 <div className="flex items-center gap-3">
-                  <RiCalendarEventLine className="size-4 text-muted-foreground/60 shrink-0" />
-                  <span className="text-xs font-semibold text-foreground">
+                  <Calendar className="size-4 text-muted-foreground/60 shrink-0" strokeWidth={1.75} />
+                  <span className="text-[13px] font-semibold text-foreground">
                     {selected.start?.dateTime
                       ? formatDateMed(selected.start.dateTime)
                       : formatDateMed(undefined, selected.start?.date)}
@@ -158,16 +158,16 @@ export default function EventDetailPanel({
                 </div>
                 {selected.start?.dateTime ? (
                   <div className="flex items-center gap-3">
-                    <RiTimeLine className="size-4 text-muted-foreground/60 shrink-0" />
-                    <span className="text-xs text-muted-foreground/95">
+                    <Clock className="size-4 text-muted-foreground/60 shrink-0" strokeWidth={1.75} />
+                    <span className="text-[13px] text-muted-foreground/95">
                       {formatTime(selected.start.dateTime)}
                       {selected.end?.dateTime && <> &ndash; {formatTime(selected.end.dateTime)}</>}
                     </span>
                   </div>
                 ) : (
                   <div className="flex items-center gap-3">
-                    <RiTimeLine className="size-4 text-muted-foreground/60 shrink-0" />
-                    <span className="text-xs text-muted-foreground/95">All day</span>
+                    <Clock className="size-4 text-muted-foreground/60 shrink-0" strokeWidth={1.75} />
+                    <span className="text-[13px] text-muted-foreground/95">All day</span>
                   </div>
                 )}
               </div>
@@ -251,7 +251,7 @@ export default function EventDetailPanel({
                   <select
                     value={editForm.calendarId}
                     onChange={(e) => onEditFormChange({ calendarId: e.target.value })}
-                    className="flex-1 text-xs bg-secondary/40 border border-border/40 rounded-lg px-2.5 h-10 focus:outline-none focus:border-foreground/20 transition-colors cursor-pointer"
+                    className="flex-1 text-[13px] bg-secondary/40 border border-border/40 rounded-lg px-2.5 h-10 focus:outline-none focus:border-foreground/20 transition-colors cursor-pointer"
                   >
                     {calendars.map((cal) => (
                       <option key={cal.id} value={cal.id} className="bg-card">{cal.summary ?? cal.id}</option>
@@ -265,10 +265,13 @@ export default function EventDetailPanel({
             {!editMode && selected._calendarId && calendars.length > 1 && (() => {
               const cal = calendars.find((c) => c.id === selected._calendarId);
               return cal ? (
+               <div className="space-y-2">
+                <label className="text-[9.5px] font-bold text-muted-foreground/50 uppercase tracking-[0.13em] font-heading">Calendar</label>
                 <div className="flex items-center gap-2.5">
                   <span className="size-2 shrink-0 rounded-full border border-border/20" style={{ backgroundColor: cal.color }} />
-                  <span className="text-xs text-muted-foreground truncate">{cal.summary ?? cal.id}</span>
+                  <span className="text-[13px] text-muted-foreground truncate">{cal.summary ?? cal.id}</span>
                 </div>
+               </div>
               ) : null;
             })()}
 
@@ -280,13 +283,16 @@ export default function EventDetailPanel({
                   value={editForm.location}
                   onChange={(e) => onEditFormChange({ location: e.target.value })}
                   placeholder="Add location"
-                  className="w-full text-xs bg-secondary/40 rounded-lg px-2.5 h-10 border border-border/40 focus:border-foreground/20 focus:outline-none transition-colors placeholder:text-muted-foreground/35"
+                  className="w-full text-[13px] bg-secondary/40 rounded-lg px-2.5 h-10 border border-border/40 focus:border-foreground/20 focus:outline-none transition-colors placeholder:text-muted-foreground/35"
                 />
               </div>
             ) : selected.location ? (
+              <div className="space-y-2">
+                <label className="text-[9.5px] font-bold text-muted-foreground/50 uppercase tracking-[0.13em] font-heading">Location</label>
               <div className="flex items-start gap-3">
-                <RiMapPinLine className="size-4 text-muted-foreground/60 mt-0.5 shrink-0" />
-                <span className="text-xs text-foreground leading-relaxed">{selected.location}</span>
+                <MapPin className="size-4 text-muted-foreground/60 mt-0.5 shrink-0" strokeWidth={1.75} />
+                <span className="text-[13px] text-foreground leading-relaxed">{selected.location}</span>
+              </div>
               </div>
             ) : null}
 
@@ -299,7 +305,7 @@ export default function EventDetailPanel({
                   onChange={(e) => onEditFormChange({ description: e.target.value })}
                   placeholder="Add notes"
                   rows={4}
-                  className="w-full text-xs bg-secondary/40 border border-border/40 rounded-lg px-2.5 py-2 focus:outline-none focus:border-foreground/20 transition-colors placeholder:text-muted-foreground/35 resize-none leading-relaxed"
+                  className="w-full text-[13px] bg-secondary/40 border border-border/40 rounded-lg px-2.5 py-2 focus:outline-none focus:border-foreground/20 transition-colors placeholder:text-muted-foreground/35 resize-none leading-relaxed"
                 />
               </div>
             ) : (
@@ -314,7 +320,7 @@ export default function EventDetailPanel({
                   onBlur={onNotesSave}
                   placeholder="Add notes…"
                   rows={3}
-                  className="w-full text-xs bg-secondary/40 border border-border/40 rounded-lg px-2.5 py-2 focus:outline-none focus:border-foreground/20 transition-colors placeholder:text-muted-foreground/35 resize-none leading-relaxed"
+                  className="w-full text-[13px] bg-secondary/40 border border-border/40 rounded-lg px-2.5 py-2 focus:outline-none focus:border-foreground/20 transition-colors placeholder:text-muted-foreground/35 resize-none leading-relaxed"
                 />
               </div>
             )}
@@ -327,13 +333,13 @@ export default function EventDetailPanel({
                   value={editForm.attendees}
                   onChange={(e) => onEditFormChange({ attendees: e.target.value })}
                   placeholder="email@company.com, ..."
-                  className="w-full text-xs bg-secondary/40 rounded-lg px-2.5 h-10 border border-border/40 focus:border-foreground/20 focus:outline-none transition-colors placeholder:text-muted-foreground/35"
+                  className="w-full text-[13px] bg-secondary/40 rounded-lg px-2.5 h-10 border border-border/40 focus:border-foreground/20 focus:outline-none transition-colors placeholder:text-muted-foreground/35"
                 />
               </div>
             ) : (selected.attendees?.length ?? 0) > 0 ? (
               <div className="space-y-3">
                 <p className="text-[9.5px] font-bold text-muted-foreground/50 uppercase tracking-[0.13em] flex items-center gap-1.5 font-heading">
-                  <RiGroupLine className="size-3.5 opacity-60" />
+                  <Users className="size-3.5 opacity-60" strokeWidth={1.75} />
                   Guests ({selected.attendees!.length})
                 </p>
                 <div className="space-y-2">
@@ -370,7 +376,7 @@ export default function EventDetailPanel({
                 rel="noreferrer"
                 className="inline-flex items-center gap-1.5 text-[10.5px] text-muted-foreground/60 hover:text-foreground transition-all duration-150 pt-2"
               >
-                <RiExternalLinkLine className="size-3.5" />
+                <ExternalLink className="size-3.5" strokeWidth={1.75} />
                 Open in Google Calendar
               </a>
             )}
@@ -384,14 +390,14 @@ export default function EventDetailPanel({
               <button
                 disabled={saving || !editForm.title.trim()}
                 onClick={onSave}
-                className="flex-1 h-9 text-xs font-semibold bg-primary text-primary-foreground rounded-lg hover:bg-primary/95 disabled:opacity-35 active:scale-[0.98] transition-all duration-150 cursor-pointer shadow-sm"
+                className="flex-1 h-9 text-[13px] font-semibold bg-foreground text-background rounded-lg hover:bg-foreground/90 disabled:opacity-35 active:scale-[0.98] transition-all duration-150 cursor-pointer shadow-sm"
               >
                 {saving ? "Saving…" : "Save Changes"}
               </button>
               <button
                 disabled={saving}
                 onClick={onCancelEdit}
-                className="h-9 px-4 text-xs font-semibold border border-border/60 rounded-lg text-foreground hover:bg-secondary disabled:opacity-35 transition-all duration-150 cursor-pointer"
+                className="h-9 px-4 text-[13px] font-semibold border border-border/60 rounded-lg text-foreground hover:bg-secondary disabled:opacity-35 transition-all duration-150 cursor-pointer"
               >
                 Cancel
               </button>
@@ -400,17 +406,17 @@ export default function EventDetailPanel({
             <div className="flex gap-2">
               <button
                 onClick={onStartEdit}
-                className="flex-1 h-9 text-xs font-semibold border border-border/60 rounded-lg text-foreground hover:bg-secondary transition-all duration-150 flex items-center justify-center gap-1.5 cursor-pointer"
+                className="flex-1 h-9 text-[13px] font-semibold border border-border/60 rounded-lg text-foreground hover:bg-secondary transition-all duration-150 flex items-center justify-center gap-1.5 cursor-pointer"
               >
-                <RiPencilLine className="size-4" />
+                <Pencil className="size-4" strokeWidth={1.75} />
                 Edit
               </button>
               <button
                 disabled={deleting}
                 onClick={onDelete}
-                className="flex-1 h-9 text-xs font-semibold rounded-lg border border-red-200/50 text-red-500/80 hover:text-red-500 hover:bg-red-500/10 disabled:opacity-35 transition-all duration-150 flex items-center justify-center gap-1.5 cursor-pointer"
+                className="flex-1 h-9 text-[13px] font-semibold rounded-lg border border-red-200/50 text-red-500/80 hover:text-red-500 hover:bg-red-500/10 disabled:opacity-35 transition-all duration-150 flex items-center justify-center gap-1.5 cursor-pointer"
               >
-                <RiDeleteBin6Line className="size-4" />
+                <Trash2 className="size-4" strokeWidth={1.75} />
                 {deleting ? "Deleting…" : "Delete"}
               </button>
             </div>

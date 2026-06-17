@@ -1,6 +1,6 @@
 "use client";
 
-import { RiAddLine, RiArrowLeftSLine, RiArrowRightSLine } from "@remixicon/react";
+import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
 import { CALENDAR_VIEWS } from "@/constants/calendar";
 import type { CalendarView } from "@/types/calendar";
 
@@ -34,13 +34,13 @@ export default function CalendarToolbar({
             onClick={onPrev}
             className="size-7 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors duration-150 cursor-pointer"
           >
-            <RiArrowLeftSLine className="size-4.5" />
+            <ChevronLeft className="size-4.5" strokeWidth={1.75} />
           </button>
           <button
             onClick={onNext}
             className="size-7 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors duration-150 cursor-pointer"
           >
-            <RiArrowRightSLine className="size-4.5" />
+            <ChevronRight className="size-4.5" strokeWidth={1.75} />
           </button>
         </div>
 
@@ -52,7 +52,7 @@ export default function CalendarToolbar({
         </button>
 
         <div className="flex items-center gap-2">
-          <h1 className="text-lg font-semibold text-foreground tracking-tight leading-none">{title}</h1>
+          <h1 className="text-[15px] font-semibold text-foreground tracking-tight leading-none">{title}</h1>
           {loading && (
             <div className="size-3 rounded-full border-[1.5px] border-muted-foreground/20 border-t-muted-foreground/55 animate-spin shrink-0" />
           )}
@@ -84,9 +84,9 @@ export default function CalendarToolbar({
         {/* New Event — foreground-fill button */}
         <button
           onClick={onNewEvent}
-          className="flex items-center gap-1.5 h-8 px-4 bg-foreground text-background text-[11px] font-semibold rounded-md hover:bg-foreground/85 active:scale-[0.97] transition-all duration-150 cursor-pointer"
+          className="flex items-center gap-1.5 h-8 px-4 bg-foreground text-background text-[11px] font-semibold rounded-md hover:bg-foreground/85 active:scale-[0.97] transition-all duration-150 cursor-pointer shadow-sm"
         >
-          <RiAddLine className="size-3.5" />
+          <Plus className="size-3.5" strokeWidth={2} />
           New Event
         </button>
       </div>

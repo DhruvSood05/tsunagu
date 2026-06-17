@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { RiMoreLine, RiEditLine, RiDeleteBinLine } from "@remixicon/react";
+import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 
 interface DraftRowProps {
   draft: { id: string };
@@ -31,22 +31,22 @@ function ThreeDotMenu({ onEdit, onDelete }: { onEdit: () => void; onDelete: () =
         onClick={() => setOpen((o) => !o)}
         className="opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity rounded-lg cursor-pointer size-6 hover:bg-secondary"
       >
-        <RiMoreLine className="size-3.5 text-muted-foreground/80 hover:text-foreground" />
+        <MoreHorizontal className="size-3.5 text-muted-foreground/80 hover:text-foreground" strokeWidth={1.75} />
       </Button>
       {open && (
         <div className="absolute right-0 top-full mt-1 w-32 bg-card border border-border shadow-xl z-20 overflow-hidden rounded-lg animate-in fade-in duration-100">
           <button
             onClick={() => { setOpen(false); onEdit(); }}
-            className="flex items-center gap-2.5 w-full text-left px-3.5 py-2 text-xs text-foreground hover:bg-secondary transition-colors cursor-pointer"
+            className="flex items-center gap-2.5 w-full text-left px-3.5 py-2 text-[13px] font-medium text-foreground hover:bg-secondary transition-colors cursor-pointer"
           >
-            <RiEditLine className="size-3.5 text-muted-foreground/60" />
+            <Pencil className="size-3.5 text-muted-foreground/60" strokeWidth={1.75} />
             Edit
           </button>
           <button
             onClick={() => { setOpen(false); onDelete(); }}
-            className="flex items-center gap-2.5 w-full text-left px-3.5 py-2 text-xs text-destructive hover:bg-destructive/15 transition-colors cursor-pointer"
+            className="flex items-center gap-2.5 w-full text-left px-3.5 py-2 text-[13px] font-medium text-destructive hover:bg-destructive/15 transition-colors cursor-pointer"
           >
-            <RiDeleteBinLine className="size-3.5" />
+            <Trash2 className="size-3.5" strokeWidth={1.75} />
             Delete
           </button>
         </div>
@@ -75,10 +75,10 @@ export default function DraftRow({ draft, selected, onClick, onDelete }: DraftRo
           </span>
           <ThreeDotMenu onEdit={onClick} onDelete={() => onDelete(draft.id)} />
         </div>
-        <p className="text-xs font-semibold text-foreground truncate mb-1 tracking-tight font-heading">
+        <p className="text-[13px] font-semibold text-foreground truncate mb-1 tracking-tight font-heading">
           {draftSubject}
         </p>
-        <p className="text-[10.5px] text-muted-foreground/65 truncate leading-relaxed">
+        <p className="text-[11px] text-muted-foreground/65 truncate leading-relaxed">
           {draftBody || "Empty draft message"}
         </p>
       </div>

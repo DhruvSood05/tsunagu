@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog, DialogContent, DialogDescription, DialogTitle,
 } from "@/components/ui/dialog";
-import { RiCalendarEventLine, RiCloseLine, RiGroupLine, RiMapPinLine, RiTimeLine } from "@remixicon/react";
+import { Calendar, X, Users, MapPin, Clock } from "lucide-react";
 import type { CalendarInfo, CreateEventForm } from "@/types/calendar";
 import { GCAL_DEFAULT } from "@/constants/calendar";
 
@@ -46,7 +46,7 @@ export default function CreateEventDialog({
             onClick={handleClose}
             className="size-6 flex items-center justify-center rounded-lg text-muted-foreground/60 hover:text-foreground hover:bg-secondary transition-all cursor-pointer"
           >
-            <RiCloseLine className="size-4" />
+            <X className="size-4" strokeWidth={1.75} />
           </button>
         </div>
 
@@ -59,7 +59,7 @@ export default function CreateEventDialog({
               value={form.title}
               onChange={(e) => onFormChange({ title: e.target.value })}
               onKeyDown={(e) => e.key === "Enter" && !creating && onCreate()}
-              className="h-10 text-[14px] font-medium placeholder:text-muted-foreground/35 border-0 border-b border-border/40 rounded-none px-0 focus-visible:ring-0 shadow-none focus:border-foreground/30 transition-colors bg-transparent font-heading"
+              className="h-10 text-[15px] font-medium placeholder:text-muted-foreground/35 border-0 border-b border-border/40 rounded-none px-0 focus-visible:ring-0 shadow-none focus:border-foreground/30 transition-colors bg-transparent font-heading"
             />
           </div>
 
@@ -69,12 +69,12 @@ export default function CreateEventDialog({
               <p className="text-[9.5px] font-bold uppercase tracking-[0.13em] text-muted-foreground/60 font-heading">When</p>
 
               <div className="flex items-center gap-3">
-                <RiCalendarEventLine className="size-4 text-muted-foreground/50 shrink-0" />
+                <Calendar className="size-4 text-muted-foreground/50 shrink-0" strokeWidth={1.75} />
                 <Input
                   type="date"
                   value={form.date}
                   onChange={(e) => onFormChange({ date: e.target.value })}
-                  className="flex-1 min-w-0 h-10 text-xs rounded-lg border border-border/40 bg-secondary/40 focus-visible:ring-0 focus:border-foreground/20"
+                  className="flex-1 min-w-0 h-10 text-[13px] rounded-lg border border-border/40 bg-secondary/40 focus-visible:ring-0 focus:border-foreground/20"
                 />
                 <label className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground/80 cursor-pointer select-none shrink-0 hover:text-foreground transition-colors">
                   <input
@@ -89,20 +89,20 @@ export default function CreateEventDialog({
 
               {!form.allDay && (
                 <div className="flex items-center gap-3">
-                  <RiTimeLine className="size-4 text-muted-foreground/50 shrink-0" />
+                  <Clock className="size-4 text-muted-foreground/50 shrink-0" strokeWidth={1.75} />
                   <div className="flex items-center gap-2 flex-1 min-w-0">
                     <Input
                       type="time"
                       value={form.startTime}
                       onChange={(e) => onFormChange({ startTime: e.target.value })}
-                      className="flex-1 min-w-0 h-10 text-xs rounded-lg border border-border/40 bg-secondary/40 focus-visible:ring-0 focus:border-foreground/20"
+                      className="flex-1 min-w-0 h-10 text-[13px] rounded-lg border border-border/40 bg-secondary/40 focus-visible:ring-0 focus:border-foreground/20"
                     />
                     <span className="text-muted-foreground/35 text-xs shrink-0">→</span>
                     <Input
                       type="time"
                       value={form.endTime}
                       onChange={(e) => onFormChange({ endTime: e.target.value })}
-                      className="flex-1 min-w-0 h-10 text-xs rounded-lg border border-border/40 bg-secondary/40 focus-visible:ring-0 focus:border-foreground/20"
+                      className="flex-1 min-w-0 h-10 text-[13px] rounded-lg border border-border/40 bg-secondary/40 focus-visible:ring-0 focus:border-foreground/20"
                     />
                   </div>
                 </div>
@@ -124,7 +124,7 @@ export default function CreateEventDialog({
                   <select
                     value={form.calendarId}
                     onChange={(e) => onFormChange({ calendarId: e.target.value })}
-                    className="flex-1 h-10 text-xs bg-secondary/40 border border-border/40 rounded-lg px-2.5 focus:outline-none focus:border-foreground/20 transition-colors cursor-pointer"
+                    className="flex-1 h-10 text-[13px] bg-secondary/40 border border-border/40 rounded-lg px-2.5 focus:outline-none focus:border-foreground/20 transition-colors cursor-pointer"
                   >
                     {calendars.map((cal) => (
                       <option key={cal.id} value={cal.id} className="bg-card">{cal.summary ?? cal.id}</option>
@@ -134,22 +134,22 @@ export default function CreateEventDialog({
               )}
 
               <div className="flex items-center gap-3">
-                <RiMapPinLine className="size-4 text-muted-foreground/50 shrink-0" />
+                <MapPin className="size-4 text-muted-foreground/50 shrink-0" strokeWidth={1.75} />
                 <Input
                   placeholder="Add location"
                   value={form.location}
                   onChange={(e) => onFormChange({ location: e.target.value })}
-                  className="flex-1 h-10 text-xs rounded-lg border border-border/40 bg-secondary/40 focus-visible:ring-0 focus:border-foreground/20 placeholder:text-muted-foreground/45"
+                  className="flex-1 h-10 text-[13px] rounded-lg border border-border/40 bg-secondary/40 focus-visible:ring-0 focus:border-foreground/20 placeholder:text-muted-foreground/45"
                 />
               </div>
 
               <div className="flex items-center gap-3">
-                <RiGroupLine className="size-4 text-muted-foreground/50 shrink-0" />
+                <Users className="size-4 text-muted-foreground/50 shrink-0" strokeWidth={1.75} />
                 <Input
                   placeholder="Invite people (comma separated)"
                   value={form.attendees}
                   onChange={(e) => onFormChange({ attendees: e.target.value })}
-                  className="flex-1 h-10 text-xs rounded-lg border border-border/40 bg-secondary/40 focus-visible:ring-0 focus:border-foreground/20 placeholder:text-muted-foreground/45"
+                  className="flex-1 h-10 text-[13px] rounded-lg border border-border/40 bg-secondary/40 focus-visible:ring-0 focus:border-foreground/20 placeholder:text-muted-foreground/45"
                 />
               </div>
 
@@ -157,7 +157,7 @@ export default function CreateEventDialog({
                 placeholder="Add notes or agenda…"
                 value={form.description}
                 onChange={(e) => onFormChange({ description: e.target.value })}
-                className="text-xs resize-none min-h-[72px] rounded-lg border border-border/40 bg-secondary/40 focus-visible:ring-0 focus:border-foreground/20 placeholder:text-muted-foreground/45 py-2 px-3"
+                className="text-[13px] resize-none min-h-[72px] rounded-lg border border-border/40 bg-secondary/40 focus-visible:ring-0 focus:border-foreground/20 placeholder:text-muted-foreground/45 py-2 px-3 leading-relaxed"
               />
             </div>
           </div>
@@ -167,14 +167,14 @@ export default function CreateEventDialog({
         <div className="px-6 py-4 border-t border-border/30 flex items-center justify-end gap-2 bg-secondary/15">
           <button
             onClick={handleClose}
-            className="h-9 px-4 text-xs font-semibold border border-border/60 rounded-lg text-foreground hover:bg-secondary transition-all duration-150 cursor-pointer"
+            className="h-9 px-4 text-[13px] font-semibold border border-border/60 rounded-lg text-foreground hover:bg-secondary transition-all duration-150 cursor-pointer"
           >
             Cancel
           </button>
           <button
             disabled={!form.title.trim() || creating}
             onClick={onCreate}
-            className="h-9 px-4.5 text-xs font-semibold bg-primary text-primary-foreground rounded-lg hover:bg-primary/95 disabled:opacity-35 active:scale-[0.98] transition-all duration-150 cursor-pointer"
+            className="h-9 px-4.5 text-[13px] font-semibold bg-foreground text-background rounded-lg hover:bg-foreground/90 disabled:opacity-35 active:scale-[0.98] transition-all duration-150 cursor-pointer shadow-sm"
           >
             {creating ? "Creating…" : "Create Event"}
           </button>

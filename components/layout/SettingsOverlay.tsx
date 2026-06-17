@@ -4,18 +4,18 @@ import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useTheme } from "@/lib/theme/ThemeProvider";
 import { Button } from "@/components/ui/button";
 import {
-  RiCloseLine,
-  RiSettings3Line,
-  RiSunLine,
-  RiMoonLine,
-  RiComputerLine,
-  RiGoogleFill,
-  RiCalendarLine,
-  RiRefreshLine,
-  RiLoaderLine,
-  RiRobot2Line,
-  RiLinkUnlinkM,
-} from "@remixicon/react";
+  X,
+  Settings,
+  Sun,
+  Moon,
+  Monitor,
+  Mail,
+  Calendar,
+  RefreshCw,
+  Loader2,
+  Bot,
+  Unplug,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 
 interface SettingsOverlayProps {
@@ -106,14 +106,14 @@ export default function SettingsOverlay({
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4.5 border-b border-border/40 shrink-0 bg-card/60 backdrop-blur-sm">
           <div className="flex items-center gap-2">
-            <RiSettings3Line className="size-4.5 text-muted-foreground" />
+            <Settings className="size-4.5 text-muted-foreground" strokeWidth={1.75} />
             <h2 className="text-xl font-semibold text-foreground tracking-tight">Settings</h2>
           </div>
           <button
             onClick={handleClose}
             className="size-7 flex items-center justify-center rounded-lg text-muted-foreground/60 hover:text-foreground hover:bg-secondary/80 transition-all cursor-pointer"
           >
-            <RiCloseLine className="size-4" />
+            <X className="size-4" strokeWidth={1.75} />
           </button>
         </div>
 
@@ -146,7 +146,7 @@ export default function SettingsOverlay({
               <div className="p-3.5 border border-border/45 rounded-lg bg-background space-y-3">
                 <div className="flex items-start gap-2.5">
                   <div className="size-8 rounded bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-                    <RiRobot2Line className="size-4 text-primary" />
+                    <Bot className="size-4 text-primary" strokeWidth={1.75} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-bold text-foreground">Daily AI Requests</p>
@@ -215,9 +215,9 @@ export default function SettingsOverlay({
             <h3 className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest font-heading">Appearance</h3>
             <div className="grid grid-cols-3 gap-2">
               {[
-                { key: "light", label: "Light", icon: RiSunLine },
-                { key: "dark", label: "Dark", icon: RiMoonLine },
-                { key: "system", label: "System", icon: RiComputerLine },
+                { key: "light", label: "Light", icon: Sun },
+                { key: "dark", label: "Dark", icon: Moon },
+                { key: "system", label: "System", icon: Monitor },
               ].map((opt) => {
                 const Icon = opt.icon;
                 const active = theme === opt.key;
@@ -231,7 +231,7 @@ export default function SettingsOverlay({
                         : "bg-background text-muted-foreground border-border/40 hover:text-foreground hover:bg-secondary/40"
                     }`}
                   >
-                    <Icon className="size-4.5" />
+                    <Icon className="size-4.5" strokeWidth={1.75} />
                     <span>{opt.label}</span>
                   </button>
                 );
@@ -254,7 +254,7 @@ export default function SettingsOverlay({
                 disabled={resettingTour || tourReset}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-semibold text-muted-foreground hover:text-foreground bg-secondary/40 hover:bg-secondary/80 border border-border/30 rounded-lg transition-all disabled:opacity-50 cursor-pointer disabled:cursor-default"
               >
-                <RiRefreshLine className={`size-3 ${resettingTour ? "animate-spin" : ""}`} />
+                <RefreshCw className={`size-3 ${resettingTour ? "animate-spin" : ""}`} strokeWidth={1.75} />
                 {tourReset ? "Reloading…" : resettingTour ? "Resetting…" : "Restart Tour"}
               </button>
             </div>
@@ -271,7 +271,7 @@ export default function SettingsOverlay({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="size-8 rounded bg-[#ea4335]/10 flex items-center justify-center text-[#ea4335]">
-                      <RiGoogleFill className="size-4" />
+                      <Mail className="size-4" strokeWidth={1.75} />
                     </div>
                     <div>
                       <p className="text-xs font-bold text-foreground">Gmail Inbox</p>
@@ -293,9 +293,9 @@ export default function SettingsOverlay({
                     className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 text-[10px] font-semibold text-rose-500 hover:text-rose-600 bg-rose-500/5 hover:bg-rose-500/10 border border-rose-500/20 rounded-md transition-all disabled:opacity-50 cursor-pointer disabled:cursor-default"
                   >
                     {disconnecting === "gmail" ? (
-                      <RiLoaderLine className="size-3 animate-spin" />
+                      <Loader2 className="size-3 animate-spin" strokeWidth={1.75} />
                     ) : (
-                      <RiLinkUnlinkM className="size-3" />
+                      <Unplug className="size-3" strokeWidth={1.75} />
                     )}
                     {disconnecting === "gmail" ? "Disconnecting…" : "Disconnect Gmail"}
                   </button>
@@ -304,7 +304,7 @@ export default function SettingsOverlay({
                     onClick={() => { window.location.href = "/api/connect?plugin=gmail"; }}
                     className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 text-[10px] font-semibold text-foreground bg-secondary/40 hover:bg-secondary/80 border border-border/30 rounded-md transition-all cursor-pointer"
                   >
-                    <RiGoogleFill className="size-3" />
+                    <Mail className="size-3" strokeWidth={1.75} />
                     Connect Gmail
                   </button>
                 )}
@@ -315,7 +315,7 @@ export default function SettingsOverlay({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="size-8 rounded bg-[#4285f4]/10 flex items-center justify-center text-[#4285f4]">
-                      <RiCalendarLine className="size-4" />
+                      <Calendar className="size-4" strokeWidth={1.75} />
                     </div>
                     <div>
                       <p className="text-xs font-bold text-foreground">Google Calendar</p>
@@ -337,9 +337,9 @@ export default function SettingsOverlay({
                     className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 text-[10px] font-semibold text-rose-500 hover:text-rose-600 bg-rose-500/5 hover:bg-rose-500/10 border border-rose-500/20 rounded-md transition-all disabled:opacity-50 cursor-pointer disabled:cursor-default"
                   >
                     {disconnecting === "calendar" ? (
-                      <RiLoaderLine className="size-3 animate-spin" />
+                      <Loader2 className="size-3 animate-spin" strokeWidth={1.75} />
                     ) : (
-                      <RiLinkUnlinkM className="size-3" />
+                      <Unplug className="size-3" strokeWidth={1.75} />
                     )}
                     {disconnecting === "calendar" ? "Disconnecting…" : "Disconnect Calendar"}
                   </button>
@@ -348,7 +348,7 @@ export default function SettingsOverlay({
                     onClick={() => { window.location.href = "/api/connect?plugin=googlecalendar"; }}
                     className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 text-[10px] font-semibold text-foreground bg-secondary/40 hover:bg-secondary/80 border border-border/30 rounded-md transition-all cursor-pointer"
                   >
-                    <RiCalendarLine className="size-3" />
+                    <Calendar className="size-3" strokeWidth={1.75} />
                     Connect Calendar
                   </button>
                 )}
@@ -359,7 +359,7 @@ export default function SettingsOverlay({
 
         {/* Footer */}
         <div className="p-4 border-t border-border/40 bg-secondary/15 shrink-0 flex justify-end">
-          <Button onClick={handleClose} className="h-9 px-4.5 rounded-lg text-xs font-semibold cursor-pointer">
+          <Button onClick={handleClose} className="h-9 px-4.5 rounded-lg text-[13px] bg-foreground text-background font-semibold cursor-pointer shadow-sm hover:bg-foreground/90">
             Close Settings
           </Button>
         </div>

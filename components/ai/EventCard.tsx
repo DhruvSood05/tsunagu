@@ -2,20 +2,15 @@
 
 import { useState, useEffect } from "react";
 import {
-  RiCalendarEventLine,
-  RiExternalLinkLine,
-  RiLoaderLine,
-  RiCheckLine,
-  RiAlertLine,
-  RiMapPinLine,
-  RiGroupLine,
-  RiFileTextLine,
-  RiGlobalLine,
-  RiTimeLine,
-  RiPencilLine,
-  RiCloseLine,
-  RiArrowRightSLine,
-} from "@remixicon/react";
+  ExternalLink,
+  Loader2,
+  AlertCircle,
+  MapPin,
+  Users,
+  FileText,
+  Globe,
+  Calendar,
+} from "lucide-react";
 import type { ChatArtifact } from "@/types/ai";
 
 type EventArtifact = Extract<ChatArtifact, { kind: "event" }>;
@@ -157,7 +152,9 @@ export default function EventCard({ event }: { event: EventArtifact }) {
       setErrorMsg(err?.message ?? "Something went wrong");
       setStatus("error");
     }
-  }  /* ── Accent colors ── */
+  }
+
+  /* ── Accent colors ── */
   const accent = isDeleted
     ? { badge: "text-rose-600 dark:text-rose-400 bg-rose-500/8 border-rose-500/25", dot: "bg-rose-500" }
     : status === "saved"
@@ -166,7 +163,7 @@ export default function EventCard({ event }: { event: EventArtifact }) {
 
   const badgeText = isDeleted ? "Deleted" : status === "saved" ? "Updated" : event.htmlLink ? "Created" : "Scheduled";
 
-  const inputCls = "w-full text-[13px] text-[#111827] dark:text-[#FAFAF8] bg-[#FAFAF8] dark:bg-[#1A1A1A] border border-[#E5E7EB] dark:border-[#333333] rounded-[10px] px-3.5 py-2.5 outline-none focus:border-[#CFE8D6] dark:focus:border-[#2A3B30] focus:ring-2 focus:ring-[#D8F0E1]/50 dark:focus:ring-[#2A3B30]/50 placeholder:text-[#9CA3AF] dark:placeholder:text-[#666666] disabled:opacity-50 transition-all duration-200";
+  const inputCls = "w-full text-[13px] text-[#111827] dark:text-[#FAFAF8] bg-[#FAFAF8] dark:bg-[#1A1A1A] border border-[#E5E7EB] dark:border-[#333333] rounded-[10px] px-3.5 py-2.5 outline-none focus:border-[#CFE8D6] dark:focus:border-[#2A3B30] focus:ring-2 focus:ring-[#D8F0E1]/50 dark:focus:ring-[#2A3B30]/50 placeholder:text-[#9CA3AF] dark:placeholder:text-[#666666] disabled:opacity-50 transition-all duration-200 caret-ai";
 
   const startDate = fmtDate(event.start);
   const startTime = fmtTime(event.start);
@@ -182,6 +179,7 @@ export default function EventCard({ event }: { event: EventArtifact }) {
         <div className="px-5 pt-5 pb-4">
           <div className="flex items-center justify-between mb-3">
              <div className="flex items-center gap-2">
+               <Calendar className="size-3.5 text-[#6B7280] dark:text-[#A1A1AA]" strokeWidth={1.75} />
                <span className="text-[11px] font-medium text-[#6B7280] dark:text-[#A1A1AA] uppercase tracking-wide">Calendar Event</span>
              </div>
              
@@ -193,7 +191,7 @@ export default function EventCard({ event }: { event: EventArtifact }) {
                {event.htmlLink && (
                  <a href={event.htmlLink} target="_blank" rel="noreferrer"
                    className="inline-flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-0.5 rounded-full border text-[#6B7280] dark:text-[#A1A1AA] bg-[#F9FAFB] dark:bg-[#1A1A1A] border-[#E5E7EB] dark:border-[#333333] hover:text-[#111827] dark:hover:text-[#FAFAF8] transition-colors">
-                   <RiExternalLinkLine className="size-3" /> Open
+                   <ExternalLink className="size-3" strokeWidth={1.75} /> Open
                  </a>
                )}
              </div>
@@ -234,7 +232,7 @@ export default function EventCard({ event }: { event: EventArtifact }) {
                     <span className="text-[14px] text-[#111827] dark:text-[#FAFAF8] font-medium mb-1 block">All day</span>
                   )}
                   <div className="flex items-center gap-1.5 text-[12px] text-[#6B7280] dark:text-[#A1A1AA]">
-                    <RiGlobalLine className="size-3.5 opacity-70" />
+                    <Globe className="size-3.5 opacity-70" strokeWidth={1.75} />
                     <span>{event.timeZone || "Asia/Kolkata"}</span>
                   </div>
                 </div>
@@ -246,13 +244,13 @@ export default function EventCard({ event }: { event: EventArtifact }) {
               <div className="space-y-3 pt-1">
                 {hasLocation && (
                   <div className="flex items-start gap-3">
-                    <div className="mt-0.5 text-[#9CA3AF] dark:text-[#666666] shrink-0"><RiMapPinLine className="size-4" /></div>
+                    <div className="mt-0.5 text-[#9CA3AF] dark:text-[#666666] shrink-0"><MapPin className="size-4" strokeWidth={1.75} /></div>
                     <span className="text-[13px] text-[#4B5563] dark:text-[#D4D4D8] leading-relaxed">{event.location}</span>
                   </div>
                 )}
                 {hasAttendees && (
                   <div className="flex items-start gap-3">
-                    <div className="mt-0.5 text-[#9CA3AF] dark:text-[#666666] shrink-0"><RiGroupLine className="size-4" /></div>
+                    <div className="mt-0.5 text-[#9CA3AF] dark:text-[#666666] shrink-0"><Users className="size-4" strokeWidth={1.75} /></div>
                     <div className="flex flex-wrap gap-1.5">
                       {event.attendees!.map((email, i) => (
                         <span key={i} className="text-[12px] font-medium text-[#4B5563] dark:text-[#D4D4D8] bg-[#F3F4F6] dark:bg-[#27272A] border border-[#E5E7EB] dark:border-[#3F3F46] rounded-[8px] px-2.5 py-1">{email}</span>
@@ -262,7 +260,7 @@ export default function EventCard({ event }: { event: EventArtifact }) {
                 )}
                 {hasDescription && (
                   <div className="flex items-start gap-3">
-                    <div className="mt-0.5 text-[#9CA3AF] dark:text-[#666666] shrink-0"><RiFileTextLine className="size-4" /></div>
+                    <div className="mt-0.5 text-[#9CA3AF] dark:text-[#666666] shrink-0"><FileText className="size-4" strokeWidth={1.75} /></div>
                     <p className="text-[13px] text-[#4B5563] dark:text-[#D4D4D8] leading-relaxed whitespace-pre-wrap">{event.description}</p>
                   </div>
                 )}
@@ -321,7 +319,7 @@ export default function EventCard({ event }: { event: EventArtifact }) {
         {busy && (
           <div className="px-5 pb-5">
             <div className="flex items-center gap-2.5 text-[13px] text-[#4B5563] dark:text-[#D4D4D8] px-4 py-3 rounded-[12px] bg-[#FAFAF8] dark:bg-[#1A1A1A] border border-[#E5E7EB] dark:border-[#333333]">
-              <RiLoaderLine className="size-4 animate-spin text-[#4A7D59] dark:text-[#88B395]" />
+              <Loader2 className="size-4 animate-spin text-[#4A7D59] dark:text-[#88B395]" strokeWidth={1.75} />
               <span className="font-medium">Syncing changes...</span>
             </div>
           </div>
@@ -330,7 +328,7 @@ export default function EventCard({ event }: { event: EventArtifact }) {
         {/* ── Error ── */}
         {status === "error" && (
           <div className="mx-5 mb-4 flex items-center gap-2.5 text-[13px] text-[#B91C1C] dark:text-[#F87171] bg-[#FEF2F2] dark:bg-[#451A1A] border border-[#FECACA] dark:border-[#7F1D1D] rounded-[12px] px-4 py-3">
-            <RiAlertLine className="size-4 shrink-0" />
+            <AlertCircle className="size-4 shrink-0" strokeWidth={1.75} />
             <span className="font-medium">{errorMsg || "Failed. Please try again."}</span>
           </div>
         )}

@@ -2,10 +2,10 @@
 
 import * as React from "react"
 import {
-  RiArrowDownSLine,
-  RiArrowLeftSLine,
-  RiArrowRightSLine,
-} from "@remixicon/react"
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react"
 import { DayButton, DayPicker, getDefaultClassNames } from "react-day-picker"
 
 import { cn } from "@/lib/utils"
@@ -138,21 +138,22 @@ function Calendar({
         Chevron: ({ className, orientation, ...props }) => {
           if (orientation === "left") {
             return (
-              <RiArrowLeftSLine className={cn("size-4", className)} {...props} />
+              <ChevronLeft className={cn("size-4", className)} strokeWidth={1.75} {...props} />
             )
           }
 
           if (orientation === "right") {
             return (
-              <RiArrowRightSLine
+              <ChevronRight
                 className={cn("size-4", className)}
+                strokeWidth={1.75}
                 {...props}
               />
             )
           }
 
           return (
-            <RiArrowDownSLine className={cn("size-4", className)} {...props} />
+            <ChevronDown className={cn("size-4", className)} strokeWidth={1.75} {...props} />
           )
         },
         DayButton: CalendarDayButton,

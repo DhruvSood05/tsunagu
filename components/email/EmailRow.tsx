@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { getHeader } from "@/lib/email";
-import { RiStarFill, RiStarLine } from "@remixicon/react";
+import { Star, Check } from "lucide-react";
 
 interface EmailRowProps {
   email: any;
@@ -103,20 +103,26 @@ export default function EmailRow({ email, selected, checked, priority, onClick, 
   return (
     <div
       onClick={onClick}
-      className={`group relative flex items-center gap-3 px-4 py-3.5 cursor-pointer border-b border-border/20 transition-colors duration-150 select-none font-sans ${
+      className={`group relative flex items-center gap-3 px-4 py-3.5 cursor-pointer border-b border-border transition-all duration-150 select-none font-sans ${
         selected
-          ? "bg-secondary border-l-2 border-l-primary"
-          : "hover:bg-secondary/25 border-l-2 border-l-transparent"
-      }`}
+          ? "bg-secondary dark:bg-[#1a1a1c] border-l-2 border-l-primary z-10 shadow-[0_1px_3px_rgba(0,0,0,0.1)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.2)]"
+          : "bg-background hover:bg-foreground/5 dark:hover:bg-[#202022] border-l-2 border-l-transparent"
+      } ${!isUnread && !selected ? "opacity-70 hover:opacity-100" : ""}`}
     >
-      {/* Checkbox — always visible, extreme left */}
-      <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
-        <input
-          type="checkbox"
-          checked={checked}
-          onChange={() => onCheck(!checked)}
-          className="size-3.5 rounded border-border/50 text-foreground focus:ring-foreground/20 bg-transparent focus:outline-none cursor-pointer accent-foreground"
-        />
+      <div className="shrink-0 flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+        <button
+          type="button"
+          role="checkbox"
+          aria-checked={checked}
+          onClick={() => onCheck(!checked)}
+          className={`size-4.5 rounded-[4px] flex items-center justify-center border-[1.5px] transition-all duration-150 focus:outline-none cursor-pointer shadow-sm ${
+            checked 
+              ? "bg-foreground border-foreground text-background" 
+              : "border-muted-foreground/40 bg-card hover:border-foreground/60"
+          }`}
+        >
+          {checked && <Check className="size-3" strokeWidth={3} />}
+        </button>
       </div>
 
       {/* Sender avatar */}
@@ -128,26 +134,26 @@ export default function EmailRow({ email, selected, checked, priority, onClick, 
       <div className="flex-1 min-w-0 space-y-0.5">
         {/* Sender + date */}
         <div className="flex items-baseline justify-between gap-3">
-          <span className={`text-[13px] truncate leading-tight ${
-            isUnread ? "font-semibold text-foreground" : "font-medium text-muted-foreground"
+          <span className={`text-[13px] font-heading truncate leading-tight ${
+            isUnread ? "font-semibold text-foreground" : "font-medium text-foreground"
           }`}>
             {senderName || "(unknown)"}
           </span>
-          <span className="text-[11px] text-muted-foreground/50 font-mono tabular-nums shrink-0">
+          <span className="text-[10px] text-muted-foreground font-mono tabular-nums shrink-0">
             {formattedDate}
           </span>
         </div>
 
         {/* Subject */}
-        <p className={`text-xs truncate leading-snug ${
-          isUnread ? "font-semibold text-foreground" : "font-normal text-foreground/60"
+        <p className={`text-[13px] font-heading truncate leading-snug ${
+          isUnread ? "font-semibold text-foreground/90" : "font-normal text-secondary-foreground"
         }`}>
           {subject || "(no subject)"}
         </p>
 
         {/* Snippet + badges */}
-        <div className="flex items-center gap-2">
-          <p className="text-[11px] text-muted-foreground/45 truncate leading-relaxed flex-1 min-w-0">
+        <div className="flex items-center gap-2 mt-0.5">
+          <p className="text-[12px] font-email font-normal text-muted-foreground truncate leading-relaxed flex-1 min-w-0">
             {email.snippet}
           </p>
           {(badges.length > 0 || priority) && (
@@ -176,11 +182,14 @@ export default function EmailRow({ email, selected, checked, priority, onClick, 
         className="shrink-0 focus:outline-none cursor-pointer"
         title={starred ? "Remove star" : "Star"}
       >
-        {starred ? (
-          <RiStarFill className="size-4 text-amber-400" />
-        ) : (
-          <RiStarLine className="size-4 text-muted-foreground/20 hover:text-amber-400 transition-colors duration-150" />
-        )}
+        <Star 
+          className={`size-4 transition-colors duration-150 ${
+            starred 
+              ? "text-amber-400 fill-amber-400" 
+              : "text-muted-foreground/20 hover:text-amber-400"
+          }`}
+          strokeWidth={1.5}
+        />
       </button>
     </div>
   );

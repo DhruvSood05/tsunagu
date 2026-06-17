@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
-import { RiArrowLeftLine, RiSendPlaneLine, RiAttachmentLine } from "@remixicon/react";
+import { ArrowLeft, Send, Paperclip } from "lucide-react";
 
 interface DraftEditPanelProps {
   draftId: string;
@@ -75,7 +75,7 @@ export default function DraftEditPanel({
       {/* Toolbar */}
       <div className="flex items-center justify-between px-5 py-3 border-b border-border/40 shrink-0 bg-card/60 backdrop-blur-sm">
         <Button variant="ghost" size="icon-sm" onClick={onClose} title="Close" className="rounded-lg hover:bg-secondary cursor-pointer">
-          <RiArrowLeftLine className="size-4 text-muted-foreground hover:text-foreground" />
+          <ArrowLeft className="size-4 text-muted-foreground hover:text-foreground" strokeWidth={1.75} />
         </Button>
         <div className="flex items-center gap-2.5">
           {saveLabel[saveStatus] && (
@@ -87,8 +87,8 @@ export default function DraftEditPanel({
               {saveLabel[saveStatus]}
             </span>
           )}
-          <Button onClick={handleSend} disabled={sending} className="gap-2 h-9 px-4.5 rounded-lg font-semibold text-xs cursor-pointer shadow-sm">
-            <RiSendPlaneLine className="size-3.5" />
+          <Button onClick={handleSend} disabled={sending} className="gap-2 h-9 px-4.5 rounded-lg font-semibold text-[13px] bg-foreground text-background hover:bg-foreground/90 cursor-pointer shadow-sm">
+            <Send className="size-3.5" strokeWidth={1.75} />
             {sending ? "Sending…" : "Send"}
           </Button>
         </div>
@@ -104,17 +104,17 @@ export default function DraftEditPanel({
         />
         <div className="flex items-start gap-3">
           <Avatar className="size-9 border border-border/40">
-            <AvatarFallback className="text-xs bg-secondary/80 font-bold">{avatarLetter}</AvatarFallback>
+            <AvatarFallback className="text-[13px] bg-secondary/80 font-bold">{avatarLetter}</AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-semibold text-foreground">Me</p>
+            <p className="text-[13px] font-semibold text-foreground">Me</p>
             <div className="flex items-center gap-1.5 mt-0.5">
               <span className="text-[10px] text-muted-foreground/60 shrink-0 font-heading">To:</span>
               <input
                 value={to}
                 onChange={(e) => setTo(e.target.value)}
                 placeholder="recipient@example.com"
-                className="text-xs text-foreground outline-none flex-1 min-w-0 bg-transparent placeholder:text-muted-foreground/45"
+                className="text-[13px] text-foreground outline-none flex-1 min-w-0 bg-transparent placeholder:text-muted-foreground/45"
               />
             </div>
           </div>
@@ -127,7 +127,7 @@ export default function DraftEditPanel({
           value={body}
           onChange={(e) => setBody(e.target.value)}
           placeholder="Write your message…"
-          className="w-full h-full min-h-48 text-xs text-foreground resize-none outline-none leading-relaxed bg-transparent placeholder:text-muted-foreground/45"
+          className="w-full h-full min-h-48 text-[13px] text-foreground resize-none outline-none leading-relaxed bg-transparent placeholder:text-muted-foreground/45"
         />
       </div>
 
@@ -135,8 +135,8 @@ export default function DraftEditPanel({
 
       {/* Attachments */}
       <div className="px-5 py-3.5 shrink-0 bg-secondary/15">
-        <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer hover:text-foreground transition-colors w-fit select-none">
-          <RiAttachmentLine className="size-4" />
+        <label className="flex items-center gap-1.5 text-[13px] text-muted-foreground cursor-pointer hover:text-foreground transition-colors w-fit select-none">
+          <Paperclip className="size-4" strokeWidth={1.75} />
           <input type="file" multiple onChange={(e) => setFiles(e.target.files)} className="hidden" />
           <span className="text-[11px] font-medium">
             {files && files.length > 0 ? `${files.length} file(s) attached` : "Attach files"}

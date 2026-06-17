@@ -1,7 +1,7 @@
 "use client";
 
 import { useTheme } from "@/lib/theme/ThemeProvider";
-import { RiSunLine, RiMoonLine } from "@remixicon/react";
+import { Sun, Moon } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export default function ThemeToggle() {
@@ -13,7 +13,7 @@ export default function ThemeToggle() {
   }, []);
 
   if (!mounted) {
-    return <div className="size-9 rounded-lg bg-secondary/40 shrink-0" />;
+    return <div className="size-8 rounded-lg bg-secondary/40 shrink-0" />;
   }
 
   const isDark = theme === "dark";
@@ -21,13 +21,13 @@ export default function ThemeToggle() {
   return (
     <button
       onClick={() => setTheme(isDark ? "light" : "dark")}
-      className="size-9 shrink-0 flex items-center justify-center rounded-lg text-muted-foreground border border-transparent hover:text-foreground hover:bg-card hover:border-border/60 hover:shadow-sm transition-all duration-200 active:scale-90 cursor-pointer"
+      className="size-8 shrink-0 flex items-center justify-center rounded-lg text-muted-foreground border border-transparent hover:text-foreground hover:bg-card hover:border-border/50 transition-all duration-200 active:scale-90 cursor-pointer"
       title={isDark ? "Switch to light mode" : "Switch to dark mode"}
     >
       {isDark ? (
-        <RiSunLine className="size-4.5 text-amber-400 transition-transform duration-300" />
+        <Sun className="size-4 text-amber-400 transition-transform duration-300" strokeWidth={1.75} />
       ) : (
-        <RiMoonLine className="size-4.5 text-indigo-500 transition-transform duration-300" />
+        <Moon className="size-4 text-muted-foreground transition-transform duration-300" strokeWidth={1.75} />
       )}
     </button>
   );

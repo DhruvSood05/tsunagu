@@ -1,4 +1,4 @@
-import { RiArrowLeftSLine, RiArrowRightSLine } from "@remixicon/react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface PaginationProps {
   page: number;
@@ -19,7 +19,7 @@ export default function Pagination({ page, hasPrev, hasNext, onPrev, onNext, loa
         disabled={!hasPrev || loading}
         className="flex items-center gap-1 h-8 pl-2 pr-3.5 rounded-full font-semibold text-[11px] cursor-pointer text-muted-foreground border border-border/50 bg-card hover:text-foreground hover:bg-secondary/50 hover:shadow-sm disabled:opacity-40 disabled:pointer-events-none transition-all duration-150 active:scale-[0.97]"
       >
-        <RiArrowLeftSLine className="size-4" />
+        <ChevronLeft className="size-4" strokeWidth={1.75} />
         Prev
       </button>
 
@@ -33,7 +33,7 @@ export default function Pagination({ page, hasPrev, hasNext, onPrev, onNext, loa
         className="flex items-center gap-1 h-8 pl-3.5 pr-2 rounded-full font-semibold text-[11px] cursor-pointer text-muted-foreground border border-border/50 bg-card hover:text-foreground hover:bg-secondary/50 hover:shadow-sm disabled:opacity-40 disabled:pointer-events-none transition-all duration-150 active:scale-[0.97]"
       >
         Next
-        <RiArrowRightSLine className="size-4" />
+        <ChevronRight className="size-4" strokeWidth={1.75} />
       </button>
     </div>
   );
