@@ -169,7 +169,20 @@ export default function AIContent({ user, gmailConnected, calendarConnected }: A
     const assistantPlaceholder: Message = { role: "assistant", content: "" };
     setMessages((prev) => [...prev, assistantPlaceholder]);
 
-    const openaiMessages = newMessages.map((m) => ({ role: m.role, content: m.content }));
+    // Build messages for the AI — append hidden draft context so the AI knows
+    // what to pass to send_email when the user says "send it" in the next turn.
+    const openaiMessages = newMessages.map((m) => {
+      if (m.role !== "assistant" || !m.artifacts?.length) {
+        return { role: m.role as "user" | "assistant", content: m.content };
+      }
+      let content = m.content;
+      const emailArtifact = m.artifacts.find((a) => a.kind === "email");
+      if (emailArtifact && emailArtifact.kind === "email") {
+        content +=
+          `\n[DRAFT_EMAIL to="${emailArtifact.to}" subject="${emailArtifact.subject}" body="${emailArtifact.body}"]`;
+      }
+      return { role: "assistant" as const, content };
+    });
 
     abortRef.current = new AbortController();
 

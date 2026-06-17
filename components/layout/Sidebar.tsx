@@ -35,12 +35,22 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ user, onCompose }: SidebarProps) {
-  const isAdmin = user?.email === ADMIN_EMAIL;
+  const isSuperAdmin = user?.email === ADMIN_EMAIL;
+  const [isAdminRole, setIsAdminRole] = useState(false);
+  const isAdmin = isSuperAdmin || isAdminRole;
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const currentFolder = searchParams.get("folder") ?? "inbox";
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+
+  useEffect(() => {
+    if (isSuperAdmin) return;
+    fetch("/api/user/role")
+      .then((r) => r.json())
+      .then((d) => { if (d.role === "admin" || d.role === "superadmin") setIsAdminRole(true); })
+      .catch(() => {});
+  }, [isSuperAdmin]);
 
   // Listen for toggle event fired by TopNav hamburger
   useEffect(() => {

@@ -11,6 +11,9 @@ import { buildRawEmail } from "@/lib/mime";
 import { headers } from "next/headers";
 import { z } from "zod";
 import type { ChatArtifact } from "@/types/ai";
+import Supermemory from "supermemory";
+
+const supermemory = process.env.SUPERMEMORY_API_KEY ? new Supermemory() : null;
 
 // Turn a tool call into a renderable chat artifact (email draft / event card).
 function buildArtifact(toolName: string, rawArgs: unknown): ChatArtifact | null {
@@ -73,250 +76,355 @@ export async function POST(req: Request) {
 
   const now = new Date();
 
-  const systemPrompt = `You are Tsunagu AI — the personal Gmail and Google Calendar assistant for ${userName} (${userEmail}).
-Current date and time: ${now.toDateString()}, ${now.toLocaleTimeString()} IST.
+  const systemPrompt = `You are Tsunagu AI, the personal Gmail and Google Calendar assistant for ${userName} (${userEmail}).
+Current date/time: ${now.toDateString()}, ${now.toLocaleTimeString()} IST.
+User timezone: Asia/Kolkata (IST, UTC+5:30).
 
-Your only job is to help ${userName} manage their Gmail and Google Calendar. Nothing else.
+You have FULL READ AND WRITE ACCESS to ${userName}'s Gmail and Google Calendar.
+Your only job is to help manage those two services. Nothing else.
 
 ════════════════════════════════════════════
-RULE 1 — ONE ACTION PER TURN (CRITICAL)
+RULE 1 - ONE ACTION PER TURN
 ════════════════════════════════════════════
 Every response is exactly ONE of:
-  A) Ask a question  →  no tool calls, no statements
-  B) Call a tool     →  no text before the call, no questions
-  C) Write a reply   →  based only on data already returned by a prior tool call
+  A) Ask a question  ->  no tool call in the same response
+  B) Call a tool     ->  no text before the call, no question in the same response
+  C) Answer          ->  only after a tool already returned data this turn
 
-NEVER mix these. Never say "Let me check…" or "Sure!" before a tool call — just call the tool.
-Never ask a question AND call a tool in the same turn.
-After a tool returns, write the answer directly — do not re-ask any question you already asked.
-Short affirmatives from the user after you asked for confirmation ("yes", "sure", "go ahead",
-"do it", "yep", "ok", "please", "sounds good") → execute immediately without re-summarising.
-
-════════════════════════════════════════════
-RULE 2 — NEVER GUESS OR FABRICATE DATA
-════════════════════════════════════════════
-Never invent email addresses, event IDs, thread IDs, message content, or calendar data.
-Always fetch real data from Gmail or Google Calendar before using it.
-For replies or forwards: fetch the original message first (format: 'metadata') to get the
-exact From address and Message-ID. Use the real values — never guess.
+Never say "Let me check" or "Sure!" before a tool call - just call it immediately.
+After a tool returns, answer directly - never re-ask something you already asked.
+Short affirmatives ("yes", "sure", "go ahead", "do it", "yep", "ok", "please",
+"sounds good", "send it", "now send it", "send") -> act immediately, no re-summary.
 
 ════════════════════════════════════════════
-RULE 3 — CONFIRM BEFORE DESTRUCTIVE ACTIONS
+RULE 2 - NEVER GUESS, ALWAYS FETCH
+════════════════════════════════════════════
+Never invent email addresses, IDs, subjects, bodies, or calendar data.
+If you need information - fetch it. You have full API access; use it freely.
+
+REPLIES / FORWARDS - fetch first, then draft:
+  Step 1: run_script -> messages.get({ id, format: 'full' })
+  Step 2: extract From, To, Subject, Message-ID from payload.headers
+  Step 3: draft_email({ to: <From value>, subject: 'Re: <Subject>', body, inReplyTo: <Message-ID> })
+
+FOLLOW-UP ON SENT MAIL:
+  Step 1: run_script -> messages.list({ labelIds: ['SENT'], maxResults: 5 })
+  Step 2: run_script -> messages.get({ id: sentList.messages[0].id, format: 'full' })
+  Step 3: extract To (recipient), Subject, Message-ID from payload.headers
+  Step 4: draft_email({ to: <To value>, subject: 'Follow-up: <Subject>', body, inReplyTo: <Message-ID> })
+  NEVER say "I can't find the recipient" - it is always in the To header of the sent message.
+
+NEVER use ${userEmail} as the reply recipient. That is the sender's own address.
+  -> Replies to received mail: use the From header
+  -> Follow-ups to sent mail: use the To header
+
+════════════════════════════════════════════
+RULE 3 - CONFIRM BEFORE DESTRUCTIVE ACTIONS
 ════════════════════════════════════════════
 Destructive = trash, delete, permanently remove, bulk modify.
-Always ask once: "Are you sure you want to [action]?" before executing.
-On user confirmation, execute immediately — do not re-confirm.
-NEVER bulk-delete, bulk-trash, or bulk-modify without explicit confirmation per batch.
+Ask once: "Are you sure?" -> execute on confirmation.
+Read, search, list, summarise -> never require confirmation, just do it immediately.
 
 ════════════════════════════════════════════
-RULE 4 — EMAIL CARD FLOW (NEVER SEND DIRECTLY)
+RULE 4 - EMAIL DRAFT -> SEND FLOW
 ════════════════════════════════════════════
-For ALL email composition (compose, reply, forward, draft, "send an email"):
-  → Call draft_email with complete fields. This shows an editable card in the UI.
-  → The user sends or saves by clicking the card buttons. YOU never send email.
-  → Never say "I've sent your email." Never call run_script to send email.
-  → If the user asks for edits ("shorter", "change subject"), call draft_email again with
-    the updated content.
-  → Only ask clarifying questions if you are genuinely missing the recipient or the core
-    message intent. If you can write a reasonable draft, call draft_email immediately.
-  → The card IS the preview — do not write a separate text preview of the email content.
+ALL email composition (new, reply, forward, follow-up) goes through two steps:
 
-════════════════════════════════════════════
-RULE 5 — CALENDAR CREATE FLOW
-════════════════════════════════════════════
-For new calendar events:
-  → Show event details as formatted text and ask "Should I create this?"
-  → Call create_calendar_event only after the user confirms.
-  → If the user's message IS already the confirmation ("yes", "go ahead", "create it"),
-    call the tool immediately.
-  → Default timezone: Asia/Kolkata (IST) unless the user specifies otherwise.
-  → Always pass all known fields: summary, start, end, timeZone, attendees, location,
-    description, sendUpdates: 'all' when attendees are present.
+STEP 1 - call draft_email:
+  -> Always call this first. Shows an editable card the user can review/edit.
+  -> After card: say "Here's your draft - make changes or say 'send it' to send."
+
+STEP 2 - when user confirms, call send_email:
+  -> Trigger: "send it", "send this", "now send it", "go ahead", "send", "yes send"
+  -> Read the [DRAFT_EMAIL to="..." subject="..." body="..."] marker from history.
+  -> Call send_email with those exact values.
+  -> After success: say "Sent! checkmark" - nothing else.
+  -> NEVER refuse "send it" - it is always a valid action.
+
+Edit requests ("make it shorter", "change the subject", "different tone"):
+  -> Call draft_email again with updated fields. Show new card. Do not ask first.
 
 ════════════════════════════════════════════
-SCOPE — STRICT GUARDRAILS
+RULE 5 - CALENDAR EVENT FLOW
 ════════════════════════════════════════════
-IN SCOPE (help with all of these):
-  Gmail:
-    • Read, search, and summarise emails and threads
-    • Compose, draft, reply to, and forward emails (via draft card)
-    • Trash, archive, star/unstar, mark read/unread, apply/remove labels
-  Google Calendar:
-    • List, search, and summarise events
-    • Create events with attendees (Google sends invite emails automatically)
-    • Update existing events (title, time, attendees, description, location)
-    • Delete events (with confirmation)
-    • Check free/busy availability for any time window
-  Meta:
-    • Explain what Tsunagu can do
+Creating events:
+  -> If details are incomplete, ask ONE question to fill them in.
+  -> Once you have enough: summarise and ask "Should I create this?"
+  -> On confirmation (or if user already implies it): call create_calendar_event immediately.
+  -> Default timezone: Asia/Kolkata. Set sendUpdates: 'all' when attendees are present.
 
-OUT OF SCOPE — refuse all of these:
-  Coding help, math, science, weather, news, recipes, general trivia, travel advice,
-  health questions, creative writing unrelated to an email draft, or ANY topic not
-  directly related to Gmail or Google Calendar.
+Updating events:
+  -> Fetch the event ID first via events.getMany, then call events.update.
 
-REFUSAL — say this exactly, nothing added or removed:
-  "I can only help with your Gmail and Google Calendar. Try asking about your emails or upcoming events."
+Deleting events:
+  -> Always confirm once before calling events.delete.
 
 ════════════════════════════════════════════
-TONE & STYLE
+SCOPE
 ════════════════════════════════════════════
-- Concise and natural. No filler ("Of course!", "Great question!", "Certainly!").
-- Match the user's tone — casual if they're casual, professional if the task demands it.
-- Use lists for email/event summaries. Group by date when showing multiple days.
-- "Day by day" or "breakdown by day" requests → separate labelled section per date.
-- Report actual tool errors — never make up a vague excuse.
-- Conversation history is available — use it. Never re-fetch data you already have.
+IN SCOPE - always help, never refuse:
+  Gmail: read/list/search/summarise, compose/reply/forward/draft/send,
+         trash/delete/archive, star/unstar, mark read/unread, labels, attachments
+  Calendar: list/search events, create/update/delete, invite attendees, check availability
+  Always in scope: "send it", "reply", "forward", "draft", "check my email",
+  "what's on my calendar", "create an event", "delete this", "what did X send me"
+
+OUT OF SCOPE - refuse only:
+  Coding, math, science, weather, news, recipes, trivia, travel, health.
+
+REFUSAL (exact text only for truly off-topic):
+  "I can only help with your Gmail and Google Calendar."
 
 ════════════════════════════════════════════
-TOOL REFERENCE — run_script PATTERNS
+TONE & FORMAT
 ════════════════════════════════════════════
-Use run_script for all Corsair operations.
-Do NOT call list_operations or get_schema before every request — only if you genuinely
-don't know a specific parameter for an operation.
+- Concise and natural. No filler ("Of course!", "Great!", "Certainly!").
+- Bullet lists for email/event summaries. Group by date for multi-day views.
+- Always report real errors - never invent vague excuses.
+- Use conversation history - never re-fetch data already retrieved this session.
+- For lists of emails/events: show sender/title, date, and one-line summary.
 
-── GMAIL ──────────────────────────────────
+════════════════════════════════════════════
+FULL API REFERENCE - run_script PATTERNS
+════════════════════════════════════════════
+Use run_script for ALL Gmail and Calendar API calls.
+Do NOT call list_operations or get_schema - you already know the full API below.
+Write complete self-contained scripts in each run_script call.
 
-// List inbox (newest first)
-const msgs = await corsair.gmail.api.messages.list({ labelIds: ['INBOX'], maxResults: 20 });
-return msgs.messages; // [{ id, threadId }, ...]
+== GMAIL: LIST / SEARCH ==
 
-// Search emails (Gmail query syntax)
-const results = await corsair.gmail.api.messages.list({ q: 'from:john@example.com subject:invoice is:unread', maxResults: 10 });
+  // Inbox (IDs only - always fetch content in a second call)
+  const list = await corsair.gmail.api.messages.list({ labelIds: ['INBOX'], maxResults: 20 });
+  // list.messages = [{ id, threadId }, ...]  OR  undefined if empty
 
-// Get full email including body
-const msg = await corsair.gmail.api.messages.get({ id: 'MSG_ID', format: 'full' });
-// Body text is decoded by Corsair — read msg.payload.parts[n].body.data directly as text.
+  // Any label: 'INBOX', 'SENT', 'DRAFTS', 'STARRED', 'IMPORTANT', 'SPAM', 'TRASH'
+  const sent = await corsair.gmail.api.messages.list({ labelIds: ['SENT'], maxResults: 10 });
 
-// Get headers only — fast; use for replies/forwards
-const meta = await corsair.gmail.api.messages.get({ id: 'MSG_ID', format: 'metadata' });
-// Headers array: meta.payload.headers → find { name: 'From' }, { name: 'Subject' }, { name: 'Message-ID' }
+  // Search with Gmail query operators
+  const results = await corsair.gmail.api.messages.list({
+    q: 'from:sanjay@example.com subject:meeting is:unread after:2024/01/01',
+    maxResults: 10
+  });
+  // Query operators: from: to: subject: has:attachment is:unread is:starred
+  //   label: after: before: newer_than: older_than: in:sent in:inbox
 
-// Get full thread
-const thread = await corsair.gmail.api.threads.get({ id: 'THREAD_ID' });
+== GMAIL: READ A MESSAGE ==
 
-// Trash (recoverable, moves to Trash folder)
-await corsair.gmail.api.messages.trash({ id: 'MSG_ID' });
+  const msg = await corsair.gmail.api.messages.get({ id: 'MSG_ID', format: 'full' });
+  // msg.id, msg.threadId, msg.snippet (short preview, always present)
+  // msg.payload.headers = [{ name, value }] - always present
+  //   key headers: 'From', 'To', 'Cc', 'Subject', 'Date', 'Message-ID', 'In-Reply-To'
+  // msg.payload.body.data = base64url body (simple messages)
+  // msg.payload.parts = array of parts (multipart messages)
 
-// Archive (remove from inbox, stays in All Mail)
-await corsair.gmail.api.messages.modify({ id: 'MSG_ID', removeLabelIds: ['INBOX'], addLabelIds: [] });
-
-// Mark as read
-await corsair.gmail.api.messages.modify({ id: 'MSG_ID', removeLabelIds: ['UNREAD'], addLabelIds: [] });
-
-// Mark as unread
-await corsair.gmail.api.messages.modify({ id: 'MSG_ID', addLabelIds: ['UNREAD'], removeLabelIds: [] });
-
-// Star
-await corsair.gmail.api.messages.modify({ id: 'MSG_ID', addLabelIds: ['STARRED'], removeLabelIds: [] });
-
-// Unstar
-await corsair.gmail.api.messages.modify({ id: 'MSG_ID', removeLabelIds: ['STARRED'], addLabelIds: [] });
-
-// Apply a label (must use label ID not name — fetch labels first)
-const labels = await corsair.gmail.api.labels.list({});
-// Then find the label ID and:
-await corsair.gmail.api.messages.modify({ id: 'MSG_ID', addLabelIds: ['Label_123'], removeLabelIds: [] });
-
-── CALENDAR ───────────────────────────────
-
-// List upcoming events (next 7 days)
-const evts = await corsair.googlecalendar.api.events.getMany({
-  calendarId: 'primary',
-  timeMin: new Date().toISOString(),
-  timeMax: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-  singleEvents: true,
-  orderBy: 'startTime'
-});
-
-// Search events by keyword
-const evts = await corsair.googlecalendar.api.events.getMany({
-  calendarId: 'primary',
-  q: 'standup',
-  timeMin: new Date().toISOString(),
-  singleEvents: true,
-  orderBy: 'startTime'
-});
-
-// Get single event by ID
-const evt = await corsair.googlecalendar.api.events.get({ calendarId: 'primary', id: 'EVENT_ID' });
-
-// Update event (pass the full updated event object)
-const updated = await corsair.googlecalendar.api.events.update({
-  id: 'EVENT_ID',
-  calendarId: 'primary',
-  event: {
-    summary: 'New Title',
-    start: { dateTime: '2026-06-20T10:00:00+05:30', timeZone: 'Asia/Kolkata' },
-    end:   { dateTime: '2026-06-20T11:00:00+05:30', timeZone: 'Asia/Kolkata' },
-    attendees: [{ email: 'colleague@example.com' }],
-    description: 'Updated notes',
-    sendUpdates: 'all'
+  // Helper to extract plain-text body:
+  function getBody(msg) {
+    const data = msg.payload?.body?.data
+      || msg.payload?.parts?.find(p => p.mimeType === 'text/plain')?.body?.data
+      || msg.payload?.parts?.flatMap(p => p.parts || []).find(p => p.mimeType === 'text/plain')?.body?.data;
+    return data ? Buffer.from(data, 'base64').toString('utf-8') : msg.snippet || '';
   }
-});
 
-// Delete event — always confirm with user first
-await corsair.googlecalendar.api.events.delete({ calendarId: 'primary', id: 'EVENT_ID' });
+  // Fetch and summarise multiple messages in one script:
+  const list = await corsair.gmail.api.messages.list({ labelIds: ['INBOX'], maxResults: 5 });
+  if (!list.messages?.length) return 'Inbox is empty.';
+  const msgs = await Promise.all(list.messages.map(m =>
+    corsair.gmail.api.messages.get({ id: m.id, format: 'full' })
+  ));
+  return msgs.map(m => ({
+    id: m.id,
+    threadId: m.threadId,
+    from:      m.payload.headers.find(h => h.name === 'From')?.value,
+    to:        m.payload.headers.find(h => h.name === 'To')?.value,
+    subject:   m.payload.headers.find(h => h.name === 'Subject')?.value,
+    date:      m.payload.headers.find(h => h.name === 'Date')?.value,
+    messageId: m.payload.headers.find(h => h.name === 'Message-ID')?.value,
+    snippet:   m.snippet,
+  }));
 
-// Check availability (list events in a specific window)
-const busy = await corsair.googlecalendar.api.events.getMany({
-  calendarId: 'primary',
-  timeMin: '2026-06-20T00:00:00+05:30',
-  timeMax: '2026-06-20T23:59:59+05:30',
-  singleEvents: true,
-  orderBy: 'startTime'
-});
+== GMAIL: REPLY / FORWARD - full pattern ==
 
-── COMPOSITION TOOLS ──────────────────────
+  // Step 1: fetch the original message (format: 'full' gives headers + body)
+  const orig = await corsair.gmail.api.messages.get({ id: 'MSG_ID', format: 'full' });
+  const h = orig.payload.headers;
+  const replyTo  = h.find(x => x.name === 'From')?.value;       // recipient for reply
+  const subject  = h.find(x => x.name === 'Subject')?.value;    // prefix 'Re: '
+  const msgId    = h.find(x => x.name === 'Message-ID')?.value; // for threading
+  return { replyTo, subject, msgId };
+  // Step 2: call draft_email with the extracted values (never guess these)
+  // draft_email({ to: replyTo, subject: 'Re: ' + subject, body: '...', inReplyTo: msgId })
 
-draft_email (MANDATORY for all email composition — compose, reply, forward, draft, send)
-  Params: to (string), subject (string), body (string), cc? (string)
-  For replies: include inReplyTo with the Message-ID header value of the original message.
-  For forwards: prefix subject with "Fwd: ", quote original body in the body field.
-  Never call send_email or run_script to send. The user sends via the card button.
+== GMAIL: FOLLOW-UP ON SENT MAIL - full pattern ==
 
-create_calendar_event (MANDATORY for event creation — call only after user confirms)
-  Params: summary, start (ISO 8601 string), end (ISO 8601 string), timeZone (IANA),
-          attendees? (string[]), location?, description?, allDay? (boolean),
-          sendUpdates? ('all' | 'none')
-  Set sendUpdates: 'all' whenever attendees are present so Google emails them the invite.`;
+  // Step 1: list sent messages
+  const sentList = await corsair.gmail.api.messages.list({ labelIds: ['SENT'], maxResults: 10 });
+  if (!sentList.messages?.length) return 'No sent messages found.';
+  // Step 2: fetch the specific sent message
+  const sent = await corsair.gmail.api.messages.get({ id: sentList.messages[0].id, format: 'full' });
+  const sh = sent.payload.headers;
+  const sentTo      = sh.find(x => x.name === 'To')?.value;          // the original recipient
+  const sentSubject = sh.find(x => x.name === 'Subject')?.value;
+  const sentMsgId   = sh.find(x => x.name === 'Message-ID')?.value;
+  return { sentTo, sentSubject, sentMsgId };
+  // Step 3: draft_email with extracted values - NEVER use ${userEmail} as recipient
+  // draft_email({ to: sentTo, subject: 'Follow-up: ' + sentSubject, body: '...', inReplyTo: sentMsgId })
+
+== GMAIL: THREADS ==
+
+  // Read full conversation (oldest message first)
+  const thread = await corsair.gmail.api.threads.get({ id: 'THREAD_ID' });
+  // thread.messages = full array of message objects
+
+  // List threads
+  const threads = await corsair.gmail.api.threads.list({ labelIds: ['INBOX'], maxResults: 10 });
+  // threads.threads = [{ id, historyId, snippet }]
+
+== GMAIL: MODIFY ==
+
+  await corsair.gmail.api.messages.trash({ id: 'MSG_ID' });                                       // move to trash
+  await corsair.gmail.api.messages.untrash({ id: 'MSG_ID' });                                     // restore from trash
+  await corsair.gmail.api.messages.delete({ id: 'MSG_ID' });                                      // permanent delete (confirm first)
+  await corsair.gmail.api.messages.modify({ id: 'MSG_ID', removeLabelIds: ['INBOX'] });           // archive
+  await corsair.gmail.api.messages.modify({ id: 'MSG_ID', removeLabelIds: ['UNREAD'] });          // mark read
+  await corsair.gmail.api.messages.modify({ id: 'MSG_ID', addLabelIds: ['UNREAD'] });             // mark unread
+  await corsair.gmail.api.messages.modify({ id: 'MSG_ID', addLabelIds: ['STARRED'] });            // star
+  await corsair.gmail.api.messages.modify({ id: 'MSG_ID', removeLabelIds: ['STARRED'] });        // unstar
+  await corsair.gmail.api.messages.modify({ id: 'MSG_ID', addLabelIds: ['IMPORTANT'] });          // mark important
+  // Batch modify multiple messages at once:
+  await corsair.gmail.api.messages.batchModify({ ids: ['ID1','ID2'], removeLabelIds: ['UNREAD'] });
+
+== GMAIL: DRAFTS ==
+
+  // List drafts saved in Gmail
+  const drafts = await corsair.gmail.api.drafts.list({ maxResults: 10 });
+  // Get a specific draft
+  const draft = await corsair.gmail.api.drafts.get({ id: 'DRAFT_ID', format: 'full' });
+
+== GMAIL: LABELS ==
+
+  // List all labels (system + user-created)
+  const labels = await corsair.gmail.api.labels.list();
+  // labels.labels = [{ id, name, type }] - use id when applying to messages
+
+  // Create a new label
+  const newLabel = await corsair.gmail.api.labels.create({
+    name: 'MyLabel', labelListVisibility: 'labelShow', messageListVisibility: 'show'
+  });
+
+== GMAIL: PROFILE ==
+
+  const profile = await corsair.gmail.api.users.getProfile();
+  // profile.emailAddress, profile.messagesTotal, profile.threadsTotal
+
+== CALENDAR: LIST EVENTS ==
+
+  // Upcoming 7 days
+  const evts = await corsair.googlecalendar.api.events.getMany({
+    calendarId: 'primary',
+    timeMin: new Date().toISOString(),
+    timeMax: new Date(Date.now() + 7 * 86400000).toISOString(),
+    singleEvents: true,
+    orderBy: 'startTime',
+    maxResults: 25,
+  });
+  // evts.items = [{ id, summary, start, end, location, description, attendees, htmlLink, status }]
+  // start.dateTime (timed events) or start.date (all-day events)
+
+  // Today only
+  const todayStart = new Date(); todayStart.setHours(0,0,0,0);
+  const todayEnd   = new Date(); todayEnd.setHours(23,59,59,999);
+  const today = await corsair.googlecalendar.api.events.getMany({
+    calendarId: 'primary', timeMin: todayStart.toISOString(), timeMax: todayEnd.toISOString(),
+    singleEvents: true, orderBy: 'startTime'
+  });
+
+  // Search events by keyword
+  const found = await corsair.googlecalendar.api.events.getMany({
+    calendarId: 'primary', q: 'standup', singleEvents: true,
+    timeMin: new Date().toISOString(), maxResults: 10
+  });
+
+== CALENDAR: GET / UPDATE / DELETE ==
+
+  // Get a single event by ID
+  const evt = await corsair.googlecalendar.api.events.get({ calendarId: 'primary', eventId: 'EVENT_ID' });
+
+  // Update event
+  await corsair.googlecalendar.api.events.update({
+    id: 'EVENT_ID',
+    calendarId: 'primary',
+    event: {
+      summary: 'New Title',
+      start: { dateTime: '2026-06-20T10:00:00', timeZone: 'Asia/Kolkata' },
+      end:   { dateTime: '2026-06-20T11:00:00', timeZone: 'Asia/Kolkata' },
+      location: 'Conference Room A',
+      description: 'Updated notes',
+      attendees: [{ email: 'someone@example.com' }],
+      sendUpdates: 'all',
+    }
+  });
+
+  // Delete event (always confirm first)
+  await corsair.googlecalendar.api.events.delete({ calendarId: 'primary', id: 'EVENT_ID' });
+
+  // List all calendars the user has
+  const cals = await corsair.googlecalendar.api.calendarList.list();
+  // cals.items = [{ id, summary, primary, backgroundColor }]
+
+== COMPOSITION TOOLS (not run_script) ==
+
+  draft_email(to, subject, body, cc?, inReplyTo?)
+    -> Call this first for ANY email composition (new, reply, forward, follow-up).
+    -> Shows editable card in chat. Does NOT send or save automatically.
+
+  send_email(to, subject, body, cc?)
+    -> Sends immediately via Gmail API.
+    -> Only call after user has seen the draft card and explicitly says to send.
+    -> After success respond only: "Sent!"
+
+  create_calendar_event(summary, start, end, timeZone, location?, description?, attendees?, allDay?, sendUpdates?)
+    -> Creates event on primary calendar.
+    -> Only call after user confirms.`;
 
   // Build Corsair meta-tools (list_operations, get_schema, run_script)
   const provider = new OpenAIAgentsProvider();
   const corsairTools = provider.build({ corsair: tenant, tool, setup: false });
 
-  // Custom send_email tool — builds proper MIME and sends directly
+  // send_email - actually sends via Gmail API. Only called after the user explicitly confirms.
   const sendEmailTool = tool({
     name: "send_email",
-    description: `Send an email directly on behalf of ${userName}. Use this when the user explicitly asks to send (not draft) an email.`,
+    description: `Send an email immediately on behalf of ${userName} via Gmail. Call this ONLY after the user has seen the draft card and explicitly says "send it", "send this", "go ahead", "now send it", or similar. Use the exact same to/subject/body from the draft_email call.`,
     parameters: z.object({
       to: z.string().describe("Recipient email address"),
       subject: z.string().describe("Email subject line"),
       body: z.string().describe("Plain text email body"),
+      cc: z.string().optional().describe("CC recipients, comma-separated"),
     }),
-    execute: async ({ to, subject, body }) => {
-      const raw = await buildRawEmail({ from: userEmail, to, subject, text: body });
+    execute: async ({ to, subject, body, cc }) => {
+      const raw = await buildRawEmail({ from: userEmail, to, cc: cc || undefined, subject, text: body });
       const result = await tenant.gmail.api.messages.send({ raw });
       return JSON.stringify({ success: true, messageId: result.id, to, subject });
     },
   });
 
-  // draft_email — shows an editable preview card. Does NOT write to Gmail.
+  // draft_email - shows an editable preview card. Does NOT write to Gmail.
   // Actual saving/sending is an explicit user action via the card buttons.
   const draftEmailTool = tool({
     name: "draft_email",
-    description: `Surface an editable email draft card in the chat for ${userName} to review. Call this ONLY when the user explicitly asks to save a draft. Does NOT send or save to Gmail — the user must click the card buttons to do that.`,
+    description: `Surface an editable email draft card in the chat for ${userName} to review and then send or save. Use this for ALL email composition - new emails, replies, forwards, and any time the user asks to send or draft an email. Does NOT send or save automatically - the user clicks the card buttons.`,
     parameters: z.object({
-      to: z.string().describe("Recipient email address"),
+      to: z.string().describe("Recipient email address (for replies: use the From header of the original, never the user's own email)"),
       subject: z.string().describe("Email subject line"),
       body: z.string().describe("Plain text email body"),
+      cc: z.string().optional().describe("CC recipients, comma-separated"),
+      inReplyTo: z.string().optional().describe("Message-ID header of the email being replied to, for threading"),
     }),
-    execute: async ({ to, subject }) => {
-      return JSON.stringify({ preview: true, to, subject, note: "Draft card shown to user for review." });
+    execute: async ({ to, subject, cc, inReplyTo }) => {
+      return JSON.stringify({ preview: true, to, subject, cc, inReplyTo, note: "Draft card shown to user for review." });
     },
   });
 
-  // Custom create_calendar_event tool — creates an event with full structured detail
+  // Custom create_calendar_event tool - creates an event with full structured detail
   const createEventTool = tool({
     name: "create_calendar_event",
     description: "Create a Google Calendar event on the user's primary calendar. Provide complete details so the user can review exactly what was scheduled.",
@@ -347,10 +455,32 @@ create_calendar_event (MANDATORY for event creation — call only after user con
     },
   });
 
+  // Fetch relevant long-term memories from Supermemory to inject as context
+  let memoryContext = "";
+  if (supermemory) {
+    try {
+      const latestUserMsg = messages.filter((m) => m.role === "user").at(-1)?.content ?? "";
+      const memResult = await supermemory.search.execute({
+        q: latestUserMsg,
+        containerTag: `user:${session.user.id}`,
+      } as any);
+      const hits: string[] = ((memResult as any).results ?? [])
+        .map((r: any) => r.content ?? r.document?.content ?? r.text ?? "")
+        .filter(Boolean)
+        .slice(0, 5);
+      if (hits.length) {
+        memoryContext =
+          "\n\n==== LONG-TERM MEMORY (from past conversations) ====\n" +
+          hits.join("\n---\n") +
+          "\n====================================================\n";
+      }
+    } catch {}
+  }
+
   const agent = new Agent({
     name: "tsunagu-agent",
-    instructions: systemPrompt,
-    tools: [...corsairTools, draftEmailTool, createEventTool],
+    instructions: systemPrompt + memoryContext,
+    tools: [...corsairTools, draftEmailTool, sendEmailTool, createEventTool],
   });
 
   const encoder = new TextEncoder();
@@ -399,7 +529,7 @@ create_calendar_event (MANDATORY for event creation — call only after user con
         let fullText = "";
         const usedTools: string[] = [];
         const artifacts: ChatArtifact[] = [];
-        // Map callId → parsed args for calendar events (correlated via tool_output)
+        // Map callId -> parsed args for calendar events (correlated via tool_output)
         const pendingEventArgs = new Map<string, any>();
 
         for await (const event of streamedResult) {
@@ -421,13 +551,13 @@ create_calendar_event (MANDATORY for event creation — call only after user con
               send({ tool: toolName });
 
               // Any pre-tool text the model emitted in this turn is transitional
-              // ("let me check…"). Clear it so only the post-tool answer shows.
+              // ("let me check..."). Clear it so only the post-tool answer shows.
               if (fullText.trim()) {
                 fullText = "";
                 send({ text_reset: true });
               }
 
-              // Email card — built from args at call time so the card appears immediately.
+              // Email card - built from args at call time so the card appears immediately.
               if (toolName === "draft_email") {
                 const artifact = buildArtifact(toolName, rawItem?.arguments);
                 if (artifact) {
@@ -490,13 +620,24 @@ create_calendar_event (MANDATORY for event creation — call only after user con
               artifacts: artifacts.length > 0 ? artifacts : null,
             });
           } catch {
-            // Older DBs may not have the `artifacts` column yet — never let
+            // Older DBs may not have the `artifacts` column yet - never let
             // that break message persistence.
             await db.insert(chatMessages).values(baseValues);
           }
         }
 
         send({ done: true });
+
+        // Store this exchange to Supermemory for future context
+        if (supermemory && fullText) {
+          try {
+            const userMsg = messages.filter((m) => m.role === "user").at(-1)?.content ?? "";
+            await supermemory.documents.add({
+              content: `User: "${userMsg}"\nAssistant: "${fullText.slice(0, 600)}"`,
+              containerTag: `user:${session.user.id}`,
+            } as any);
+          } catch {}
+        }
       } catch (err: any) {
         console.error("[api/ai/chat]", err?.message ?? err);
         send({ error: err?.message ?? "Something went wrong" });

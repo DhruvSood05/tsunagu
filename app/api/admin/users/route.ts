@@ -9,13 +9,24 @@ import {
   corsairIntegrations,
   session as sessionTable,
 } from "@/db/schema";
-import { eq, sql, gte, desc, inArray } from "drizzle-orm";
+import { eq, sql, gte, desc } from "drizzle-orm";
 import { getSessionCached } from "@/lib/session-cache";
-import { isAdmin, FREE_TIER_LIMIT } from "@/lib/ai-rate-limit";
+import { isSuperAdmin, FREE_TIER_LIMIT } from "@/lib/ai-rate-limit";
+
+function isAdminOrSuper(email: string, role?: string | null) {
+  return isSuperAdmin(email) || role === "admin" || role === "superadmin";
+}
 
 export async function GET() {
   const sess = await getSessionCached(await headers());
-  if (!sess || !isAdmin(sess.user.email ?? "")) {
+  if (!sess) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+  const [callerPrefs] = await db
+    .select({ role: userPreferences.role })
+    .from(userPreferences)
+    .where(eq(userPreferences.userId, sess.user.id));
+
+  if (!isAdminOrSuper(sess.user.email ?? "", callerPrefs?.role)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -41,10 +52,10 @@ export async function GET() {
   const prefsMap = new Map(allPrefs.map((p) => [p.userId, p]));
   const todayMap = new Map(usageToday.map((u) => [u.userId, u.count]));
   const monthMap = new Map(usageMonth.map((u) => [u.userId, Number(u.count)]));
-  const integrationMap = new Map(integrations.map((i) => [i.id, i.name]));
+  const integrations_ = integrations;
 
-  const gmailIntId = integrations.find((i) => i.name === "gmail")?.id;
-  const calIntId = integrations.find((i) => i.name === "googlecalendar")?.id;
+  const gmailIntId = integrations_.find((i) => i.name === "gmail")?.id;
+  const calIntId = integrations_.find((i) => i.name === "googlecalendar")?.id;
 
   const gmailTenants = new Set(
     accounts.filter((a) => a.integrationId === gmailIntId).map((a) => a.tenantId),
@@ -53,11 +64,9 @@ export async function GET() {
     accounts.filter((a) => a.integrationId === calIntId).map((a) => a.tenantId),
   );
 
-  // Last active = most recent session expiry (createdAt not stored, use expiresAt - 30 days as proxy)
   const lastActiveMap = new Map<string, string>();
   for (const s of lastSessions) {
     if (!lastActiveMap.has(s.userId)) {
-      // expiresAt is 30 days from login, subtract to approximate login time
       const approx = new Date(s.expiresAt.getTime() - 30 * 24 * 60 * 60 * 1000);
       lastActiveMap.set(s.userId, approx.toISOString());
     }
@@ -66,8 +75,9 @@ export async function GET() {
   const result = users.map((u) => {
     const prefs = prefsMap.get(u.id);
     const aiDailyLimit = prefs?.aiDailyLimit ?? null;
-    // Admin account is always unlimited regardless of stored prefs
-    const effectiveLimit = isAdmin(u.email)
+    const role = isSuperAdmin(u.email) ? "superadmin" : (prefs?.role ?? "user");
+    const aiAccess = isSuperAdmin(u.email) || role === "admin" || role === "superadmin" || (prefs?.aiAccess ?? false);
+    const effectiveLimit = role === "admin" || role === "superadmin"
       ? -1
       : aiDailyLimit === -1
       ? -1
@@ -84,6 +94,8 @@ export async function GET() {
       aiThisMonth: monthMap.get(u.id) ?? 0,
       aiDailyLimit,
       effectiveLimit,
+      aiAccess,
+      role,
       lastActive: lastActiveMap.get(u.id) ?? null,
     };
   });
@@ -93,32 +105,34 @@ export async function GET() {
 
 export async function POST(req: Request) {
   const sess = await getSessionCached(await headers());
-  if (!sess || !isAdmin(sess.user.email ?? "")) {
+  if (!sess) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+  const [callerPrefs] = await db
+    .select({ role: userPreferences.role })
+    .from(userPreferences)
+    .where(eq(userPreferences.userId, sess.user.id));
+
+  if (!isAdminOrSuper(sess.user.email ?? "", callerPrefs?.role)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const { name, email, aiDailyLimit } = await req.json();
+  const { name, email, aiDailyLimit, aiAccess } = await req.json();
   if (!name?.trim() || !email?.trim()) {
     return NextResponse.json({ error: "Name and email are required" }, { status: 400 });
   }
 
-  // Check if user already exists
   const [existing] = await db.select({ id: user.id }).from(user).where(eq(user.email, email.trim().toLowerCase()));
   if (existing) {
-    // Just update their limit if provided
-    if (aiDailyLimit !== undefined) {
-      await db
-        .insert(userPreferences)
-        .values({ userId: existing.id, aiDailyLimit, updatedAt: new Date() })
-        .onConflictDoUpdate({
-          target: [userPreferences.userId],
-          set: { aiDailyLimit, updatedAt: new Date() },
-        });
-    }
+    await db
+      .insert(userPreferences)
+      .values({ userId: existing.id, aiDailyLimit, aiAccess: aiAccess ?? false, updatedAt: new Date() })
+      .onConflictDoUpdate({
+        target: [userPreferences.userId],
+        set: { aiDailyLimit, aiAccess: aiAccess ?? false, updatedAt: new Date() },
+      });
     return NextResponse.json({ id: existing.id, updated: true });
   }
 
-  // Create new user record (they'll link Google account when they sign in)
   const id = crypto.randomUUID().replace(/-/g, "").slice(0, 32);
   const now = new Date();
   await db.insert(user).values({
@@ -130,13 +144,12 @@ export async function POST(req: Request) {
     updatedAt: now,
   });
 
-  if (aiDailyLimit !== undefined) {
-    await db.insert(userPreferences).values({
-      userId: id,
-      aiDailyLimit,
-      updatedAt: now,
-    });
-  }
+  await db.insert(userPreferences).values({
+    userId: id,
+    aiDailyLimit,
+    aiAccess: aiAccess ?? false,
+    updatedAt: now,
+  });
 
   return NextResponse.json({ id, created: true });
 }

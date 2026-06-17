@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { db } from "@/db";
-import { user, aiUsage, chatMessages } from "@/db/schema";
+import { user, aiUsage, chatMessages, userPreferences } from "@/db/schema";
 import { eq, sql, gte } from "drizzle-orm";
 import { getSessionCached } from "@/lib/session-cache";
-import { isAdmin } from "@/lib/ai-rate-limit";
+import { isSuperAdmin } from "@/lib/ai-rate-limit";
 
 function classifyMessage(toolsUsed: unknown, artifacts: unknown): string {
   const arts = Array.isArray(artifacts) ? artifacts : [];
@@ -26,8 +26,18 @@ function classifyMessage(toolsUsed: unknown, artifacts: unknown): string {
 
 export async function GET() {
   const session = await getSessionCached(await headers());
-  if (!session || !isAdmin(session.user.email ?? "")) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!session) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+  const email = session.user.email ?? "";
+  if (!isSuperAdmin(email)) {
+    const [prefs] = await db
+      .select({ role: userPreferences.role })
+      .from(userPreferences)
+      .where(eq(userPreferences.userId, session.user.id));
+    const role = prefs?.role ?? "user";
+    if (role !== "admin" && role !== "superadmin") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
   }
 
   const now = new Date();

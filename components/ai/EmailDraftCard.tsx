@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Send,
   FileText,
@@ -12,6 +12,80 @@ import {
   Pencil,
 } from "lucide-react";
 import type { ChatArtifact } from "@/types/ai";
+
+function parseRecipient(raw: string): { name: string; email: string } {
+  const match = raw.match(/^(.+?)\s*<([^>]+)>$/);
+  if (match) return { name: match[1].trim(), email: match[2].trim() };
+  return { name: "", email: raw.trim() };
+}
+
+function RecipientChip({
+  value,
+  onChange,
+  disabled,
+  locked,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  disabled: boolean;
+  locked: boolean;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => { setDraft(value); }, [value]);
+
+  const { name, email } = parseRecipient(value);
+  const displayName = name || email;
+
+  function commit() {
+    onChange(draft.trim() || value);
+    setEditing(false);
+  }
+
+  if (locked) {
+    return <span className="text-[13px] text-foreground leading-relaxed">{displayName || "—"}</span>;
+  }
+
+  if (!editing && value.trim()) {
+    return (
+      <div className="flex items-center gap-1 flex-wrap">
+        <span
+          onClick={() => { if (!disabled) { setEditing(true); setTimeout(() => inputRef.current?.focus(), 0); } }}
+          className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-ai/10 border border-ai/20 text-[12px] font-medium text-foreground cursor-pointer hover:bg-ai/15 transition-colors"
+        >
+          {displayName}
+          {email && name && <span className="text-muted-foreground/60 font-normal">{email}</span>}
+          {!disabled && (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onChange(""); }}
+              className="ml-0.5 text-muted-foreground/50 hover:text-foreground transition-colors cursor-pointer"
+            >
+              <X className="size-3" strokeWidth={2.5} />
+            </button>
+          )}
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <input
+      ref={inputRef}
+      type="text"
+      value={editing ? draft : value}
+      onChange={(e) => editing ? setDraft(e.target.value) : onChange(e.target.value)}
+      onFocus={() => { setEditing(true); setDraft(value); }}
+      onBlur={commit}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === ",") { e.preventDefault(); commit(); } }}
+      disabled={disabled}
+      placeholder="recipient@example.com"
+      className="w-full text-[13px] text-foreground bg-transparent outline-none placeholder:text-muted-foreground/40 disabled:opacity-50 caret-ai"
+    />
+  );
+}
 
 type EmailArtifact = Extract<ChatArtifact, { kind: "email" }>;
 type CardStatus = "idle" | "sending" | "saving" | "sent" | "saved" | "error";
@@ -44,7 +118,7 @@ export default function EmailDraftCard({ email }: { email: EmailArtifact }) {
       const res = await fetch("/api/ai/email-action", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action, to, cc: cc.trim() || undefined, subject, body }),
+        body: JSON.stringify({ action, to: parseRecipient(to).email || to, cc: cc.trim() || undefined, subject, body }),
       });
       const data = await res.json();
       if (!res.ok || data.error) throw new Error(data.error ?? "Request failed");
@@ -99,18 +173,7 @@ export default function EmailDraftCard({ email }: { email: EmailArtifact }) {
         <div className="flex items-start gap-3 px-4 py-2.5">
           <span className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-wider w-10 shrink-0 pt-0.5">To</span>
           <div className="flex-1 min-w-0">
-            {locked ? (
-              <span className="text-[13px] text-foreground leading-relaxed">{to || "—"}</span>
-            ) : (
-              <input
-                type="email"
-                value={to}
-                onChange={(e) => setTo(e.target.value)}
-                disabled={busy}
-                placeholder="recipient@example.com"
-                className="w-full text-[13px] text-foreground bg-transparent outline-none placeholder:text-muted-foreground/40 disabled:opacity-50 caret-ai"
-              />
-            )}
+            <RecipientChip value={to} onChange={setTo} disabled={busy} locked={locked} />
           </div>
           {!locked && !showCc && (
             <button

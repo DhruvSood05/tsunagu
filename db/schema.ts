@@ -163,6 +163,10 @@ export const userPreferences = pgTable("user_preferences", {
   openaiApiKey: text("openai_api_key"),
   // null = use global default (FREE_TIER_LIMIT), -1 = unlimited, N = custom daily cap
   aiDailyLimit: integer("ai_daily_limit"),
+  // AI access control — false = no access (free tier), true = has access with aiDailyLimit cap
+  aiAccess: boolean("ai_access").notNull().default(false),
+  // 'user' | 'admin' | 'superadmin'
+  role: text("role").notNull().default("user"),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 

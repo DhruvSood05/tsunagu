@@ -31,6 +31,9 @@ import {
   RiMailLine,
   RiSparklingLine,
   RiKeyboardLine,
+  RiBrainLine,
+  RiDeleteBinLine,
+  RiCloseLine,
 } from "@remixicon/react";
 
 interface SettingsContentProps {
@@ -84,9 +87,14 @@ export default function SettingsContent({ user, gmailConnected, calendarConnecte
   const [resettingTour, setResettingTour] = useState(false);
   const [tourReset, setTourReset] = useState(false);
   const [disconnecting, setDisconnecting] = useState<"gmail" | "calendar" | null>(null);
-  const [aiUsage, setAiUsage] = useState<{ count: number; limit: number; unlimited: boolean } | null>(null);
+  const [aiUsage, setAiUsage] = useState<{ count: number; limit: number; unlimited: boolean; aiAccess?: boolean; role?: string } | null>(null);
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
+  const [showMemory, setShowMemory] = useState(false);
+  const [memories, setMemories] = useState<{ id: string; content: string; createdAt: string | null }[]>([]);
+  const [memoriesLoading, setMemoriesLoading] = useState(false);
+  const [memoryEnabled, setMemoryEnabled] = useState(true);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -109,6 +117,32 @@ export default function SettingsContent({ user, gmailConnected, calendarConnecte
     }
   };
 
+  const loadMemories = async () => {
+    setMemoriesLoading(true);
+    try {
+      const res = await fetch("/api/ai/memory");
+      const data = await res.json();
+      setMemories(data.memories ?? []);
+      setMemoryEnabled(data.enabled ?? false);
+    } finally {
+      setMemoriesLoading(false);
+    }
+  };
+
+  const handleDeleteMemory = async (id: string) => {
+    setDeletingId(id);
+    try {
+      await fetch("/api/ai/memory", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      setMemories((prev) => prev.filter((m) => m.id !== id));
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   const handleResetTour = async () => {
     setResettingTour(true);
     try {
@@ -128,6 +162,7 @@ export default function SettingsContent({ user, gmailConnected, calendarConnecte
     ? user.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
     : user?.email?.[0]?.toUpperCase() ?? "?";
 
+  const hasAiAccess = aiUsage?.aiAccess !== false;
   const isPro = aiUsage?.unlimited === true;
   const aiPct = aiUsage && !aiUsage.unlimited ? Math.min((aiUsage.count / aiUsage.limit) * 100, 100) : 0;
   const aiStatusKey = !aiUsage ? null
@@ -245,79 +280,115 @@ export default function SettingsContent({ user, gmailConnected, calendarConnecte
             {/* ── AI Credits ──────────────────────────────────── */}
             {aiUsage && (
               <section className="space-y-3">
-                <SectionLabel>AI Credits</SectionLabel>
+                <SectionLabel>AI Assistant</SectionLabel>
                 <Card>
-                  <div className="px-5 py-5 space-y-4">
-                    <div className="flex items-start gap-3.5">
-                      <div className="size-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
-                        <RiRobot2Line className="size-5 text-primary" />
+                  {!hasAiAccess ? (
+                    /* No access state */
+                    <div className="px-5 py-5 flex items-start gap-3.5">
+                      <div className="size-10 rounded-xl bg-secondary border border-border/60 flex items-center justify-center shrink-0">
+                        <RiRobot2Line className="size-5 text-muted-foreground/40" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-3">
-                          <p className="text-[13.5px] font-semibold text-foreground">Daily AI Requests</p>
-                          {!aiUsage.unlimited && (
-                            <span className={`shrink-0 text-[11px] font-semibold px-2.5 py-1 rounded-full border leading-none ${
-                              aiStatusKey === "exhausted"
-                                ? "bg-rose-500/12 text-rose-500 border-rose-500/25 dark:bg-rose-500/10 dark:border-rose-500/20"
-                                : aiStatusKey === "warning"
-                                ? "bg-amber-500/12 text-amber-500 border-amber-500/25 dark:bg-amber-500/10 dark:border-amber-500/20"
-                                : "bg-emerald-500/12 text-emerald-600 dark:text-emerald-400 border-emerald-500/25 dark:border-emerald-500/20"
-                            }`}>
-                              {aiStatusKey === "exhausted" ? "Limit reached" : aiStatusKey === "warning" ? "Almost full" : "Active"}
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-[12px] text-muted-foreground mt-0.5">
-                          {aiUsage.unlimited
-                            ? "Unlimited access — you're on a Pro plan."
-                            : `${aiUsage.count} of ${aiUsage.limit} requests used today`}
-                        </p>
-                      </div>
-                    </div>
-
-                    {!aiUsage.unlimited && (
-                      <div className="space-y-1.5">
-                        <div className="h-1.5 w-full rounded-full bg-secondary overflow-hidden">
-                          <div
-                            className={`h-full rounded-full transition-all duration-700 ${
-                              aiStatusKey === "exhausted" ? "bg-rose-500"
-                              : aiStatusKey === "warning" ? "bg-amber-500"
-                              : "bg-primary"
-                            }`}
-                            style={{ width: `${aiPct}%` }}
-                          />
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-[11px] text-muted-foreground/60">Resets daily at midnight IST</span>
-                          <span className="text-[11px] font-mono font-medium text-muted-foreground">
-                            {Math.max(aiUsage.limit - aiUsage.count, 0)} remaining
+                          <p className="text-[13.5px] font-semibold text-foreground">Tsunagu AI</p>
+                          <span className="shrink-0 text-[11px] font-semibold px-2.5 py-1 rounded-full border leading-none bg-secondary text-muted-foreground/60 border-border/50">
+                            No Access
                           </span>
                         </div>
+                        <p className="text-[12px] text-muted-foreground mt-0.5">
+                          AI features are not enabled for your account. Contact your admin to request access.
+                        </p>
+                        <a
+                          href="mailto:dhruvsood1102@gmail.com?subject=Tsunagu AI Access Request"
+                          className="mt-3 inline-flex items-center gap-1.5 px-3.5 py-1.5 text-[12px] font-semibold bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl shadow-sm transition-all cursor-pointer"
+                        >
+                          <RiMailLine className="size-3.5" />
+                          Request Access
+                        </a>
                       </div>
-                    )}
-
-                    {/* Upgrade CTA — only for free users */}
-                    {!isPro && (
-                      <div className="mt-1 pt-4 border-t border-border/50">
-                        <div className="flex items-center justify-between gap-4">
-                          <div className="min-w-0">
-                            <p className="text-[12.5px] font-semibold text-foreground">Want more credits?</p>
-                            <p className="text-[11.5px] text-muted-foreground mt-0.5">Upgrade to Pro for unlimited daily AI requests.</p>
+                    </div>
+                  ) : (
+                    /* Has access state */
+                    <div className="px-5 py-5 space-y-4">
+                      <div className="flex items-start gap-3.5">
+                        <div className="size-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+                          <RiRobot2Line className="size-5 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-3">
+                            <p className="text-[13.5px] font-semibold text-foreground">Daily AI Requests</p>
+                            {!aiUsage.unlimited && (
+                              <span className={`shrink-0 text-[11px] font-semibold px-2.5 py-1 rounded-full border leading-none ${
+                                aiStatusKey === "exhausted"
+                                  ? "bg-rose-500/12 text-rose-500 border-rose-500/25 dark:bg-rose-500/10 dark:border-rose-500/20"
+                                  : aiStatusKey === "warning"
+                                  ? "bg-amber-500/12 text-amber-500 border-amber-500/25 dark:bg-amber-500/10 dark:border-amber-500/20"
+                                  : "bg-emerald-500/12 text-emerald-600 dark:text-emerald-400 border-emerald-500/25 dark:border-emerald-500/20"
+                              }`}>
+                                {aiStatusKey === "exhausted" ? "Limit reached" : aiStatusKey === "warning" ? "Almost full" : "Active"}
+                              </span>
+                            )}
                           </div>
-                          <button
-                            onClick={() => setShowUpgrade(true)}
-                            className="shrink-0 flex items-center gap-1.5 px-4 py-2 text-[12px] font-semibold bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl shadow-sm shadow-primary/20 transition-all cursor-pointer"
-                          >
-                            <RiArrowUpLine className="size-3.5" />
-                            Upgrade
-                          </button>
+                          <p className="text-[12px] text-muted-foreground mt-0.5">
+                            {aiUsage.unlimited
+                              ? `Unlimited access${isPro ? " — Pro plan" : ""}.`
+                              : `${aiUsage.count} of ${aiUsage.limit} requests used today`}
+                          </p>
                         </div>
                       </div>
-                    )}
-                  </div>
+
+                      {!aiUsage.unlimited && (
+                        <div className="space-y-1.5">
+                          <div className="h-1.5 w-full rounded-full bg-secondary overflow-hidden">
+                            <div
+                              className={`h-full rounded-full transition-all duration-700 ${
+                                aiStatusKey === "exhausted" ? "bg-rose-500"
+                                : aiStatusKey === "warning" ? "bg-amber-500"
+                                : "bg-primary"
+                              }`}
+                              style={{ width: `${aiPct}%` }}
+                            />
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-[11px] text-muted-foreground/60">Resets daily at midnight IST</span>
+                            <span className="text-[11px] font-mono font-medium text-muted-foreground">
+                              {Math.max(aiUsage.limit - aiUsage.count, 0)} remaining
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </Card>
               </section>
             )}
+
+            {/* ── AI Memory ───────────────────────────────────── */}
+            <section className="space-y-3">
+              <SectionLabel>AI Memory</SectionLabel>
+              <Card>
+                <div className="px-5 py-4 flex items-center justify-between">
+                  <div className="flex items-center gap-3.5">
+                    <div className="size-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+                      <RiBrainLine className="size-4.5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-[13.5px] font-semibold text-foreground">Long-term Memory</p>
+                      <p className="text-[12px] text-muted-foreground mt-0.5">
+                        {memoryEnabled ? "AI remembers context from past conversations" : "Supermemory not configured"}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => { setShowMemory(true); loadMemories(); }}
+                    className="flex items-center gap-2 px-4 py-2 text-[12px] font-semibold text-foreground bg-secondary hover:bg-secondary/80 border border-border/60 rounded-xl transition-all cursor-pointer shrink-0"
+                  >
+                    <RiBrainLine className="size-3.5" />
+                    View Memory
+                  </button>
+                </div>
+              </Card>
+            </section>
 
             {/* ── Integrations ────────────────────────────────── */}
             <section className="space-y-3">
@@ -586,6 +657,83 @@ export default function SettingsContent({ user, gmailConnected, calendarConnecte
       </Dialog>
 
       <SettingsOverlay user={user} gmailConnected={gmailConnected} calendarConnected={calendarConnected} />
+
+      {/* ── Memory Viewer Dialog ──────────────────────────── */}
+      <Dialog open={showMemory} onOpenChange={setShowMemory}>
+        <DialogContent className="max-w-lg max-h-[80vh] flex flex-col" aria-describedby={undefined}>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <RiBrainLine className="size-4 text-primary" />
+              AI Memory
+              {memories.length > 0 && (
+                <span className="ml-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+                  {memories.length}
+                </span>
+              )}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="flex-1 overflow-y-auto space-y-2 py-1 min-h-0">
+            {memoriesLoading ? (
+              <div className="flex items-center justify-center py-10 gap-2 text-muted-foreground">
+                <RiLoaderLine className="size-4 animate-spin" />
+                <span className="text-[13px]">Loading memories…</span>
+              </div>
+            ) : !memoryEnabled ? (
+              <div className="py-10 text-center">
+                <RiBrainLine className="size-8 text-muted-foreground/30 mx-auto mb-3" />
+                <p className="text-[13px] font-medium text-muted-foreground">Supermemory not configured</p>
+                <p className="text-[12px] text-muted-foreground/60 mt-1">Add SUPERMEMORY_API_KEY to enable memory.</p>
+              </div>
+            ) : memories.length === 0 ? (
+              <div className="py-10 text-center">
+                <RiBrainLine className="size-8 text-muted-foreground/30 mx-auto mb-3" />
+                <p className="text-[13px] font-medium text-muted-foreground">No memories yet</p>
+                <p className="text-[12px] text-muted-foreground/60 mt-1">Memories are saved as you chat with the AI.</p>
+              </div>
+            ) : (
+              memories.map((m) => (
+                <div
+                  key={m.id}
+                  className="group relative flex gap-3 p-3.5 rounded-xl border border-border/50 bg-secondary/20 hover:bg-secondary/40 transition-colors"
+                >
+                  <div className="size-6 rounded-lg bg-primary/10 border border-primary/15 flex items-center justify-center shrink-0 mt-0.5">
+                    <RiBrainLine className="size-3.5 text-primary/70" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[12.5px] text-foreground/90 leading-relaxed whitespace-pre-wrap wrap-break-word">
+                      {m.content}
+                    </p>
+                    {m.createdAt && (
+                      <p className="text-[10.5px] text-muted-foreground/50 mt-1.5">
+                        {new Date(m.createdAt).toLocaleString()}
+                      </p>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => handleDeleteMemory(m.id)}
+                    disabled={deletingId === m.id}
+                    className="shrink-0 opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-muted-foreground/40 hover:text-rose-500 hover:bg-rose-500/8 transition-all cursor-pointer disabled:opacity-30"
+                  >
+                    {deletingId === m.id
+                      ? <RiLoaderLine className="size-3.5 animate-spin" />
+                      : <RiDeleteBinLine className="size-3.5" />
+                    }
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+
+          {memories.length > 0 && (
+            <div className="pt-3 border-t border-border/50">
+              <p className="text-[11px] text-muted-foreground/50 text-center">
+                Hover a memory and click the trash icon to delete it
+              </p>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
