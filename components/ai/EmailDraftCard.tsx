@@ -4,19 +4,12 @@ import { useState, useEffect } from "react";
 import {
   RiMailSendLine,
   RiDraftLine,
-  RiCheckLine,
   RiLoaderLine,
   RiAlertLine,
+  RiCheckDoubleLine,
+  RiCloseLine,
+  RiAddLine,
   RiPencilLine,
-  RiMailLine,
-  RiAtLine,
-  RiFileTextLine,
-  RiDeleteBinLine,
-  RiMore2Fill,
-  RiEmotionHappyLine,
-  RiAttachment2,
-  RiCalendarEventLine,
-  RiLink,
 } from "@remixicon/react";
 import type { ChatArtifact } from "@/types/ai";
 
@@ -25,6 +18,8 @@ type CardStatus = "idle" | "sending" | "saving" | "sent" | "saved" | "error";
 
 export default function EmailDraftCard({ email }: { email: EmailArtifact }) {
   const [to, setTo] = useState(email.to ?? "");
+  const [cc, setCc] = useState("");
+  const [showCc, setShowCc] = useState(false);
   const [subject, setSubject] = useState(email.subject ?? "");
   const [body, setBody] = useState(email.body ?? "");
   const [status, setStatus] = useState<CardStatus>(
@@ -32,7 +27,6 @@ export default function EmailDraftCard({ email }: { email: EmailArtifact }) {
   );
   const [errorMsg, setErrorMsg] = useState("");
 
-  // Sync state with streaming props
   useEffect(() => {
     setTo(email.to ?? "");
     setSubject(email.subject ?? "");
@@ -50,7 +44,7 @@ export default function EmailDraftCard({ email }: { email: EmailArtifact }) {
       const res = await fetch("/api/ai/email-action", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action, to, subject, body }),
+        body: JSON.stringify({ action, to, cc: cc.trim() || undefined, subject, body }),
       });
       const data = await res.json();
       if (!res.ok || data.error) throw new Error(data.error ?? "Request failed");
@@ -61,98 +55,186 @@ export default function EmailDraftCard({ email }: { email: EmailArtifact }) {
     }
   }
 
-  /* ── Accent color per state ── */
-  const accent = (() => {
-    if (status === "sent") return { badge: "text-[#065F46] dark:text-[#6EE7B7] bg-[#D1FAE5] dark:bg-[#064E3B] border-[#A7F3D0] dark:border-[#047857]", dot: "bg-[#10B981] dark:bg-[#34D399]" };
-    if (status === "saved") return { badge: "text-[#0369A1] dark:text-[#7DD3FC] bg-[#E0F2FE] dark:bg-[#0C4A6E] border-[#BAE6FD] dark:border-[#0284C7]", dot: "bg-[#0EA5E9] dark:bg-[#38BDF8]" };
-    return { badge: "text-[#4C1D95] dark:text-[#DDD6FE] bg-[#F8F8F8] dark:bg-[#222222] border-[#ECECEC] dark:border-[#333333]", dot: "bg-[#8B5CF6] dark:bg-[#A78BFA]" };
-  })();
-
-  const badgeText = status === "sent" ? "Delivered" : status === "saved" ? "In Drafts" : "AI Generated Draft";
+  const isSent = status === "sent";
+  const isSaved = status === "saved";
 
   return (
-    <div className="mt-4 rounded-[16px] bg-[#FFFFFF] dark:bg-[#111111] overflow-hidden shadow-sm hover:shadow transition-shadow duration-300 animate-in fade-in slide-in-from-bottom-2 w-full max-w-[650px] mx-auto border border-[#ECECEC] dark:border-[#333333]">
-      <div className="flex flex-col relative min-h-[300px]">
-        
-        {/* ── Metadata Rows ── */}
-        <div className="px-6 flex flex-col pt-1">
+    <div className="mt-3 w-full max-w-[620px] rounded-2xl overflow-hidden border border-border/60 bg-card shadow-[0_4px_24px_rgba(0,0,0,0.08)] dark:shadow-[0_4px_24px_rgba(0,0,0,0.32)] animate-in fade-in slide-in-from-bottom-2 duration-200">
 
-          <div className="flex items-center gap-4 border-b border-[#ECECEC] dark:border-[#333333] py-3">
-            <span className="text-[13px] font-medium text-[#666666] dark:text-[#A1A1AA] w-14 shrink-0">To</span>
-            {locked ? (
-              <span className="text-[14px] text-[#111111] dark:text-[#FAFAF8] truncate">{to || "—"}</span>
+      {/* ── Header ── */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border/50 bg-secondary/20 dark:bg-secondary/10">
+        <div className="flex items-center gap-2.5">
+          <div className="size-7 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+            {isSent ? (
+              <RiCheckDoubleLine className="size-3.5 text-emerald-500" />
+            ) : isSaved ? (
+              <RiDraftLine className="size-3.5 text-sky-500" />
             ) : (
-              <input type="email" value={to} onChange={(e) => setTo(e.target.value)} disabled={busy}
-                placeholder="recipient@example.com" className="flex-1 text-[14px] text-[#111111] dark:text-[#FAFAF8] bg-transparent outline-none placeholder:text-[#999999] dark:placeholder:text-[#666666]" />
-            )}
-            {/* AI Draft Badge */}
-            <div className={`ml-auto inline-flex items-center gap-1.5 text-[11px] font-medium text-[#666666] dark:text-[#A1A1AA] px-2.5 py-0.5 rounded-full border ${accent.badge} shrink-0`}>
-              ✨ {badgeText}
-            </div>
-          </div>
-
-          {/* ── Subject ── */}
-          <div className="flex items-center gap-4 border-b border-[#ECECEC] dark:border-[#333333] py-3">
-            <span className="text-[13px] font-medium text-[#666666] dark:text-[#A1A1AA] w-14 shrink-0">Subject</span>
-            {locked ? (
-              <span className="text-[14px] text-[#111111] dark:text-[#FAFAF8]">{subject || "(No subject)"}</span>
-            ) : (
-              <input type="text" value={subject} onChange={(e) => setSubject(e.target.value)} disabled={busy}
-                placeholder="Subject" className="flex-1 text-[14px] text-[#111111] dark:text-[#FAFAF8] bg-transparent outline-none placeholder:text-[#999999] dark:placeholder:text-[#666666]" />
+              <RiPencilLine className="size-3.5 text-primary" />
             )}
           </div>
+          <span className="text-[12px] font-semibold text-foreground">
+            {isSent ? "Email Sent" : isSaved ? "Saved to Drafts" : "Email Draft"}
+          </span>
         </div>
 
-        {/* ── Email Body (Document Style) ── */}
-        <div className="relative flex-1 flex flex-col px-6 pt-5 pb-6">
-          {locked ? (
-            <div className="text-[14px] leading-[1.7] text-[#111111] dark:text-[#D4D4D8] whitespace-pre-wrap">
-              {body || "(Empty body)"}
-            </div>
-          ) : (
-            <textarea value={body} onChange={(e) => setBody(e.target.value)} disabled={busy}
-              placeholder="Write your email..."
-              className="w-full h-full min-h-[160px] text-[14px] leading-[1.7] text-[#111111] dark:text-[#D4D4D8] bg-transparent outline-none resize-none placeholder:text-[#999999] dark:placeholder:text-[#666666] disabled:opacity-50" />
+        <span className={`inline-flex items-center gap-1.5 text-[10.5px] font-semibold px-2.5 py-1 rounded-full border leading-none ${
+          isSent
+            ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/25"
+            : isSaved
+            ? "bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/25"
+            : "bg-primary/8 text-primary border-primary/20"
+        }`}>
+          <span className={`size-1.5 rounded-full ${
+            isSent ? "bg-emerald-500" : isSaved ? "bg-sky-500" : "bg-primary animate-pulse"
+          }`} />
+          {isSent ? "Delivered" : isSaved ? "In Drafts" : "✨ AI Draft"}
+        </span>
+      </div>
+
+      {/* ── Fields ── */}
+      <div className="divide-y divide-border/40">
+
+        {/* To */}
+        <div className="flex items-start gap-3 px-4 py-2.5">
+          <span className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-wider w-10 shrink-0 pt-0.5">To</span>
+          <div className="flex-1 min-w-0">
+            {locked ? (
+              <span className="text-[13px] text-foreground leading-relaxed">{to || "—"}</span>
+            ) : (
+              <input
+                type="email"
+                value={to}
+                onChange={(e) => setTo(e.target.value)}
+                disabled={busy}
+                placeholder="recipient@example.com"
+                className="w-full text-[13px] text-foreground bg-transparent outline-none placeholder:text-muted-foreground/40 disabled:opacity-50"
+              />
+            )}
+          </div>
+          {!locked && !showCc && (
+            <button
+              onClick={() => setShowCc(true)}
+              className="shrink-0 flex items-center gap-1 text-[10.5px] font-medium text-muted-foreground/50 hover:text-muted-foreground transition-colors cursor-pointer"
+            >
+              <RiAddLine className="size-3" />
+              CC
+            </button>
           )}
         </div>
 
-        {/* ── Error ── */}
-        {status === "error" && (
-          <div className="mx-6 mb-4 flex items-center gap-2.5 text-[13px] text-[#B91C1C] dark:text-[#F87171] bg-[#FEF2F2] dark:bg-[#451A1A] border border-[#FECACA] dark:border-[#7F1D1D] rounded-[12px] px-4 py-3">
-            <RiAlertLine className="size-4 shrink-0" />
-            <span className="font-medium">{errorMsg || "Failed to process request. Please try again."}</span>
+        {/* CC (optional) */}
+        {(showCc || cc) && (
+          <div className="flex items-start gap-3 px-4 py-2.5">
+            <span className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-wider w-10 shrink-0 pt-0.5">CC</span>
+            <div className="flex-1 min-w-0">
+              {locked ? (
+                cc ? <span className="text-[13px] text-foreground">{cc}</span> : null
+              ) : (
+                <input
+                  type="text"
+                  value={cc}
+                  onChange={(e) => setCc(e.target.value)}
+                  disabled={busy}
+                  placeholder="cc@example.com, another@example.com"
+                  className="w-full text-[13px] text-foreground bg-transparent outline-none placeholder:text-muted-foreground/40 disabled:opacity-50"
+                />
+              )}
+            </div>
+            {!locked && (
+              <button
+                onClick={() => { setShowCc(false); setCc(""); }}
+                className="shrink-0 text-muted-foreground/40 hover:text-muted-foreground transition-colors cursor-pointer"
+              >
+                <RiCloseLine className="size-3.5" />
+              </button>
+            )}
           </div>
         )}
 
-        {/* ── Footer Actions ── */}
-        <div className="px-5 py-3.5 flex items-center justify-between mt-auto bg-[#F8F8F8] dark:bg-[#1A1A1A] border-t border-[#ECECEC] dark:border-[#333333]">
-          
-          <div className="flex items-center gap-4 mr-auto">
-            {locked && (
-              <span className="text-[13px] text-[#666666] dark:text-[#A1A1AA] font-medium">
-                {status === "sent" ? "Email sent successfully" : "Saved to drafts"}
-              </span>
-            )}
-          </div>
-
-          <div className="flex items-center gap-3">
-            {!locked && (
-              <>
-                <button onClick={() => submit("draft")} disabled={busy || !to.trim()}
-                  className="inline-flex items-center justify-center px-4 py-2 text-[13.5px] font-medium rounded-[10px] text-[#666666] dark:text-[#A1A1AA] bg-transparent border border-transparent hover:border-[#ECECEC] dark:hover:border-[#333333] hover:bg-[#FFFFFF] dark:hover:bg-[#141414] hover:text-[#111111] dark:hover:text-[#FAFAF8] disabled:opacity-50 transition-all duration-200 cursor-pointer shadow-sm">
-                  {status === "saving" ? <RiLoaderLine className="size-4 animate-spin mr-2" /> : null}
-                  {status === "saving" ? "Saving..." : "Save Draft"}
-                </button>
-                <button onClick={() => submit("send")} disabled={busy || !to.trim()}
-                  className="inline-flex items-center justify-center px-5 py-2 text-[13.5px] font-medium rounded-[10px] bg-[#111111] dark:bg-[#FAFAF8] text-[#FFFFFF] dark:text-[#111111] hover:bg-[#222222] dark:hover:bg-[#E5E7EB] disabled:opacity-50 transition-all duration-200 cursor-pointer shadow-sm">
-                  {status === "sending" ? <RiLoaderLine className="size-4 animate-spin mr-2" /> : <RiMailSendLine className="size-4 mr-2" />}
-                  {status === "sending" ? "Sending..." : "Send now"}
-                </button>
-              </>
+        {/* Subject */}
+        <div className="flex items-start gap-3 px-4 py-2.5">
+          <span className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-wider w-10 shrink-0 pt-0.5">Subj</span>
+          <div className="flex-1 min-w-0">
+            {locked ? (
+              <span className="text-[13px] font-medium text-foreground">{subject || "(No subject)"}</span>
+            ) : (
+              <input
+                type="text"
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                disabled={busy}
+                placeholder="Subject line"
+                className="w-full text-[13px] font-medium text-foreground bg-transparent outline-none placeholder:text-muted-foreground/40 disabled:opacity-50"
+              />
             )}
           </div>
         </div>
+      </div>
 
+      {/* ── Body ── */}
+      <div className="px-4 py-4">
+        {locked ? (
+          <div className="text-[13px] leading-relaxed text-foreground/90 whitespace-pre-wrap min-h-[80px]">
+            {body || "(Empty body)"}
+          </div>
+        ) : (
+          <textarea
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            disabled={busy}
+            placeholder="Write your message here…"
+            rows={6}
+            className="w-full text-[13px] leading-relaxed text-foreground bg-transparent outline-none resize-none placeholder:text-muted-foreground/40 disabled:opacity-50 min-h-[120px]"
+          />
+        )}
+      </div>
+
+      {/* ── Error ── */}
+      {status === "error" && (
+        <div className="mx-4 mb-3 flex items-center gap-2 text-[12px] text-rose-600 dark:text-rose-400 bg-rose-500/8 border border-rose-500/20 rounded-xl px-3.5 py-2.5">
+          <RiAlertLine className="size-3.5 shrink-0" />
+          <span>{errorMsg || "Failed to process. Please try again."}</span>
+        </div>
+      )}
+
+      {/* ── Footer ── */}
+      <div className="flex items-center justify-between px-4 py-3 border-t border-border/40 bg-secondary/10 dark:bg-secondary/5">
+        <div className="text-[11px] text-muted-foreground/50">
+          {isSent && "Delivered successfully"}
+          {isSaved && "Saved to Gmail Drafts"}
+          {!locked && "Review and edit before sending"}
+        </div>
+
+        {!locked && (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => submit("draft")}
+              disabled={busy || !to.trim()}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 text-[12px] font-medium rounded-xl text-muted-foreground hover:text-foreground border border-border/60 hover:border-border hover:bg-secondary/60 disabled:opacity-40 transition-all cursor-pointer"
+            >
+              {status === "saving" ? (
+                <RiLoaderLine className="size-3.5 animate-spin" />
+              ) : (
+                <RiDraftLine className="size-3.5" />
+              )}
+              {status === "saving" ? "Saving…" : "Save Draft"}
+            </button>
+
+            <button
+              onClick={() => submit("send")}
+              disabled={busy || !to.trim()}
+              className="flex items-center gap-1.5 px-4 py-1.5 text-[12px] font-semibold rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground disabled:opacity-40 shadow-sm shadow-primary/20 transition-all cursor-pointer"
+            >
+              {status === "sending" ? (
+                <RiLoaderLine className="size-3.5 animate-spin" />
+              ) : (
+                <RiMailSendLine className="size-3.5" />
+              )}
+              {status === "sending" ? "Sending…" : "Send"}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -8,9 +8,10 @@ export async function POST(req: Request) {
   const session = await getSessionCached(await headers());
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { action, to, subject, body } = await req.json() as {
+  const { action, to, cc, subject, body } = await req.json() as {
     action: "send" | "draft";
     to: string;
+    cc?: string;
     subject: string;
     body: string;
   };
@@ -22,7 +23,7 @@ export async function POST(req: Request) {
   try {
     const tenant = corsair.withTenant(session.user.id);
     const userEmail = session.user.email ?? "";
-    const raw = await buildRawEmail({ from: userEmail, to, subject, text: body ?? "" });
+    const raw = await buildRawEmail({ from: userEmail, to, cc: cc || undefined, subject, text: body ?? "" });
 
     if (action === "send") {
       const result = await tenant.gmail.api.messages.send({ raw });

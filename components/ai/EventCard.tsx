@@ -19,7 +19,7 @@ import {
 import type { ChatArtifact } from "@/types/ai";
 
 type EventArtifact = Extract<ChatArtifact, { kind: "event" }>;
-type CardStatus = "idle" | "editing" | "saving" | "saved" | "error";
+type CardStatus = "idle" | "editing" | "saving" | "saved" | "error" | "confirm_delete" | "deleting" | "deleted";
 
 function toDatetimeLocal(iso?: string | null): string {
   if (!iso) return "";
@@ -88,10 +88,25 @@ export default function EventCard({ event }: { event: EventArtifact }) {
   ]);
 
   const canUpdate = !!event.eventId;
-  // Show read-only view by default; only show editable fields when user clicks Edit
   const isEditing = status === "editing";
   const locked = status === "idle" || status === "saved";
   const busy = status === "saving";
+  const isDeleted = status === "deleted";
+  const isConfirmDelete = status === "confirm_delete";
+  const isDeleting = status === "deleting";
+
+  async function handleDelete() {
+    if (!canUpdate) return;
+    setStatus("deleting");
+    try {
+      const res = await fetch(`/api/calendar/events/${event.eventId}?calendarId=primary`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Delete failed");
+      setStatus("deleted");
+    } catch (err: any) {
+      setErrorMsg(err?.message ?? "Failed to delete event");
+      setStatus("error");
+    }
+  }
 
   function handleStartEdit() {
     if (!canUpdate || busy) return;
@@ -143,11 +158,13 @@ export default function EventCard({ event }: { event: EventArtifact }) {
       setStatus("error");
     }
   }  /* ── Accent colors ── */
-  const accent = status === "saved"
-    ? { stripe: "bg-[#CFE8D6] dark:bg-[#2A3B30]", icon: "text-[#4A7D59] dark:text-[#88B395]", iconBg: "bg-[#F0F8F3] dark:bg-[#1A261F]", badge: "text-[#4A7D59] dark:text-[#88B395] bg-[#F0F8F3] dark:bg-[#1A261F] border-[#D8F0E1] dark:border-[#2A3B30]", dot: "bg-[#4A7D59] dark:bg-[#88B395]" }
-    : { stripe: "bg-[#E5E7EB] dark:bg-[#333333]", icon: "text-[#6B7280] dark:text-[#A1A1AA]", iconBg: "bg-[#F9FAFB] dark:bg-[#27272A]", badge: "text-[#6B7280] dark:text-[#A1A1AA] bg-[#F9FAFB] dark:bg-[#27272A] border-[#E5E7EB] dark:border-[#3F3F46]", dot: "bg-[#9CA3AF] dark:bg-[#71717A]" };
+  const accent = isDeleted
+    ? { badge: "text-rose-600 dark:text-rose-400 bg-rose-500/8 border-rose-500/25", dot: "bg-rose-500" }
+    : status === "saved"
+    ? { badge: "text-[#4A7D59] dark:text-[#88B395] bg-[#F0F8F3] dark:bg-[#1A261F] border-[#D8F0E1] dark:border-[#2A3B30]", dot: "bg-[#4A7D59] dark:bg-[#88B395]" }
+    : { badge: "text-[#6B7280] dark:text-[#A1A1AA] bg-[#F9FAFB] dark:bg-[#27272A] border-[#E5E7EB] dark:border-[#3F3F46]", dot: "bg-[#9CA3AF] dark:bg-[#71717A]" };
 
-  const badgeText = status === "saved" ? "Updated" : event.htmlLink ? "Created" : "Scheduled";
+  const badgeText = isDeleted ? "Deleted" : status === "saved" ? "Updated" : event.htmlLink ? "Created" : "Scheduled";
 
   const inputCls = "w-full text-[13px] text-[#111827] dark:text-[#FAFAF8] bg-[#FAFAF8] dark:bg-[#1A1A1A] border border-[#E5E7EB] dark:border-[#333333] rounded-[10px] px-3.5 py-2.5 outline-none focus:border-[#CFE8D6] dark:focus:border-[#2A3B30] focus:ring-2 focus:ring-[#D8F0E1]/50 dark:focus:ring-[#2A3B30]/50 placeholder:text-[#9CA3AF] dark:placeholder:text-[#666666] disabled:opacity-50 transition-all duration-200";
 
@@ -319,14 +336,36 @@ export default function EventCard({ event }: { event: EventArtifact }) {
         )}
 
         {/* ── Action buttons ── */}
-        <div className="px-5 pb-5 flex items-center gap-2.5">
-          {locked && canUpdate && (
+        <div className="px-5 pb-5 flex items-center gap-2.5 flex-wrap">
+          {isDeleted && (
+            <span className="text-[12px] text-rose-500 dark:text-rose-400 font-medium">Event deleted from Google Calendar.</span>
+          )}
+
+          {locked && canUpdate && !isDeleted && !isConfirmDelete && (
             <>
               <button onClick={handleStartEdit}
                 className="inline-flex items-center justify-center h-8 px-4 text-[13px] font-medium rounded-[10px] text-[#111827] dark:text-[#FAFAF8] bg-white dark:bg-[#141414] border border-[#E5E7EB] dark:border-[#333333] hover:bg-[#F9FAFB] dark:hover:bg-[#1A1A1A] shadow-sm transition-all duration-200 cursor-pointer">
                 Edit event
               </button>
-              <span className="text-[12px] text-[#9CA3AF] dark:text-[#666666] font-medium ml-2">Synced with Google Calendar</span>
+              <button onClick={() => setStatus("confirm_delete")}
+                className="inline-flex items-center justify-center h-8 px-4 text-[13px] font-medium rounded-[10px] text-rose-600 dark:text-rose-400 bg-rose-500/6 border border-rose-500/20 hover:bg-rose-500/12 transition-all duration-200 cursor-pointer">
+                Delete
+              </button>
+              <span className="text-[12px] text-[#9CA3AF] dark:text-[#666666] font-medium ml-auto">Synced with Google Calendar</span>
+            </>
+          )}
+
+          {isConfirmDelete && (
+            <>
+              <span className="text-[12.5px] text-foreground font-medium">Delete this event?</span>
+              <button onClick={handleDelete}
+                className="inline-flex items-center justify-center h-8 px-4 text-[13px] font-semibold rounded-[10px] bg-rose-500 hover:bg-rose-600 text-white transition-all duration-200 cursor-pointer shadow-sm">
+                {isDeleting ? "Deleting…" : "Yes, delete"}
+              </button>
+              <button onClick={() => setStatus("idle")}
+                className="inline-flex items-center justify-center h-8 px-4 text-[13px] font-medium rounded-[10px] text-[#111827] dark:text-[#FAFAF8] bg-white dark:bg-[#141414] border border-[#E5E7EB] dark:border-[#333333] hover:bg-[#F9FAFB] dark:hover:bg-[#1A1A1A] shadow-sm transition-all duration-200 cursor-pointer">
+                Cancel
+              </button>
             </>
           )}
 
@@ -344,7 +383,7 @@ export default function EventCard({ event }: { event: EventArtifact }) {
           )}
 
           {status === "error" && (
-            <button onClick={() => setStatus("editing")}
+            <button onClick={() => setStatus(canUpdate ? "editing" : "idle")}
               className="inline-flex items-center justify-center h-8 px-4 text-[13px] font-medium rounded-[10px] text-[#111827] dark:text-[#FAFAF8] bg-white dark:bg-[#141414] border border-[#E5E7EB] dark:border-[#333333] hover:bg-[#F9FAFB] dark:hover:bg-[#1A1A1A] shadow-sm transition-all duration-200 cursor-pointer">
               Try Again
             </button>

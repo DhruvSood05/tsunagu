@@ -66,6 +66,12 @@ export async function GET() {
   const result = users.map((u) => {
     const prefs = prefsMap.get(u.id);
     const aiDailyLimit = prefs?.aiDailyLimit ?? null;
+    // Admin account is always unlimited regardless of stored prefs
+    const effectiveLimit = isAdmin(u.email)
+      ? -1
+      : aiDailyLimit === -1
+      ? -1
+      : (aiDailyLimit ?? FREE_TIER_LIMIT);
     return {
       id: u.id,
       name: u.name,
@@ -77,7 +83,7 @@ export async function GET() {
       aiToday: Number(todayMap.get(u.id) ?? 0),
       aiThisMonth: monthMap.get(u.id) ?? 0,
       aiDailyLimit,
-      effectiveLimit: aiDailyLimit === -1 ? -1 : (aiDailyLimit ?? FREE_TIER_LIMIT),
+      effectiveLimit,
       lastActive: lastActiveMap.get(u.id) ?? null,
     };
   });

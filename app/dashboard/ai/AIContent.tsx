@@ -61,6 +61,24 @@ export default function AIContent({ user, gmailConnected, calendarConnected }: A
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, streaming]);
 
+  // Global keyboard shortcuts
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const ctrl = e.ctrlKey || e.metaKey;
+      if (ctrl && e.key === "k") {
+        e.preventDefault();
+        createNewSession();
+      }
+      if (ctrl && e.key === "/") {
+        e.preventDefault();
+        setSidebarOpen((v) => !v);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Load sessions on mount
   useEffect(() => {
     fetchSessions();
@@ -287,7 +305,7 @@ export default function AIContent({ user, gmailConnected, calendarConnected }: A
           {sidebarOpen && (
             <div
               id="tour-ai-sessions"
-              className="w-56 shrink-0 bg-card border border-border/40 rounded-xl overflow-hidden shadow-xl flex flex-col"
+              className="w-56 shrink-0 bg-card border border-border/40 rounded-2xl overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.08)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.32)] flex flex-col"
             >
               <div className="px-3 py-3 border-b border-border/40 flex items-center justify-between bg-card/60 backdrop-blur-sm shrink-0">
                 <div className="flex items-center gap-1.5">
@@ -296,7 +314,7 @@ export default function AIContent({ user, gmailConnected, calendarConnected }: A
                 </div>
                 <button
                   onClick={() => setSidebarOpen(false)}
-                  className="size-6 flex items-center justify-center rounded text-muted-foreground/40 hover:text-foreground hover:bg-secondary/60 transition-all cursor-pointer"
+                  className="size-6 flex items-center justify-center rounded-lg text-muted-foreground/40 hover:text-foreground hover:bg-secondary/60 transition-all cursor-pointer"
                 >
                   <RiMenuFoldLine className="size-3.5" />
                 </button>
@@ -305,7 +323,7 @@ export default function AIContent({ user, gmailConnected, calendarConnected }: A
               <div className="px-2 py-2 shrink-0">
                 <button
                   onClick={createNewSession}
-                  className="w-full flex items-center gap-2 px-2.5 py-2 text-xs font-semibold text-foreground bg-secondary/40 hover:bg-secondary/80 border border-border/30 rounded-md transition-all cursor-pointer"
+                  className="w-full flex items-center gap-2 px-2.5 py-2 text-xs font-semibold text-foreground bg-secondary/40 hover:bg-secondary/80 border border-border/30 rounded-xl transition-all cursor-pointer"
                 >
                   <RiAddLine className="size-3.5 shrink-0" />
                   New Chat
@@ -322,7 +340,7 @@ export default function AIContent({ user, gmailConnected, calendarConnected }: A
                   <button
                     key={s.id}
                     onClick={() => loadSession(s.id)}
-                    className={`group w-full flex items-center gap-1.5 px-2.5 py-2 rounded-md text-left transition-all cursor-pointer ${
+                    className={`group w-full flex items-center gap-1.5 px-2.5 py-2 rounded-xl text-left transition-all cursor-pointer ${
                       activeSessionId === s.id
                         ? "bg-secondary text-foreground"
                         : "text-muted-foreground hover:text-foreground hover:bg-secondary/40"
@@ -336,7 +354,7 @@ export default function AIContent({ user, gmailConnected, calendarConnected }: A
                     </div>
                     <button
                       onClick={(e) => deleteSession(e, s.id)}
-                      className="shrink-0 opacity-0 group-hover:opacity-100 size-5 flex items-center justify-center rounded text-muted-foreground/40 hover:text-rose-500 transition-all cursor-pointer"
+                      className="shrink-0 opacity-0 group-hover:opacity-100 size-5 flex items-center justify-center rounded-lg text-muted-foreground/40 hover:text-rose-500 transition-all cursor-pointer"
                     >
                       <RiDeleteBinLine className="size-3" />
                     </button>
@@ -349,25 +367,27 @@ export default function AIContent({ user, gmailConnected, calendarConnected }: A
           {/* Main Chat Area */}
           <div
             id="tour-ai-chat"
-            className="flex-1 bg-card border border-border/40 rounded-xl overflow-hidden shadow-xl flex flex-col relative min-w-0"
+            className="flex-1 bg-card border border-border/40 rounded-2xl overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.08)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.32)] flex flex-col relative min-w-0"
           >
             {/* Inner Header */}
-            <div className="px-6 py-4.5 border-b border-border/40 shrink-0 flex items-center justify-between bg-card/60 backdrop-blur-sm relative z-10">
-              <div className="flex items-center gap-2">
+            <div className="px-5 py-3.5 border-b border-border/40 shrink-0 flex items-center justify-between bg-card/70 backdrop-blur-sm relative z-10">
+              <div className="flex items-center gap-2.5">
                 {!sidebarOpen && (
                   <button
                     onClick={() => setSidebarOpen(true)}
-                    className="size-7 flex items-center justify-center rounded-md text-muted-foreground/40 hover:text-foreground hover:bg-secondary/60 transition-all cursor-pointer mr-1"
+                    className="size-7 flex items-center justify-center rounded-xl text-muted-foreground/40 hover:text-foreground hover:bg-secondary/60 transition-all cursor-pointer"
                   >
                     <RiMenuUnfoldLine className="size-3.5" />
                   </button>
                 )}
-                <RiSparkling2Fill className="size-4.5 text-foreground animate-pulse-glow" />
-                <h1 className="text-xs font-bold text-foreground uppercase tracking-widest">Tsunagu Assistant</h1>
+                <div className="size-7 rounded-xl bg-linear-to-br from-primary/20 to-primary/8 border border-primary/20 flex items-center justify-center">
+                  <RiSparkling2Fill className="size-3.5 text-primary animate-pulse-glow" />
+                </div>
+                <h1 className="text-xs font-bold text-foreground tracking-wide">AI Assistant</h1>
               </div>
               <button
                 onClick={createNewSession}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-semibold text-muted-foreground hover:text-foreground bg-secondary/40 hover:bg-secondary/80 border border-border/30 rounded-md transition-all cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-semibold text-muted-foreground hover:text-foreground bg-secondary/40 hover:bg-secondary/80 border border-border/30 rounded-xl transition-all cursor-pointer"
               >
                 <RiAddLine className="size-3" />
                 New Chat
@@ -375,7 +395,7 @@ export default function AIContent({ user, gmailConnected, calendarConnected }: A
             </div>
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
+            <div className="flex-1 overflow-y-auto px-5 py-5 space-y-4">
               {loadingMessages ? (
                 <div className="flex flex-col items-center justify-center h-full gap-3 text-muted-foreground/40">
                   <RiChatHistoryLine className="size-7 animate-pulse" />
@@ -384,11 +404,11 @@ export default function AIContent({ user, gmailConnected, calendarConnected }: A
               ) : isEmpty ? (
                 <div className="flex flex-col items-center justify-center h-full gap-8 max-w-2xl mx-auto text-center py-10">
                   <div className="flex flex-col items-center gap-4">
-                    <div className="size-14 rounded-lg bg-linear-to-tr from-foreground/80 to-foreground flex items-center justify-center shadow-lg">
-                      <RiSparkling2Fill className="size-7 text-background" />
+                    <div className="size-14 rounded-2xl bg-linear-to-br from-primary/20 to-primary/8 border border-primary/20 flex items-center justify-center shadow-[0_8px_24px_rgba(99,102,241,0.18)]">
+                      <RiSparkling2Fill className="size-6 text-primary" />
                     </div>
                     <div className="space-y-2">
-                      <h2 className="text-3xl font-bold text-foreground tracking-tight leading-tight">
+                      <h2 className="text-2xl font-bold text-foreground tracking-tight leading-tight">
                         How can I help{user?.name ? `, ${user.name.split(" ")[0]}` : ""}?
                       </h2>
                       <p className="text-[13px] text-muted-foreground max-w-sm mx-auto leading-relaxed">
@@ -402,16 +422,16 @@ export default function AIContent({ user, gmailConnected, calendarConnected }: A
                       <button
                         key={label}
                         onClick={() => sendMessage(SUGGESTIONS[i])}
-                        className="text-left px-4.5 py-3.5 text-xs text-muted-foreground hover:text-foreground bg-secondary/35 hover:bg-secondary/65 border border-border/30 hover:border-border/60 rounded-lg transition-all cursor-pointer shadow-sm"
+                        className="text-left px-4 py-3.5 text-xs text-muted-foreground hover:text-foreground bg-secondary/30 hover:bg-secondary/60 border border-border/30 hover:border-border/50 rounded-2xl transition-all cursor-pointer shadow-sm hover:shadow-md"
                       >
-                        <p className="font-semibold">{label}</p>
-                        <p className="text-[10px] opacity-60 truncate mt-1">Prompt template</p>
+                        <p className="font-semibold text-foreground/80">{label}</p>
+                        <p className="text-[10px] text-muted-foreground/50 truncate mt-1">Tap to send</p>
                       </button>
                     ))}
                   </div>
                 </div>
               ) : (
-                <div className="max-w-3xl mx-auto space-y-6">
+                <div className="max-w-3xl mx-auto space-y-4">
                   {messages.map((msg, i) => (
                     <AIChatBubble key={i} message={msg} />
                   ))}
@@ -421,9 +441,9 @@ export default function AIContent({ user, gmailConnected, calendarConnected }: A
             </div>
 
             {/* Input Bar */}
-            <div className="px-6 py-4.5 border-t border-border/40 shrink-0 bg-card/60 backdrop-blur-sm relative z-10">
+            <div className="px-5 py-4 border-t border-border/40 shrink-0 bg-card/70 backdrop-blur-sm relative z-10">
               <form onSubmit={handleSubmit} className="max-w-3xl mx-auto">
-                <div className="flex items-end gap-2 bg-card border border-border focus-within:border-foreground/30 focus-within:ring-2 focus-within:ring-foreground/6 rounded-2xl pl-4 pr-2 py-2 shadow-sm transition-all">
+                <div className="flex items-end gap-2 bg-secondary/30 border border-border/50 focus-within:border-primary/30 focus-within:bg-secondary/50 focus-within:ring-2 focus-within:ring-primary/8 rounded-2xl pl-4 pr-2 py-2 shadow-sm transition-all duration-200">
                   <textarea
                     ref={inputRef}
                     value={input}
@@ -432,20 +452,20 @@ export default function AIContent({ user, gmailConnected, calendarConnected }: A
                     placeholder="Ask about your emails or calendar…"
                     rows={1}
                     disabled={streaming}
-                    className="flex-1 text-[13px] text-foreground bg-transparent outline-none resize-none placeholder:text-muted-foreground/50 leading-relaxed max-h-36 overflow-y-auto disabled:opacity-50 py-1.5"
+                    className="flex-1 text-[13px] text-foreground bg-transparent outline-none resize-none placeholder:text-muted-foreground/40 leading-relaxed max-h-36 overflow-y-auto disabled:opacity-50 py-1.5"
                     style={{ fieldSizing: "content" } as any}
                   />
                   <Button
                     type="submit"
                     size="icon-sm"
                     disabled={!input.trim() || streaming}
-                    className="shrink-0 mb-0.5 rounded-xl size-8 cursor-pointer disabled:opacity-40"
+                    className="shrink-0 mb-0.5 rounded-xl size-8 cursor-pointer disabled:opacity-30 shadow-[0_2px_8px_rgba(99,102,241,0.30)]"
                   >
                     <RiSendPlaneLine className="size-4" />
                   </Button>
                 </div>
-                <p className="text-[10px] text-muted-foreground/60 text-center mt-2 font-medium">
-                  Enter to send · Shift+Enter for newline · Alt+A to open from anywhere
+                <p className="text-[10px] text-muted-foreground/40 text-center mt-2">
+                  Enter to send · Shift+Enter for newline
                 </p>
               </form>
             </div>

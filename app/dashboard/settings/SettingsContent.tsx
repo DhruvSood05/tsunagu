@@ -8,6 +8,12 @@ import Sidebar from "@/components/layout/Sidebar";
 import TopNav from "@/components/layout/TopNav";
 import SettingsOverlay from "@/components/layout/SettingsOverlay";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   RiSunLine,
   RiMoonLine,
   RiComputerLine,
@@ -20,6 +26,11 @@ import {
   RiCheckLine,
   RiWifiOffLine,
   RiFlashlightLine,
+  RiVipCrownLine,
+  RiArrowUpLine,
+  RiMailLine,
+  RiSparklingLine,
+  RiKeyboardLine,
 } from "@remixicon/react";
 
 interface SettingsContentProps {
@@ -28,11 +39,9 @@ interface SettingsContentProps {
   calendarConnected: boolean;
 }
 
-/* ── shared atoms ─────────────────────────────────────────── */
-
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="text-[11px] font-bold text-muted-foreground/50 uppercase tracking-widest font-heading mb-3 px-0.5">
+    <p className="text-[11px] font-bold text-muted-foreground/50 uppercase tracking-widest mb-3 px-0.5">
       {children}
     </p>
   );
@@ -67,8 +76,6 @@ function ConnectedBadge({ connected }: { connected: boolean }) {
   );
 }
 
-/* ── main component ───────────────────────────────────────── */
-
 export default function SettingsContent({ user, gmailConnected, calendarConnected }: SettingsContentProps) {
   const router = useRouter();
   const { theme, setTheme } = useTheme();
@@ -78,6 +85,8 @@ export default function SettingsContent({ user, gmailConnected, calendarConnecte
   const [tourReset, setTourReset] = useState(false);
   const [disconnecting, setDisconnecting] = useState<"gmail" | "calendar" | null>(null);
   const [aiUsage, setAiUsage] = useState<{ count: number; limit: number; unlimited: boolean } | null>(null);
+  const [showUpgrade, setShowUpgrade] = useState(false);
+  const [showShortcuts, setShowShortcuts] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -119,6 +128,7 @@ export default function SettingsContent({ user, gmailConnected, calendarConnecte
     ? user.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
     : user?.email?.[0]?.toUpperCase() ?? "?";
 
+  const isPro = aiUsage?.unlimited === true;
   const aiPct = aiUsage && !aiUsage.unlimited ? Math.min((aiUsage.count / aiUsage.limit) * 100, 100) : 0;
   const aiStatusKey = !aiUsage ? null
     : aiUsage.unlimited ? "unlimited"
@@ -133,9 +143,8 @@ export default function SettingsContent({ user, gmailConnected, calendarConnecte
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         <TopNav user={user} gmailConnected={gmailConnected} />
 
-        {/* Scrollable content with subtle depth gradient */}
         <div className="flex-1 overflow-y-auto bg-background dark:bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(129,140,248,0.06),transparent)]">
-          <div className="max-w-[680px] mx-auto px-6 py-10 space-y-8">
+          <div className="max-w-170 mx-auto px-6 py-10 space-y-8">
 
             {/* Page header */}
             <div className="pb-2">
@@ -148,7 +157,6 @@ export default function SettingsContent({ user, gmailConnected, calendarConnecte
               <SectionLabel>Account</SectionLabel>
               <Card>
                 <div className="px-5 py-5 flex items-center gap-4">
-                  {/* Avatar */}
                   <div className="relative shrink-0">
                     {user?.image ? (
                       <img
@@ -158,20 +166,29 @@ export default function SettingsContent({ user, gmailConnected, calendarConnecte
                         className="size-14 rounded-full object-cover ring-2 ring-border/60 dark:ring-white/8 shadow-md"
                       />
                     ) : (
-                      <div className="size-14 rounded-full bg-gradient-to-br from-primary/30 to-primary/10 border border-primary/20 flex items-center justify-center shadow-md">
+                      <div className="size-14 rounded-full bg-linear-to-br from-primary/30 to-primary/10 border border-primary/20 flex items-center justify-center shadow-md">
                         <span className="text-[17px] font-bold text-primary">{initials}</span>
                       </div>
                     )}
                     <span className="absolute bottom-0 right-0 size-3.5 rounded-full bg-emerald-500 border-2 border-card shadow-sm" />
                   </div>
 
-                  {/* Info */}
                   <div className="flex-1 min-w-0">
                     <p className="text-[15px] font-semibold text-foreground leading-tight truncate">{user?.name ?? "Tsunagu User"}</p>
                     <p className="text-[12.5px] text-muted-foreground truncate mt-0.5">{user?.email}</p>
-                    <span className="inline-block mt-2 text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 uppercase tracking-wider">
-                      Pro account
-                    </span>
+                    {/* Badge: only shown once aiUsage has loaded */}
+                    {aiUsage && (
+                      isPro ? (
+                        <span className="inline-flex items-center gap-1.5 mt-2 text-[10px] font-bold px-2.5 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 uppercase tracking-wider">
+                          <RiVipCrownLine className="size-3" />
+                          Pro Account
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 mt-2 text-[10px] font-bold px-2.5 py-1 rounded-full bg-secondary text-muted-foreground border border-border/60 uppercase tracking-wider">
+                          Free Account
+                        </span>
+                      )
+                    )}
                   </div>
                 </div>
               </Card>
@@ -191,7 +208,7 @@ export default function SettingsContent({ user, gmailConnected, calendarConnecte
                       {([
                         { key: "light",  label: "Light",  icon: RiSunLine,      preview: "bg-[#f8f9fc] border-[#e2e7f0]" },
                         { key: "dark",   label: "Dark",   icon: RiMoonLine,     preview: "bg-[#0c0c10] border-[rgba(255,255,255,0.07)]" },
-                        { key: "system", label: "System", icon: RiComputerLine, preview: "bg-gradient-to-br from-[#f8f9fc] to-[#0c0c10] border-border/50" },
+                        { key: "system", label: "System", icon: RiComputerLine, preview: "bg-linear-to-br from-[#f8f9fc] to-[#0c0c10] border-border/50" },
                       ] as const).map(({ key, label, icon: Icon, preview }) => {
                         const active = theme === key;
                         return (
@@ -204,7 +221,6 @@ export default function SettingsContent({ user, gmailConnected, calendarConnecte
                                 : "border-border/60 bg-secondary/20 hover:bg-secondary/50 hover:border-border"
                             }`}
                           >
-                            {/* Mini preview swatch */}
                             <div className={`h-8 w-full rounded-lg border ${preview}`} />
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-2">
@@ -226,10 +242,10 @@ export default function SettingsContent({ user, gmailConnected, calendarConnecte
               </Card>
             </section>
 
-            {/* ── AI Usage ────────────────────────────────────── */}
+            {/* ── AI Credits ──────────────────────────────────── */}
             {aiUsage && (
               <section className="space-y-3">
-                <SectionLabel>AI Usage</SectionLabel>
+                <SectionLabel>AI Credits</SectionLabel>
                 <Card>
                   <div className="px-5 py-5 space-y-4">
                     <div className="flex items-start gap-3.5">
@@ -253,7 +269,7 @@ export default function SettingsContent({ user, gmailConnected, calendarConnecte
                         </div>
                         <p className="text-[12px] text-muted-foreground mt-0.5">
                           {aiUsage.unlimited
-                            ? "Unlimited access enabled on your account."
+                            ? "Unlimited access — you're on a Pro plan."
                             : `${aiUsage.count} of ${aiUsage.limit} requests used today`}
                         </p>
                       </div>
@@ -279,6 +295,25 @@ export default function SettingsContent({ user, gmailConnected, calendarConnecte
                         </div>
                       </div>
                     )}
+
+                    {/* Upgrade CTA — only for free users */}
+                    {!isPro && (
+                      <div className="mt-1 pt-4 border-t border-border/50">
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="min-w-0">
+                            <p className="text-[12.5px] font-semibold text-foreground">Want more credits?</p>
+                            <p className="text-[11.5px] text-muted-foreground mt-0.5">Upgrade to Pro for unlimited daily AI requests.</p>
+                          </div>
+                          <button
+                            onClick={() => setShowUpgrade(true)}
+                            className="shrink-0 flex items-center gap-1.5 px-4 py-2 text-[12px] font-semibold bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl shadow-sm shadow-primary/20 transition-all cursor-pointer"
+                          >
+                            <RiArrowUpLine className="size-3.5" />
+                            Upgrade
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </Card>
               </section>
@@ -287,44 +322,39 @@ export default function SettingsContent({ user, gmailConnected, calendarConnecte
             {/* ── Integrations ────────────────────────────────── */}
             <section className="space-y-3">
               <SectionLabel>Integrations</SectionLabel>
-              <div className="grid grid-cols-1 gap-3">
+              <div className="grid grid-cols-2 gap-3">
 
                 {/* Gmail */}
                 <Card>
-                  <div className="px-5 pt-5 pb-4 space-y-4">
-                    <div className="flex items-start gap-4">
-                      {/* Icon */}
-                      <div className="size-11 rounded-xl bg-gradient-to-br from-[#ea4335]/20 to-[#ea4335]/8 border border-[#ea4335]/20 dark:border-[#ea4335]/15 flex items-center justify-center shrink-0 shadow-sm">
-                        <RiGoogleFill className="size-5 text-[#ea4335]" />
+                  <div className="px-4 pt-4 pb-4 space-y-3.5 flex flex-col h-full">
+                    <div className="flex items-start gap-3">
+                      <div className="size-9 rounded-xl bg-linear-to-br from-[#ea4335]/20 to-[#ea4335]/8 border border-[#ea4335]/20 dark:border-[#ea4335]/15 flex items-center justify-center shrink-0 shadow-sm">
+                        <RiGoogleFill className="size-4 text-[#ea4335]" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-2 mb-1">
-                          <p className="text-[14px] font-semibold text-foreground">Gmail Inbox</p>
-                          <ConnectedBadge connected={gmailConnected} />
-                        </div>
-                        <p className="text-[12px] text-muted-foreground leading-snug">
-                          Read, send, and manage emails directly inside Tsunagu.
-                        </p>
+                        <p className="text-[13px] font-semibold text-foreground leading-tight">Gmail</p>
+                        <p className="text-[11px] text-muted-foreground leading-snug mt-0.5">Read, send & manage emails</p>
                       </div>
                     </div>
 
-                    {/* Action button */}
+                    <ConnectedBadge connected={gmailConnected} />
+
                     {gmailConnected ? (
                       <button
                         onClick={() => handleDisconnect("gmail")}
                         disabled={!!disconnecting}
-                        className="w-full flex items-center justify-center gap-2 py-2.5 text-[13px] font-semibold text-rose-500 dark:text-rose-400 border border-rose-500/25 dark:border-rose-500/20 rounded-xl hover:bg-rose-500/6 dark:hover:bg-rose-500/8 transition-all duration-150 disabled:opacity-40 cursor-pointer"
+                        className="mt-auto w-full flex items-center justify-center gap-1.5 py-2 text-[12px] font-semibold text-rose-500 dark:text-rose-400 border border-rose-500/25 dark:border-rose-500/20 rounded-xl hover:bg-rose-500/6 dark:hover:bg-rose-500/8 transition-all disabled:opacity-40 cursor-pointer"
                       >
                         {disconnecting === "gmail"
-                          ? <><RiLoaderLine className="size-4 animate-spin" /> Disconnecting…</>
-                          : <><RiWifiOffLine className="size-4" /> Disconnect Gmail</>}
+                          ? <><RiLoaderLine className="size-3.5 animate-spin" /> Disconnecting…</>
+                          : <><RiWifiOffLine className="size-3.5" /> Disconnect</>}
                       </button>
                     ) : (
                       <button
                         onClick={() => { window.location.href = "/api/connect?plugin=gmail"; }}
-                        className="w-full flex items-center justify-center gap-2 py-2.5 text-[13px] font-semibold bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl shadow-sm shadow-primary/20 transition-all duration-150 cursor-pointer"
+                        className="mt-auto w-full flex items-center justify-center gap-1.5 py-2 text-[12px] font-semibold bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl shadow-sm shadow-primary/20 transition-all cursor-pointer"
                       >
-                        <RiGoogleFill className="size-4" />
+                        <RiGoogleFill className="size-3.5" />
                         Connect Gmail
                       </button>
                     )}
@@ -333,44 +363,121 @@ export default function SettingsContent({ user, gmailConnected, calendarConnecte
 
                 {/* Google Calendar */}
                 <Card>
-                  <div className="px-5 pt-5 pb-4 space-y-4">
-                    <div className="flex items-start gap-4">
-                      <div className="size-11 rounded-xl bg-gradient-to-br from-[#4285f4]/20 to-[#4285f4]/8 border border-[#4285f4]/20 dark:border-[#4285f4]/15 flex items-center justify-center shrink-0 shadow-sm">
-                        <RiCalendarLine className="size-5 text-[#4285f4]" />
+                  <div className="px-4 pt-4 pb-4 space-y-3.5 flex flex-col h-full">
+                    <div className="flex items-start gap-3">
+                      <div className="size-9 rounded-xl bg-linear-to-br from-[#4285f4]/20 to-[#4285f4]/8 border border-[#4285f4]/20 dark:border-[#4285f4]/15 flex items-center justify-center shrink-0 shadow-sm">
+                        <RiCalendarLine className="size-4 text-[#4285f4]" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-2 mb-1">
-                          <p className="text-[14px] font-semibold text-foreground">Google Calendar</p>
-                          <ConnectedBadge connected={calendarConnected} />
-                        </div>
-                        <p className="text-[12px] text-muted-foreground leading-snug">
-                          Sync meetings, schedule events, and see your agenda.
-                        </p>
+                        <p className="text-[13px] font-semibold text-foreground leading-tight">Calendar</p>
+                        <p className="text-[11px] text-muted-foreground leading-snug mt-0.5">Sync events & schedule</p>
                       </div>
                     </div>
+
+                    <ConnectedBadge connected={calendarConnected} />
 
                     {calendarConnected ? (
                       <button
                         onClick={() => handleDisconnect("calendar")}
                         disabled={!!disconnecting}
-                        className="w-full flex items-center justify-center gap-2 py-2.5 text-[13px] font-semibold text-rose-500 dark:text-rose-400 border border-rose-500/25 dark:border-rose-500/20 rounded-xl hover:bg-rose-500/6 dark:hover:bg-rose-500/8 transition-all duration-150 disabled:opacity-40 cursor-pointer"
+                        className="mt-auto w-full flex items-center justify-center gap-1.5 py-2 text-[12px] font-semibold text-rose-500 dark:text-rose-400 border border-rose-500/25 dark:border-rose-500/20 rounded-xl hover:bg-rose-500/6 dark:hover:bg-rose-500/8 transition-all disabled:opacity-40 cursor-pointer"
                       >
                         {disconnecting === "calendar"
-                          ? <><RiLoaderLine className="size-4 animate-spin" /> Disconnecting…</>
-                          : <><RiWifiOffLine className="size-4" /> Disconnect Calendar</>}
+                          ? <><RiLoaderLine className="size-3.5 animate-spin" /> Disconnecting…</>
+                          : <><RiWifiOffLine className="size-3.5" /> Disconnect</>}
                       </button>
                     ) : (
                       <button
                         onClick={() => { window.location.href = "/api/connect?plugin=googlecalendar"; }}
-                        className="w-full flex items-center justify-center gap-2 py-2.5 text-[13px] font-semibold bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl shadow-sm shadow-primary/20 transition-all duration-150 cursor-pointer"
+                        className="mt-auto w-full flex items-center justify-center gap-1.5 py-2 text-[12px] font-semibold bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl shadow-sm shadow-primary/20 transition-all cursor-pointer"
                       >
-                        <RiCalendarLine className="size-4" />
+                        <RiCalendarLine className="size-3.5" />
                         Connect Calendar
                       </button>
                     )}
                   </div>
                 </Card>
               </div>
+            </section>
+
+            {/* ── Keyboard Shortcuts ──────────────────────────── */}
+            <section className="space-y-3">
+              <SectionLabel>Keyboard Shortcuts</SectionLabel>
+              <Card>
+                <div className="px-5 py-4 flex items-center justify-between">
+                  <div className="flex items-center gap-3.5">
+                    <div className="size-10 rounded-xl bg-secondary border border-border/60 flex items-center justify-center shrink-0">
+                      <RiKeyboardLine className="size-4.5 text-muted-foreground" />
+                    </div>
+                    <div>
+                      <p className="text-[13.5px] font-semibold text-foreground">Keyboard Shortcuts</p>
+                      <p className="text-[12px] text-muted-foreground mt-0.5">View all keyboard bindings for Tsunagu</p>
+                    </div>
+                  </div>
+                  <Dialog open={showShortcuts} onOpenChange={setShowShortcuts}>
+                    <button
+                      onClick={() => setShowShortcuts(true)}
+                      className="flex items-center gap-2 px-4 py-2 text-[12px] font-semibold text-foreground bg-secondary hover:bg-secondary/80 border border-border/60 rounded-xl transition-all cursor-pointer shrink-0"
+                    >
+                      <RiKeyboardLine className="size-3.5" />
+                      View Shortcuts
+                    </button>
+                    <DialogContent className="max-w-md" aria-describedby={undefined}>
+                      <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                          <RiKeyboardLine className="size-4 text-primary" />
+                          Keyboard Shortcuts
+                        </DialogTitle>
+                      </DialogHeader>
+
+                      <div className="space-y-5 py-1">
+                        {([
+                          {
+                            label: "AI Chat",
+                            shortcuts: [
+                              { keys: ["Enter"], desc: "Send message" },
+                              { keys: ["Shift", "Enter"], desc: "New line in message" },
+                              { keys: ["Ctrl", "K"], desc: "New chat session" },
+                              { keys: ["Esc"], desc: "Stop streaming response" },
+                            ],
+                          },
+                          {
+                            label: "Navigation",
+                            shortcuts: [
+                              { keys: ["Ctrl", "/"], desc: "Toggle chat history sidebar" },
+                            ],
+                          },
+                        ] as const).map((group) => (
+                          <div key={group.label} className="space-y-2">
+                            <p className="text-[10px] font-bold text-muted-foreground/50 uppercase tracking-widest">{group.label}</p>
+                            <div className="bg-secondary/30 border border-border/50 rounded-xl overflow-hidden divide-y divide-border/40">
+                              {group.shortcuts.map(({ keys, desc }) => (
+                                <div key={desc} className="flex items-center justify-between px-4 py-2.5">
+                                  <span className="text-[12.5px] text-foreground">{desc}</span>
+                                  <div className="flex items-center gap-1">
+                                    {keys.map((k, i) => (
+                                      <span key={i} className="inline-flex items-center">
+                                        {i > 0 && <span className="text-[10px] text-muted-foreground/40 mx-0.5">+</span>}
+                                        <kbd className="inline-flex items-center justify-center px-2 py-1 text-[10px] font-semibold text-foreground/70 bg-card border border-border/60 rounded-lg shadow-[0_1px_2px_rgba(0,0,0,0.06)] font-mono min-w-[28px]">
+                                          {k}
+                                        </kbd>
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+
+                        <p className="text-[11px] text-muted-foreground/40 text-center">
+                          Mac users: use ⌘ instead of Ctrl
+                        </p>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </Card>
             </section>
 
             {/* ── Platform ────────────────────────────────────── */}
@@ -425,11 +532,58 @@ export default function SettingsContent({ user, gmailConnected, calendarConnecte
               </Card>
             </section>
 
-            {/* Bottom spacer */}
             <div className="h-8" />
           </div>
         </div>
       </div>
+
+      {/* ── Upgrade Dialog ──────────────────────────────────── */}
+      <Dialog open={showUpgrade} onOpenChange={setShowUpgrade}>
+        <DialogContent className="max-w-sm" aria-describedby={undefined}>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <RiVipCrownLine className="size-4 text-primary" />
+              Upgrade to Pro
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 py-1">
+            {/* Pro benefits */}
+            <div className="bg-primary/6 dark:bg-primary/8 border border-primary/20 rounded-xl p-4 space-y-2.5">
+              {[
+                { icon: RiSparklingLine, text: "Unlimited daily AI requests" },
+                { icon: RiRobot2Line,    text: "Priority AI response speed" },
+                { icon: RiVipCrownLine,  text: "Pro account badge" },
+              ].map(({ icon: Icon, text }) => (
+                <div key={text} className="flex items-center gap-2.5">
+                  <div className="size-5 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
+                    <Icon className="size-3 text-primary" />
+                  </div>
+                  <span className="text-[12.5px] text-foreground font-medium">{text}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Contact admin message */}
+            <div className="bg-secondary/50 border border-border/60 rounded-xl p-4 space-y-2">
+              <div className="flex items-center gap-2">
+                <RiMailLine className="size-4 text-muted-foreground shrink-0" />
+                <p className="text-[12.5px] font-semibold text-foreground">Payment gateway coming soon</p>
+              </div>
+              <p className="text-[12px] text-muted-foreground leading-relaxed">
+                Online payments aren't live yet. To get Pro access, contact the admin directly and they'll upgrade your account manually.
+              </p>
+              <a
+                href="mailto:dhruvsood1102@gmail.com?subject=Tsunagu Pro Upgrade Request"
+                className="mt-2 w-full flex items-center justify-center gap-2 py-2.5 text-[12.5px] font-semibold bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl shadow-sm shadow-primary/20 transition-all cursor-pointer"
+              >
+                <RiMailLine className="size-3.5" />
+                Contact Admin
+              </a>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <SettingsOverlay user={user} gmailConnected={gmailConnected} calendarConnected={calendarConnected} />
     </div>

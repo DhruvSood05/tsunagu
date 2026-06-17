@@ -9,6 +9,7 @@ interface Attachment {
 interface RawEmailOptions {
   from: string;
   to: string;
+  cc?: string;
   subject: string;
   text: string;
   inReplyTo?: string;
@@ -26,6 +27,7 @@ export async function buildRawEmail(options: RawEmailOptions): Promise<string> {
   const info = await transport.sendMail({
     from: options.from,
     to: options.to,
+    cc: options.cc || undefined,
     subject: options.subject,
     text: options.text,
     inReplyTo: options.inReplyTo,
