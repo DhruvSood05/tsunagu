@@ -388,7 +388,7 @@ export default function AIContent({ user, gmailConnected, calendarConnected }: A
                       <RiSparkling2Fill className="size-7 text-background" />
                     </div>
                     <div className="space-y-2">
-                      <h2 className="text-3xl font-serif text-foreground tracking-tight leading-tight">
+                      <h2 className="text-3xl font-bold text-foreground tracking-tight leading-tight">
                         How can I help{user?.name ? `, ${user.name.split(" ")[0]}` : ""}?
                       </h2>
                       <p className="text-[13px] text-muted-foreground max-w-sm mx-auto leading-relaxed">

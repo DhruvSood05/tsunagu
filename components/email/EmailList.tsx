@@ -78,7 +78,7 @@ export default function EmailList({
           <>
             <RiSearchLine className="size-8 opacity-20" />
             <div className="text-center space-y-1">
-              <p className="text-lg font-serif text-foreground tracking-tight">No results found</p>
+              <p className="text-lg font-semibold text-foreground tracking-tight">No results found</p>
               <p className="text-xs text-muted-foreground/80">No emails match &quot;{searchQuery}&quot;</p>
             </div>
           </>
@@ -86,7 +86,7 @@ export default function EmailList({
           <>
             <RiInboxLine className="size-8 opacity-20" />
             <div className="text-center space-y-1">
-              <p className="text-lg font-serif text-foreground tracking-tight">Your inbox is empty</p>
+              <p className="text-lg font-semibold text-foreground tracking-tight">Your inbox is empty</p>
               <p className="text-xs text-muted-foreground/80">Connect Gmail using the sidebar link</p>
             </div>
           </>

@@ -136,7 +136,7 @@ export default function DraftsContent({
             {/* Header */}
             <div className="px-5 py-3 border-b border-border/40 shrink-0 flex items-center justify-between bg-card/60 backdrop-blur-sm">
               <div className="flex items-center gap-2">
-                <h1 className="text-lg font-serif text-foreground tracking-tight leading-none">Drafts</h1>
+                <h1 className="text-lg font-semibold text-foreground tracking-tight leading-none">Drafts</h1>
                 {drafts.length > 0 && (
                   <span className="text-[10px] text-muted-foreground bg-secondary px-1.5 py-0.5 rounded font-mono">
                     {drafts.length}

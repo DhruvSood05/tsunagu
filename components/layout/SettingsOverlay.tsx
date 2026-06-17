@@ -107,7 +107,7 @@ export default function SettingsOverlay({
         <div className="flex items-center justify-between px-6 py-4.5 border-b border-border/40 shrink-0 bg-card/60 backdrop-blur-sm">
           <div className="flex items-center gap-2">
             <RiSettings3Line className="size-4.5 text-muted-foreground" />
-            <h2 className="text-xl font-serif text-foreground tracking-tight">Settings</h2>
+            <h2 className="text-xl font-semibold text-foreground tracking-tight">Settings</h2>
           </div>
           <button
             onClick={handleClose}
@@ -145,8 +145,8 @@ export default function SettingsOverlay({
               <h3 className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest font-heading">AI Usage</h3>
               <div className="p-3.5 border border-border/45 rounded-lg bg-background space-y-3">
                 <div className="flex items-start gap-2.5">
-                  <div className="size-8 rounded bg-[#8b5cf6]/10 flex items-center justify-center shrink-0 mt-0.5">
-                    <RiRobot2Line className="size-4 text-[#8b5cf6]" />
+                  <div className="size-8 rounded bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                    <RiRobot2Line className="size-4 text-primary" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-bold text-foreground">Daily AI Requests</p>
@@ -184,7 +184,7 @@ export default function SettingsOverlay({
                               ? "bg-rose-500"
                               : aiUsage.count >= aiUsage.limit * 0.8
                               ? "bg-amber-500"
-                              : "bg-[#8b5cf6]"
+                              : "bg-primary"
                           }`}
                           style={{ width: `${Math.min((aiUsage.count / aiUsage.limit) * 100, 100)}%` }}
                         />

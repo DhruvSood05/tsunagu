@@ -10,6 +10,7 @@ import {
   RiShieldCheckLine,
 } from "@remixicon/react";
 import Link from "next/link";
+import TsunaguLogo from "@/components/ui/TsunaguLogo";
 
 const FEATURES = [
   { icon: RiTimeLine, text: "See upcoming meetings right inside your inbox" },
@@ -23,17 +24,15 @@ export default function ConnectCalendar() {
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-background select-none font-sans">
       {/* Atmospheric depth */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
-        <div className="absolute -top-1/3 -right-1/4 h-140 w-140 rounded-full bg-violet-500/6 dark:bg-violet-500/9 blur-[120px]" />
-        <div className="absolute -bottom-1/4 -left-1/4 h-110 w-110 rounded-full bg-indigo-500/5 dark:bg-indigo-500/7 blur-[100px]" />
+        <div className="absolute -top-1/3 -right-1/4 h-140 w-140 rounded-full bg-blue-500/8 dark:bg-blue-500/10 blur-[120px]" />
+        <div className="absolute -bottom-1/4 -left-1/4 h-110 w-110 rounded-full bg-indigo-500/6 dark:bg-indigo-500/8 blur-[100px]" />
       </div>
 
       {/* Header */}
       <header className="absolute top-0 left-0 right-0 flex items-center justify-between px-8 py-6 z-10">
         <Link href="/" className="flex items-center gap-2 hover:opacity-75 transition-opacity">
-          <div className="size-7 rounded-lg bg-foreground flex items-center justify-center shadow-md">
-            <span className="text-background text-[11px] font-bold tracking-tighter font-heading">T</span>
-          </div>
-          <span className="font-semibold text-base tracking-tight text-foreground font-serif">Tsunagu</span>
+          <TsunaguLogo className="size-8 text-primary" />
+          <span className="font-semibold text-base tracking-tight text-foreground">Tsunagu</span>
         </Link>
 
         {/* Step indicator */}
@@ -55,9 +54,9 @@ export default function ConnectCalendar() {
         </div>
 
         {/* Headline */}
-        <h1 className="text-4xl sm:text-5xl font-serif tracking-tight leading-[1.05] text-foreground animate-in fade-in slide-in-from-bottom-4 duration-400">
+        <h1 className="text-4xl sm:text-5xl font-bold tracking-tight leading-[1.05] text-foreground animate-in fade-in slide-in-from-bottom-4 duration-400">
           Your schedule,<br />
-          <span className="italic text-muted-foreground">always in context.</span>
+          <span className="text-muted-foreground">always in context.</span>
         </h1>
 
         {/* Subtitle */}

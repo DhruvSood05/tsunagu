@@ -52,7 +52,7 @@ export default function CalendarToolbar({
         </button>
 
         <div className="flex items-center gap-2">
-          <h1 className="text-lg font-serif text-foreground tracking-tight leading-none">{title}</h1>
+          <h1 className="text-lg font-semibold text-foreground tracking-tight leading-none">{title}</h1>
           {loading && (
             <div className="size-3 rounded-full border-[1.5px] border-muted-foreground/20 border-t-muted-foreground/55 animate-spin shrink-0" />
           )}

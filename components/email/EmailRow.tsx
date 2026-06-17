@@ -105,7 +105,7 @@ export default function EmailRow({ email, selected, checked, priority, onClick, 
       onClick={onClick}
       className={`group relative flex items-center gap-3 px-4 py-3.5 cursor-pointer border-b border-border/20 transition-colors duration-150 select-none font-sans ${
         selected
-          ? "bg-secondary border-l-2 border-l-foreground"
+          ? "bg-secondary border-l-2 border-l-primary"
           : "hover:bg-secondary/25 border-l-2 border-l-transparent"
       }`}
     >

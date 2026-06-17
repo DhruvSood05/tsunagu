@@ -10,6 +10,7 @@ import { useTheme } from "@/lib/theme/ThemeProvider";
 import AISummaryCard from "@/components/ai/AISummaryCard";
 import {
   RiArrowLeftLine,
+  RiArrowRightLine,
   RiReplyLine,
   RiDeleteBinLine,
   RiAttachmentLine,
@@ -409,61 +410,60 @@ export default function EmailDetail({ email, onClose, onDelete, onArchive, reply
   return (
     <div className="flex flex-col h-full overflow-hidden bg-card select-none font-sans">
       {/* Toolbar */}
-      <div className="flex items-center justify-between px-5 py-3 border-b border-border/40 shrink-0 bg-card/60 backdrop-blur-sm">
-        <Button variant="ghost" size="icon-sm" onClick={onClose} title="Close reading panel (Esc)" className="hover:bg-secondary rounded-md cursor-pointer">
-          <RiArrowLeftLine className="size-4 text-muted-foreground hover:text-foreground" />
+      <div className="flex items-center justify-between px-4 py-2.5 border-b border-border/40 shrink-0 bg-card/60 backdrop-blur-sm gap-3">
+        <Button variant="ghost" size="icon-sm" onClick={onClose} title="Close reading panel (Esc)" className="hover:bg-secondary rounded-lg cursor-pointer shrink-0">
+          <RiArrowLeftLine className="size-4 text-muted-foreground" />
         </Button>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 flex-wrap">
           <Button
-            variant={showAddEvent ? "secondary" : "outline"}
+            variant={showAddEvent ? "secondary" : "ghost"}
             size="sm"
             onClick={showAddEvent ? () => setShowAddEvent(false) : openAddEvent}
-            className="gap-1.5 rounded-md border-border/60 text-xs px-2.5 h-8 font-semibold cursor-pointer"
+            className="gap-1.5 rounded-lg text-xs px-3 h-8 font-medium cursor-pointer text-muted-foreground hover:text-foreground"
           >
-            <RiCalendarEventLine className="size-3.5 text-muted-foreground" />
+            <RiCalendarEventLine className="size-3.5" />
             Calendar
           </Button>
           <Button
-            variant={showForward ? "secondary" : "outline"}
+            variant={showForward ? "secondary" : "ghost"}
             size="sm"
             onClick={showForward ? () => setShowForward(false) : openForward}
-            className="gap-1.5 rounded-md border-border/60 text-xs px-2.5 h-8 font-semibold cursor-pointer"
+            className="gap-1.5 rounded-lg text-xs px-3 h-8 font-medium cursor-pointer text-muted-foreground hover:text-foreground"
           >
-            <RiShareForwardLine className="size-3.5 text-muted-foreground" />
+            <RiShareForwardLine className="size-3.5" />
             Forward
           </Button>
           <Button
-            variant={showReply ? "secondary" : "outline"}
+            variant={showReply ? "secondary" : "ghost"}
             size="sm"
             onClick={() => { setShowReply(!showReply); setShowForward(false); setShowAddEvent(false); }}
-            className="gap-1.5 rounded-md border-border/60 text-xs px-2.5 h-8 font-semibold cursor-pointer"
+            className="gap-1.5 rounded-lg text-xs px-3 h-8 font-medium cursor-pointer text-muted-foreground hover:text-foreground"
             title="Reply (R)"
           >
-            <RiReplyLine className="size-3.5 text-muted-foreground" />
+            <RiReplyLine className="size-3.5" />
             Reply
           </Button>
+          <div className="w-px h-4 bg-border/60 mx-0.5" />
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={handleArchive}
             disabled={archiving}
-            className="gap-1.5 rounded-md border-border/60 text-xs px-2.5 h-8 font-semibold cursor-pointer"
+            className="gap-1.5 rounded-lg text-xs px-3 h-8 font-medium cursor-pointer text-muted-foreground hover:text-foreground"
             title={isArchived ? "Move back to Inbox" : "Archive (E)"}
           >
-            <RiArchiveLine className="size-3.5 text-muted-foreground" />
-            {archiving
-              ? (isArchived ? "Moving..." : "Archiving")
-              : (isArchived ? "Unarchive" : "Archive")}
+            <RiArchiveLine className="size-3.5" />
+            {archiving ? (isArchived ? "Moving…" : "Archiving…") : (isArchived ? "Unarchive" : "Archive")}
           </Button>
           <Button
-            variant="destructive"
+            variant="ghost"
             size="sm"
             onClick={handleDelete}
             disabled={deleting}
-            className="gap-1.5 rounded-md text-xs px-2.5 h-8 font-semibold cursor-pointer"
+            className="gap-1.5 rounded-lg text-xs px-3 h-8 font-medium cursor-pointer text-rose-500/70 hover:text-rose-500 hover:bg-rose-500/8"
           >
             <RiDeleteBinLine className="size-3.5" />
-            {deleting ? "Deleting" : "Trash"}
+            {deleting ? "Deleting…" : "Trash"}
           </Button>
         </div>
       </div>
@@ -473,7 +473,7 @@ export default function EmailDetail({ email, onClose, onDelete, onArchive, reply
 
         {/* Email Subject & Sender info */}
         <div className="px-6 py-5 bg-card/25">
-          <h2 className="text-xl font-serif text-foreground leading-snug tracking-tight mb-4">
+          <h2 className="text-xl font-bold text-foreground leading-snug tracking-tight mb-4">
             {subject || "(no subject)"}
           </h2>
           <div className="flex items-start gap-3.5">
@@ -494,20 +494,24 @@ export default function EmailDetail({ email, onClose, onDelete, onArchive, reply
         </div>
 
         {/* AI Features Summary Section */}
-        <div className="px-6 py-4 bg-secondary/15 border-b border-border/40">
+        <div className="px-5 py-4 border-b border-border/20">
           {aiLoading ? (
-            <div className="space-y-3 p-5 bg-secondary/50 rounded-lg border border-border/40">
-              <div className="flex items-center gap-2">
-                <RiSparkling2Line className="size-3.5 text-foreground animate-pulse" />
-                <span className="text-[10px] font-bold tracking-widest text-foreground uppercase font-heading">Analyzing with Tsunagu AI...</span>
+            <div className="flex items-center gap-3 px-4 py-3.5 rounded-xl bg-primary/6 border border-primary/15">
+              <div className="size-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                <RiSparkling2Fill className="size-4 text-primary animate-pulse" />
               </div>
-              <Skeleton className="h-4 w-full bg-secondary/60 animate-pulse rounded-md" />
-              <Skeleton className="h-3 w-2/3 bg-secondary/40 animate-pulse rounded-md" />
+              <div className="flex-1 space-y-2 min-w-0">
+                <div className="text-xs font-semibold text-foreground">Analyzing with AI…</div>
+                <div className="flex flex-col gap-1.5">
+                  <Skeleton className="h-2.5 w-full rounded-full bg-primary/10" />
+                  <Skeleton className="h-2.5 w-2/3 rounded-full bg-primary/8" />
+                </div>
+              </div>
             </div>
           ) : aiData?._rateLimited ? (
-            <div className="flex items-center gap-2 text-xs text-muted-foreground/60">
-              <RiSparkling2Line className="size-3.5" />
-              <span>Daily AI limit reached ({aiData.limit} requests/day).</span>
+            <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-secondary/60 border border-border/40">
+              <RiAlertLine className="size-4 text-muted-foreground/60 shrink-0" />
+              <span className="text-xs text-muted-foreground/70">Daily AI limit reached ({aiData.limit} analyses/day).</span>
             </div>
           ) : aiData ? (
             <AISummaryCard
@@ -523,10 +527,16 @@ export default function EmailDetail({ email, onClose, onDelete, onArchive, reply
           ) : (
             <button
               onClick={handleSummarize}
-              className="flex items-center gap-2 text-xs text-muted-foreground/70 hover:text-foreground transition-colors cursor-pointer group"
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/6 hover:bg-primary/10 border border-primary/15 hover:border-primary/30 transition-all duration-150 cursor-pointer group text-left"
             >
-              <RiSparkling2Line className="size-3.5 group-hover:text-foreground" />
-              <span className="font-medium">Summarize with AI</span>
+              <div className="size-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0 group-hover:bg-primary/15 transition-colors">
+                <RiSparkling2Fill className="size-4 text-primary" />
+              </div>
+              <div className="flex flex-col min-w-0 flex-1">
+                <span className="text-[13px] font-semibold text-foreground leading-tight">Summarize with AI</span>
+                <span className="text-[11px] text-muted-foreground leading-tight mt-0.5">Priority · category · suggested replies</span>
+              </div>
+              <RiArrowRightLine className="size-4 text-muted-foreground/40 shrink-0 group-hover:text-primary group-hover:translate-x-0.5 transition-all duration-150" />
             </button>
           )}
         </div>

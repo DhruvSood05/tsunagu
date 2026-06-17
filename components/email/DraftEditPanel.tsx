@@ -100,7 +100,7 @@ export default function DraftEditPanel({
           value={subject}
           onChange={(e) => setSubject(e.target.value)}
           placeholder="Subject"
-          className="w-full text-xl font-serif text-foreground outline-none mb-4 bg-transparent placeholder:text-muted-foreground/45 tracking-tight"
+          className="w-full text-xl font-semibold text-foreground outline-none mb-4 bg-transparent placeholder:text-muted-foreground/45 tracking-tight"
         />
         <div className="flex items-start gap-3">
           <Avatar className="size-9 border border-border/40">

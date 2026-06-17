@@ -2,8 +2,8 @@
 
 import {
   RiSparkling2Fill,
-  RiSparkling2Line,
   RiAlertLine,
+  RiArrowRightUpLine,
 } from "@remixicon/react";
 
 interface AISummaryCardProps {
@@ -17,6 +17,12 @@ interface AISummaryCardProps {
   replyGenerating: boolean;
 }
 
+const PRIORITY_STYLE: Record<string, string> = {
+  high:   "bg-rose-500/10 text-rose-500 border-rose-500/20",
+  medium: "bg-amber-500/10 text-amber-500 border-amber-500/20",
+  low:    "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
+};
+
 export default function AISummaryCard({
   summary,
   priority,
@@ -28,69 +34,69 @@ export default function AISummaryCard({
   replyGenerating,
 }: AISummaryCardProps) {
   return (
-    <div className="rounded-lg border border-border/45 bg-secondary/40 p-5 space-y-4 shadow-sm font-sans select-none animate-in fade-in duration-200">
-      {/* AI Header & Tags */}
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <div className="flex items-center gap-2">
-          <RiSparkling2Fill className="size-4 text-[#8b5cf6] animate-pulse" />
-          <span className="text-[10px] font-bold tracking-widest text-[#8b5cf6] uppercase font-heading">AI Summary</span>
+    <div className="rounded-xl border border-primary/20 bg-card shadow-sm font-sans select-none animate-in fade-in duration-200 overflow-hidden">
+
+      {/* ── Header ── */}
+      <div className="flex items-center justify-between gap-3 px-5 py-3.5 border-b border-border/30 bg-primary/4">
+        <div className="flex items-center gap-2.5">
+          <div className="size-7 rounded-lg bg-primary/12 flex items-center justify-center shrink-0">
+            <RiSparkling2Fill className="size-3.5 text-primary" />
+          </div>
+          <span className="text-sm font-semibold text-foreground tracking-tight">AI Summary</span>
         </div>
-        
-        {/* Meta Badges */}
-        <div className="flex items-center gap-1.5">
-          <span className={`text-[9px] font-bold font-mono tracking-wider uppercase px-2 py-0.5 rounded-lg leading-none border ${
-            priority === "high"
-              ? "bg-[#ec4899]/15 text-[#ec4899] border-[#ec4899]/25"
-              : priority === "medium"
-              ? "bg-[#fb923c]/15 text-[#fb923c] border-[#fb923c]/25"
-              : "bg-secondary text-muted-foreground border-border/30"
-          }`}>
-            {priority} priority
+
+        {/* Priority + category pills */}
+        <div className="flex items-center gap-1.5 flex-wrap justify-end">
+          <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full border leading-none capitalize ${PRIORITY_STYLE[priority] ?? "bg-secondary text-muted-foreground border-border/40"}`}>
+            {priority}
           </span>
           {category && (
-            <span className={`text-[9px] font-bold font-mono tracking-wider uppercase px-2 py-0.5 rounded-lg leading-none border ${
-              category.toLowerCase().includes("social")
-                ? "bg-[#34d399]/15 text-[#34d399] border-[#34d399]/25"
-                : category.toLowerCase().includes("promo")
-                ? "bg-[#fb923c]/15 text-[#fb923c] border-[#fb923c]/25"
-                : "bg-[#8b5cf6]/15 text-[#8b5cf6] border-[#8b5cf6]/25"
-            }`}>
+            <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full border leading-none bg-primary/10 text-primary border-primary/20 capitalize">
               {category}
             </span>
           )}
         </div>
       </div>
 
-      {/* Summary text */}
-      <p className="text-xs text-foreground/90 leading-relaxed font-medium">
-        {summary}
-      </p>
+      {/* ── Summary text ── */}
+      <div className="px-5 py-4">
+        <p className="text-[13.5px] text-foreground/85 leading-relaxed">
+          {summary}
+        </p>
+      </div>
 
-      {/* Follow-up reminder */}
+      {/* ── Follow-up banner ── */}
       {followUp && (
-        <div className="flex items-start gap-2 p-3 rounded-lg bg-[#ec4899]/5 border border-[#ec4899]/15 text-[#ec4899] text-xs">
-          <RiAlertLine className="size-3.5 shrink-0 mt-0.5" />
-          <p className="text-[11px] leading-tight">
-            <span className="font-bold uppercase tracking-wider text-[9px] mr-1">Follow-up:</span> 
+        <div className="mx-5 mb-4 flex items-start gap-2.5 px-4 py-3 rounded-xl bg-amber-500/8 border border-amber-500/20">
+          <RiAlertLine className="size-4 text-amber-500 shrink-0 mt-px" />
+          <p className="text-[12.5px] text-amber-600 dark:text-amber-400 leading-snug">
+            <span className="font-bold">Follow-up needed: </span>
             {followUpReason}
           </p>
         </div>
       )}
 
-      {/* Quick AI Response Actions */}
+      {/* ── Suggested replies ── */}
       {suggestedReplies && suggestedReplies.length > 0 && (
-        <div className="space-y-2 pt-3 border-t border-border/40">
-          <p className="text-[9px] font-bold tracking-widest text-muted-foreground/60 uppercase font-heading">Suggested replies</p>
-          <div className="flex flex-wrap gap-2">
+        <div className="px-5 pb-5 pt-1 space-y-2.5 border-t border-border/30">
+          <p className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest pt-4 pb-0.5">
+            Suggested replies
+          </p>
+          <div className="flex flex-col gap-2">
             {suggestedReplies.map((reply, idx) => (
               <button
                 key={idx}
                 onClick={() => onSuggestedReplyClick(reply.draftPrompt)}
                 disabled={replyGenerating}
-                className="text-left text-xs font-semibold text-foreground hover:bg-secondary border border-border/50 bg-background px-3.5 py-1.8 rounded-lg transition-all duration-150 cursor-pointer disabled:opacity-50 inline-flex items-center gap-1.5"
+                className="group w-full text-left flex items-center gap-3 px-4 py-3 rounded-xl border border-border/50 bg-secondary/40 hover:bg-secondary hover:border-border transition-all duration-150 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                <RiSparkling2Line className="size-3 text-[#8b5cf6]" />
-                {reply.label}
+                <div className="size-6 rounded-lg bg-primary/10 border border-primary/15 flex items-center justify-center shrink-0 group-hover:bg-primary/15 transition-colors">
+                  <RiSparkling2Fill className="size-3 text-primary" />
+                </div>
+                <span className="flex-1 text-[13px] font-medium text-foreground leading-snug">
+                  {reply.label}
+                </span>
+                <RiArrowRightUpLine className="size-3.5 text-muted-foreground/30 shrink-0 group-hover:text-primary/60 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all duration-150" />
               </button>
             ))}
           </div>

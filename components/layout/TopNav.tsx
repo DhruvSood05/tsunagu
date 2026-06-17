@@ -8,9 +8,7 @@ import {
   RiArrowUpDownLine,
   RiSearchLine,
   RiLogoutBoxLine,
-  RiSettings4Line,
   RiGoogleFill,
-  RiUser3Line
 } from "@remixicon/react";
 import NotificationBell from "@/components/notifications/NotificationBell";
 
@@ -149,30 +147,15 @@ export default function TopNav({ user, onOpenPalette, gmailConnected = false }: 
           </button>
 
           {profileOpen && (
-            <div className="absolute right-0 mt-2 w-56 rounded-lg border border-border bg-card p-1.5 shadow-xl animate-in fade-in-50 slide-in-from-top-2 duration-150 z-50">
-              <div className="px-2.5 py-2">
-                <p className="text-xs font-bold text-foreground leading-tight truncate">{user?.name ?? "User"}</p>
-                <p className="text-[10px] text-muted-foreground truncate mt-0.5">{user?.email}</p>
+            <div className="absolute right-0 mt-2 w-52 rounded-xl border border-border bg-card p-1.5 shadow-xl animate-in fade-in-50 slide-in-from-top-2 duration-150 z-50">
+              <div className="px-3 py-2.5">
+                <p className="text-[13px] font-semibold text-foreground leading-tight truncate">{user?.name ?? "User"}</p>
+                <p className="text-[11px] text-muted-foreground truncate mt-0.5">{user?.email}</p>
               </div>
               <div className="my-1 border-t border-border/40" />
               <button
-                onClick={() => { setProfileOpen(false); router.push("/dashboard/ai"); }}
-                className="flex items-center gap-2 w-full px-2.5 py-2 text-xs text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors rounded-md cursor-pointer"
-              >
-                <RiUser3Line className="size-4 shrink-0" />
-                AI Assistant
-              </button>
-              <button
-                onClick={() => { setProfileOpen(false); router.push("/dashboard/calendar"); }}
-                className="flex items-center gap-2 w-full px-2.5 py-2 text-xs text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors rounded-md cursor-pointer"
-              >
-                <RiSettings4Line className="size-4 shrink-0" />
-                Calendar Settings
-              </button>
-              <div className="my-1 border-t border-border/40" />
-              <button
                 onClick={handleSignOut}
-                className="flex items-center gap-2 w-full px-2.5 py-2 text-xs text-destructive hover:bg-destructive/10 transition-all rounded-md cursor-pointer"
+                className="flex items-center gap-2 w-full px-2.5 py-2 text-[13px] text-rose-500/80 hover:text-rose-500 hover:bg-rose-500/8 transition-all rounded-lg cursor-pointer"
               >
                 <RiLogoutBoxLine className="size-4 shrink-0" />
                 Sign out

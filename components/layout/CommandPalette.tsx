@@ -184,7 +184,7 @@ export default function CommandPalette({ open, onClose, onSelectEmail }: Command
               title={searchMeta.source === "cache" ? "Served instantly from Corsair's local cache" : "Fetched live from Gmail"}
               className={`flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full border shrink-0 ${
                 searchMeta.source === "cache"
-                  ? "text-[#8b5cf6] bg-[#8b5cf6]/10 border-[#8b5cf6]/20"
+                  ? "text-primary bg-primary/10 border-primary/20"
                   : "text-muted-foreground bg-secondary border-border/40"
               }`}
             >
@@ -216,7 +216,7 @@ export default function CommandPalette({ open, onClose, onSelectEmail }: Command
               <p className="text-xs text-muted-foreground/35 font-medium">
                 Search emails and calendar events
               </p>
-              <span className="flex items-center gap-1 text-[10px] font-semibold text-[#8b5cf6]/70">
+              <span className="flex items-center gap-1 text-[10px] font-semibold text-primary/70">
                 <RiFlashlightFill className="size-2.5" />
                 Instant search, powered by Corsair
               </span>
@@ -227,7 +227,7 @@ export default function CommandPalette({ open, onClose, onSelectEmail }: Command
             </div>
           ) : !hasResults ? (
             <div className="flex flex-col items-center justify-center py-14 gap-2 select-none">
-              <p className="text-lg font-serif text-foreground/60 tracking-tight">No results for &ldquo;{query}&rdquo;</p>
+              <p className="text-lg font-semibold text-foreground/60 tracking-tight">No results for &ldquo;{query}&rdquo;</p>
               <p className="text-[11px] text-muted-foreground/35">Try a different keyword, sender, or event name</p>
             </div>
           ) : (
@@ -296,8 +296,8 @@ export default function CommandPalette({ open, onClose, onSelectEmail }: Command
                         onClick={() => handleSelect({ kind: "calendar", data: ev })}
                       >
                         {/* Calendar dot */}
-                        <div className="size-9 shrink-0 flex items-center justify-center rounded-full bg-violet-500/10 border border-violet-500/20">
-                          <RiCalendarEventLine className="size-4 text-violet-500" />
+                        <div className="size-9 shrink-0 flex items-center justify-center rounded-full bg-primary/10 border border-primary/20">
+                          <RiCalendarEventLine className="size-4 text-primary" />
                         </div>
                         {/* Content */}
                         <div className="flex-1 min-w-0 space-y-0.5">

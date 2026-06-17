@@ -87,7 +87,7 @@ export default function EventDetailPanel({
               className="flex-1 min-w-0 text-xs font-semibold bg-transparent border-b border-border/60 focus:border-foreground/45 focus:outline-none pb-0.5 transition-colors placeholder:text-muted-foreground/35 font-heading"
             />
           ) : (
-            <h2 className="flex-1 min-w-0 text-lg font-serif leading-snug line-clamp-2 text-foreground tracking-tight">
+            <h2 className="flex-1 min-w-0 text-lg font-semibold leading-snug line-clamp-2 text-foreground tracking-tight">
               {selected.summary ?? "(No title)"}
             </h2>
           )}

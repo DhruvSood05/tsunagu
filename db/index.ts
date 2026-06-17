@@ -6,6 +6,7 @@ import { gmail } from "@corsair-dev/gmail";
 import { googlecalendar } from "@corsair-dev/googlecalendar";
 import * as schema from "./schema";
 import { webhookEvents } from "./schema";
+import { and, eq, lt } from "drizzle-orm";
 
 const isProd = process.env.NODE_ENV === "production";
 
@@ -26,6 +27,10 @@ export const corsair = createCorsair({
           after: async (ctx: any, _response: any) => {
             const userId = ctx?.tenantId ?? null;
             if (!userId) return;
+            const cutoff = new Date(Date.now() - 5 * 60_000);
+            await db.delete(webhookEvents).where(
+              and(eq(webhookEvents.userId, userId), lt(webhookEvents.receivedAt, cutoff))
+            );
             await db.insert(webhookEvents).values({
               id: crypto.randomUUID(),
               userId,
@@ -42,6 +47,10 @@ export const corsair = createCorsair({
           after: async (ctx: any, _response: any) => {
             const userId = ctx?.tenantId ?? null;
             if (!userId) return;
+            const cutoff = new Date(Date.now() - 5 * 60_000);
+            await db.delete(webhookEvents).where(
+              and(eq(webhookEvents.userId, userId), lt(webhookEvents.receivedAt, cutoff))
+            );
             await db.insert(webhookEvents).values({
               id: crypto.randomUUID(),
               userId,

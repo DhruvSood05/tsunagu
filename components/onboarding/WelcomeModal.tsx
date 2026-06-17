@@ -20,7 +20,7 @@ const HIGHLIGHTS = [
     icon: RiSparkling2Fill,
     label: "AI Assistant",
     description: "Draft, summarize & schedule by chatting",
-    iconClass: "text-[#8b5cf6] bg-[#8b5cf6]/10",
+    iconClass: "text-primary bg-primary/10",
   },
   {
     icon: RiInboxLine,
@@ -58,13 +58,13 @@ export default function WelcomeModal({ open, onStartTour, onSkip }: WelcomeModal
         {/* Hero */}
         <div className="flex flex-col items-center text-center px-7 pt-9 pb-6">
           <div className="relative mb-5">
-            <div className="absolute inset-0 rounded-lg bg-[#8b5cf6]/30 blur-2xl animate-pulse-glow" />
-            <div className="relative size-14 rounded-lg bg-linear-to-tr from-foreground/80 to-foreground flex items-center justify-center shadow-lg">
+            <div className="absolute inset-0 rounded-lg bg-primary/30 blur-2xl animate-pulse-glow" />
+            <div className="relative size-14 rounded-lg bg-linear-to-tr from-primary/80 to-primary flex items-center justify-center shadow-lg">
               <RiSparkling2Fill className="size-7 text-background" />
             </div>
           </div>
 
-          <span className="text-[9px] font-bold text-[#8b5cf6] bg-[#8b5cf6]/10 border border-[#8b5cf6]/15 px-2.5 py-0.5 rounded-md uppercase tracking-widest mb-3">
+          <span className="text-[9px] font-bold text-primary bg-primary/10 border border-primary/15 px-2.5 py-0.5 rounded-md uppercase tracking-widest mb-3">
             Welcome aboard
           </span>
 

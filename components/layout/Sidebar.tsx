@@ -1,6 +1,5 @@
 "use client";
 
-import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import ThemeToggle from "./ThemeToggle";
 import {
@@ -12,14 +11,14 @@ import {
   RiSparkling2Fill,
   RiSettings3Line,
   RiCalendarLine,
-  RiLogoutBoxLine,
   RiAddLine,
   RiShieldLine,
 } from "@remixicon/react";
 
 const ADMIN_EMAIL = "dhruvsood1102@gmail.com";
 import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import TsunaguLogo from "@/components/ui/TsunaguLogo";
+import { usePathname, useSearchParams } from "next/navigation";
 
 interface SidebarProps {
   user?: {
@@ -38,14 +37,8 @@ export default function Sidebar({
 }: SidebarProps) {
   const isAdmin = user?.email === ADMIN_EMAIL;
   const pathname = usePathname();
-  const router = useRouter();
   const searchParams = useSearchParams();
   const currentFolder = searchParams.get("folder") ?? "inbox";
-
-  const handleSignOut = async () => {
-    await authClient.signOut();
-    router.push("/");
-  };
 
   const mainFolders = [
     {
@@ -94,12 +87,8 @@ export default function Sidebar({
           href="/dashboard"
           className="flex items-center gap-2.5 hover:opacity-85 transition-opacity"
         >
-          <div className="size-6 rounded-md bg-primary flex items-center justify-center shadow-sm">
-            <span className="text-primary-foreground text-xs font-bold tracking-tighter select-none font-heading">
-              T
-            </span>
-          </div>
-          <span className="font-semibold text-lg tracking-tight text-foreground font-serif leading-none">
+          <TsunaguLogo className="size-7 text-primary" />
+          <span className="font-semibold text-lg tracking-tight text-foreground leading-none">
             Tsunagu
           </span>
         </Link>
@@ -140,7 +129,7 @@ export default function Sidebar({
                 href={href}
                 className={`relative flex items-center justify-between px-2.5 py-2 text-[13px] rounded-lg transition-all duration-150 ${
                   active
-                    ? "bg-card text-foreground font-semibold shadow-sm border border-border/60 before:absolute before:-left-px before:top-1/2 before:-translate-y-1/2 before:h-5 before:w-[3px] before:rounded-full before:bg-foreground"
+                    ? "bg-card text-foreground font-semibold shadow-sm border border-border/60 before:absolute before:-left-px before:top-1/2 before:-translate-y-1/2 before:h-5 before:w-0.75 before:rounded-full before:bg-foreground"
                     : "text-muted-foreground hover:text-foreground hover:bg-card/60"
                 }`}
               >
@@ -165,12 +154,12 @@ export default function Sidebar({
             href="/dashboard/ai"
             className={`relative flex items-center gap-2.5 px-2.5 py-2 text-[13px] rounded-lg transition-all duration-150 ${
               pathname === "/dashboard/ai"
-                ? "bg-card text-foreground font-semibold shadow-sm border border-[#8b5cf6]/25 before:absolute before:-left-px before:top-1/2 before:-translate-y-1/2 before:h-5 before:w-0.75 before:rounded-full before:bg-[#8b5cf6]"
+                ? "bg-card text-foreground font-semibold shadow-sm border border-primary/25 before:absolute before:-left-px before:top-1/2 before:-translate-y-1/2 before:h-5 before:w-0.75 before:rounded-full before:bg-primary"
                 : "text-muted-foreground hover:text-foreground hover:bg-card/60"
             }`}
           >
             <RiSparkling2Fill
-              className={`size-4 shrink-0 ${pathname === "/dashboard/ai" ? "text-[#8b5cf6]" : "text-muted-foreground"}`}
+              className={`size-4 shrink-0 ${pathname === "/dashboard/ai" ? "text-primary" : "text-muted-foreground"}`}
             />
             <span>AI Assistant</span>
           </Link>
@@ -199,27 +188,20 @@ export default function Sidebar({
         )}
       </div>
 
-      {/* Footer: Settings · Log out · Theme */}
-      <div id="tour-settings" className="px-3 py-3 border-t border-sidebar-border space-y-1 shrink-0">
-        <button
-          onClick={() => {
-            const params = new URLSearchParams(searchParams.toString());
-            params.set("settings", "true");
-            router.push(`${pathname}?${params.toString()}`);
-          }}
-          className="w-full flex items-center gap-2.5 px-2.5 py-2 text-[13px] rounded-lg text-muted-foreground border border-transparent hover:text-foreground hover:bg-card hover:border-border/60 hover:shadow-sm transition-all duration-150 cursor-pointer"
-        >
-          <RiSettings3Line className="size-4 shrink-0" />
-          Settings
-        </button>
+      {/* Footer: Settings · Theme */}
+      <div id="tour-settings" className="px-3 py-3 border-t border-sidebar-border shrink-0">
         <div className="flex items-center gap-1.5">
-          <button
-            onClick={handleSignOut}
-            className="flex-1 flex items-center gap-2.5 px-2.5 py-2 text-[13px] rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-150 cursor-pointer"
+          <Link
+            href="/dashboard/settings"
+            className={`relative flex-1 flex items-center gap-2.5 px-2.5 py-2 text-[13px] rounded-lg transition-all duration-150 ${
+              pathname === "/dashboard/settings"
+                ? "bg-card text-foreground font-semibold shadow-sm border border-border/60 before:absolute before:-left-px before:top-1/2 before:-translate-y-1/2 before:h-5 before:w-0.75 before:rounded-full before:bg-foreground"
+                : "text-muted-foreground hover:text-foreground hover:bg-card/60"
+            }`}
           >
-            <RiLogoutBoxLine className="size-4 shrink-0" />
-            Log out
-          </button>
+            <RiSettings3Line className={`size-4 shrink-0 ${pathname === "/dashboard/settings" ? "text-foreground" : "text-muted-foreground"}`} />
+            Settings
+          </Link>
           <ThemeToggle />
         </div>
       </div>

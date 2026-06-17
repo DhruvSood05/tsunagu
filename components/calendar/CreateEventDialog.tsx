@@ -40,7 +40,7 @@ export default function CreateEventDialog({
       >
         {/* Dialog Header */}
         <div className="flex items-center justify-between px-6 pt-5 pb-3 bg-secondary/20">
-          <DialogTitle className="text-xl font-serif text-foreground tracking-tight">New event</DialogTitle>
+          <DialogTitle className="text-xl font-semibold text-foreground tracking-tight">New event</DialogTitle>
           <DialogDescription className="sr-only">Create a new event in Google Calendar</DialogDescription>
           <button
             onClick={handleClose}

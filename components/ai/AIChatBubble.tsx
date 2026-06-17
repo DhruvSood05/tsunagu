@@ -19,8 +19,8 @@ export default function AIChatBubble({ message }: AIChatBubbleProps) {
   return (
     <div className={`flex gap-3 ${isUser ? "justify-end" : "justify-start"} font-sans select-none w-full`}>
       {!isUser && (
-        <div className="size-7 rounded-full bg-[#8b5cf6]/8 flex items-center justify-center border border-[#8b5cf6]/15 shrink-0 shadow-sm mt-1 animate-in fade-in duration-200">
-          <RiSparkling2Fill className="size-3.5 text-[#8b5cf6]" />
+        <div className="size-7 rounded-full bg-primary/8 flex items-center justify-center border border-primary/15 shrink-0 shadow-sm mt-1 animate-in fade-in duration-200">
+          <RiSparkling2Fill className="size-3.5 text-primary" />
         </div>
       )}
       
@@ -88,16 +88,16 @@ function MarkdownMessage({ content }: { content: string }) {
               </pre>
             );
           }
-          return <code className="bg-secondary/60 border border-border/20 rounded-[5px] px-1.5 py-0.5 text-[11px] font-mono text-[#8b5cf6]">{children}</code>;
+          return <code className="bg-secondary/60 border border-border/20 rounded-[5px] px-1.5 py-0.5 text-[11px] font-mono text-primary">{children}</code>;
         },
         pre: ({ children }) => <>{children}</>,
         a: ({ href, children }) => (
-          <a href={href} target="_blank" rel="noreferrer" className="text-[#8b5cf6] hover:text-[#8b5cf6]/80 underline underline-offset-2 font-medium transition-colors">
+          <a href={href} target="_blank" rel="noreferrer" className="text-primary hover:text-primary/80 underline underline-offset-2 font-medium transition-colors">
             {children}
           </a>
         ),
         blockquote: ({ children }) => (
-          <blockquote className="border-l-2 border-[#8b5cf6]/20 pl-3.5 text-foreground/60 italic my-2.5">{children}</blockquote>
+          <blockquote className="border-l-2 border-primary/20 pl-3.5 text-foreground/60 italic my-2.5">{children}</blockquote>
         ),
         hr: () => <hr className="border-border/15 my-3.5" />,
       }}
@@ -113,7 +113,7 @@ function TypingIndicator() {
       {[0, 1, 2].map((i) => (
         <span
           key={i}
-          className="size-1.5 rounded-full bg-[#8b5cf6]/50 animate-bounce"
+          className="size-1.5 rounded-full bg-primary/50 animate-bounce"
           style={{ animationDelay: `${i * 150}ms`, animationDuration: "800ms" }}
         />
       ))}
