@@ -81,7 +81,8 @@ export default function CalendarContent({ user, gmailConnected, calendarConnecte
   // ── Toolbar ────────────────────────────────────────────────────────────────
   const [view, setView] = useState<CalendarView>("dayGridMonth");
   const [title, setTitle] = useState("");
-  const [currentDate, setCurrentDate] = useState<Date>(() => new Date());
+  const [selectedDate, setSelectedDate] = useState<Date>(() => new Date());
+  const [visibleMonth, setVisibleMonth] = useState<Date>(() => new Date());
 
   const calendarRef = useRef<InstanceType<typeof FullCalendar>>(null);
   const dateRange = useRef<{ min: string; max: string } | null>(null);
@@ -310,12 +311,13 @@ export default function CalendarContent({ user, gmailConnected, calendarConnecte
     dateRange.current = { min, max };
     setTitle(info.view.title);
     setView(info.view.type as CalendarView);
-    setCurrentDate(info.view.currentStart);
+    setVisibleMonth(info.view.currentStart);
     if (enabledCals.size > 0) loadEvents(min, max);
   };
 
   const handleMiniDateSelect = (date: Date) => {
-    setCurrentDate(date);
+    setSelectedDate(date);
+    setVisibleMonth(date);
     api()?.gotoDate(date);
   };
 
@@ -511,7 +513,8 @@ export default function CalendarContent({ user, gmailConnected, calendarConnecte
                 calendars={calendars}
                 enabledCals={enabledCals}
                 colorPickerFor={colorPickerFor}
-                selectedDate={currentDate}
+                selectedDate={selectedDate}
+                visibleMonth={visibleMonth}
                 onToggle={toggleCalendar}
                 onColorChange={applyCalColor}
                 onOpenColorPicker={setColorPickerFor}

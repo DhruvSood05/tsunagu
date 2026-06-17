@@ -10,6 +10,7 @@ interface CalendarSidebarListProps {
   enabledCals: Set<string>;
   colorPickerFor: string | null;
   selectedDate: Date;
+  visibleMonth: Date;
   onToggle: (id: string) => void;
   onColorChange: (id: string, hex: string) => void;
   onOpenColorPicker: (id: string | null) => void;
@@ -21,6 +22,7 @@ export default function CalendarSidebarList({
   enabledCals,
   colorPickerFor,
   selectedDate,
+  visibleMonth,
   onToggle,
   onColorChange,
   onOpenColorPicker,
@@ -114,8 +116,8 @@ export default function CalendarSidebarList({
       <div className="px-2 pb-4 pt-2 border-t border-border/30">
         <Calendar
           mode="single"
-          selected={selectedDate}
-          month={selectedDate}
+          selected={new Date()}
+          month={visibleMonth}
           onSelect={(date) => date && onDateSelect(date)}
           onMonthChange={onDateSelect}
           showOutsideDays
