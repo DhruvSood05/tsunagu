@@ -59,6 +59,7 @@
 
 :root {
   /* ── Japanese Ink — Light (Premium Productivity) ── */
+  --radius: 0.5rem;
   --background: #fdfdfc;
   --foreground: #09090b;
   --card: #ffffff;
