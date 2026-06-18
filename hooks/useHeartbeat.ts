@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { authClient } from "@/lib/auth-client";
 
 /**
  * Hook to track real-time user presence.
@@ -7,7 +8,11 @@ import { useEffect } from "react";
  * to the database on every single API request.
  */
 export function useHeartbeat() {
+  const { data: session } = authClient.useSession();
+
   useEffect(() => {
+    if (!session?.user) return;
+
     // Ping immediately on mount
     const ping = () => {
       if (document.visibilityState === "visible") {
@@ -35,5 +40,5 @@ export function useHeartbeat() {
       clearInterval(interval);
       document.removeEventListener("visibilitychange", onVisibilityChange);
     };
-  }, []);
+  }, [session?.user]);
 }

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Outfit } from "next/font/google";
 import { GeistSans } from "geist/font/sans";
 import { ThemeProvider } from "@/lib/theme/ThemeProvider";
+import { HeartbeatProvider } from "@/components/layout/HeartbeatProvider";
 import "./globals.css";
 
 const outfit = Outfit({
@@ -35,7 +36,9 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-background text-foreground transition-colors duration-200 font-sans">
         <ThemeProvider defaultTheme="dark" storageKey="tsunagu-theme">
-          {children}
+          <HeartbeatProvider>
+            {children}
+          </HeartbeatProvider>
         </ThemeProvider>
       </body>
     </html>

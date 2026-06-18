@@ -16,7 +16,6 @@ import Sidebar from "@/components/layout/Sidebar";
 import TopNav from "@/components/layout/TopNav";
 import SettingsOverlay from "@/components/layout/SettingsOverlay";
 import WalkthroughTour from "@/components/onboarding/WalkthroughTour";
-import { useHeartbeat } from "@/hooks/useHeartbeat";
 
 type Mode = "inbox" | "search";
 
@@ -46,8 +45,6 @@ export default function DashboardContent({
   const searchParams = useSearchParams();
   const router = useRouter();
   const folder = searchParams.get("folder") ?? "inbox";
-
-  useHeartbeat();
 
   const [emails, setEmails] = useState<any[]>([]);
   const [nextPageToken, setNextPageToken] = useState<string | null>(null);
