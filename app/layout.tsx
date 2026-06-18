@@ -17,7 +17,7 @@ const interEmail = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Tsunagu | Premium AI-Powered Email Workspace",
+  title: "Tsunagu | Premium AI-Powered Email And Calendar Workspace",
   description:
     "Seamlessly manage your Gmail messages, generate AI drafts, and organize calendar schedules in a high-end minimalist productivity workspace.",
 };

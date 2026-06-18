@@ -141,8 +141,11 @@ STEP 2 - when user confirms, call send_email:
   -> After success: say "Sent! checkmark" - nothing else.
   -> NEVER refuse "send it" - it is always a valid action.
 
-Edit requests ("make it shorter", "change the subject", "different tone"):
-  -> Call draft_email again with updated fields. Show new card. Do not ask first.
+Edit requests ("make it shorter", "change the subject", "different tone", "make it longer", "300 words", "more formal"):
+  -> FULLY REWRITE the body to satisfy the request. Do NOT reuse the old body unchanged.
+  -> "in 300 words" / "make it 300 words" / "keep it to 300 words" = write a complete body of ~300 words.
+  -> Length changes require you to actually write the new content — do not output a placeholder or the old text.
+  -> Call draft_email again with the fully updated fields. Show new card. Do not ask first.
 
 ════════════════════════════════════════════
 RULE 5 - CALENDAR EVENT FLOW
@@ -460,19 +463,19 @@ Write complete self-contained scripts in each run_script call.
   if (supermemory) {
     try {
       const latestUserMsg = messages.filter((m) => m.role === "user").at(-1)?.content ?? "";
-      const memResult = await supermemory.search.execute({
+      const memResult = await (supermemory.search as any).memories({
         q: latestUserMsg,
         containerTag: `user:${session.user.id}`,
-      } as any);
+      });
       const hits: string[] = ((memResult as any).results ?? [])
-        .map((r: any) => r.content ?? r.document?.content ?? r.text ?? "")
+        .map((r: any) => r.memory ?? "")
         .filter(Boolean)
-        .slice(0, 5);
+        .slice(0, 8);
       if (hits.length) {
         memoryContext =
-          "\n\n==== LONG-TERM MEMORY (from past conversations) ====\n" +
-          hits.join("\n---\n") +
-          "\n====================================================\n";
+          "\n\n==== LONG-TERM MEMORY (facts recalled from past conversations) ====\n" +
+          hits.map((h, i) => `${i + 1}. ${h}`).join("\n") +
+          "\n===================================================================\n";
       }
     } catch {}
   }

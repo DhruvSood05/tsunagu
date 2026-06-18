@@ -14,10 +14,11 @@ export async function GET() {
       containerTag: `user:${session.user.id}`,
       limit: 50,
     });
-    const memories = (result?.documents ?? result?.results ?? result?.data ?? []).map((m: any) => ({
+    const memories = (result?.memories ?? []).map((m: any) => ({
       id: m.id,
-      content: m.content ?? m.text ?? "",
-      createdAt: m.createdAt ?? m.created_at ?? null,
+      title: m.title ?? "",
+      summary: m.summary ?? "",
+      createdAt: m.createdAt ?? null,
     }));
     return Response.json({ memories, enabled: true });
   } catch (err: any) {
@@ -30,9 +31,28 @@ export async function DELETE(req: Request) {
   if (!session) return new Response("Unauthorized", { status: 401 });
   if (!supermemory) return Response.json({ success: false });
 
-  const { id } = await req.json();
+  const body = await req.json();
+
+  // Delete all: no id provided
+  if (!body.id) {
+    try {
+      const result = await (supermemory.documents as any).list({
+        containerTag: `user:${session.user.id}`,
+        limit: 200,
+      });
+      const ids: string[] = (result?.memories ?? []).map((m: any) => m.id).filter(Boolean);
+      if (ids.length > 0) {
+        await (supermemory.documents as any).deleteBulk({ ids });
+      }
+      return Response.json({ success: true, deleted: ids.length });
+    } catch (err: any) {
+      return Response.json({ success: false, error: err?.message });
+    }
+  }
+
+  // Delete single
   try {
-    await (supermemory.documents as any).delete(id);
+    await (supermemory.documents as any).delete(body.id);
     return Response.json({ success: true });
   } catch (err: any) {
     return Response.json({ success: false, error: err?.message });

@@ -260,9 +260,22 @@ export default function AIContent({ user, gmailConnected, calendarConnected }: A
         }
       }
 
+      // Parse inline [DRAFT_EMAIL ...] marker from text revisions
+      // (AI writes this in text when revising a draft instead of re-calling the tool)
+      let finalContent = fullText || "Done.";
+      const finalArtifacts = [...artifacts];
+
+      if (!finalArtifacts.some((a) => a.kind === "email")) {
+        const m = finalContent.match(/\[DRAFT_EMAIL to="([^"]*)" subject="([^"]*)" body="([\s\S]*?)"\]/);
+        if (m) {
+          finalArtifacts.push({ kind: "email", status: "draft", to: m[1], subject: m[2], body: m[3] });
+          finalContent = finalContent.replace(/\s*\[DRAFT_EMAIL to="[^"]*" subject="[^"]*" body="[\s\S]*?"\]\s*/, " ").trim();
+        }
+      }
+
       setMessages((prev) => {
         const updated = [...prev];
-        updated[updated.length - 1] = { role: "assistant", content: fullText || "Done.", toolsUsed: usedTools, artifacts: [...artifacts] };
+        updated[updated.length - 1] = { role: "assistant", content: finalContent, toolsUsed: usedTools, artifacts: finalArtifacts };
         return updated;
       });
 
