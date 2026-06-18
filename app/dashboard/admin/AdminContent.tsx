@@ -89,6 +89,7 @@ interface UserRow {
   aiAccess: boolean;
   role: string;
   lastActive: string | null;
+  isActive: boolean;
 }
 
 function Avatar({ name, image, size = "sm" }: { name: string; image?: string | null; size?: "sm" | "md" }) {
@@ -582,10 +583,22 @@ export default function AdminContent({
                       <LimitBadge limit={u.effectiveLimit} />
 
                       {/* Last Active */}
-                      <p className="text-[10px] text-muted-foreground/40 flex items-center gap-1">
-                        <RiTimeLine className="size-3 shrink-0" />
-                        {timeAgo(u.lastActive)}
-                      </p>
+                      <div className="flex items-center">
+                        {u.isActive ? (
+                          <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
+                            <span className="relative flex size-1.5">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75" />
+                              <span className="relative inline-flex rounded-full size-1.5 bg-emerald-500" />
+                            </span>
+                            Active
+                          </span>
+                        ) : (
+                          <p className="text-[10px] text-muted-foreground/40 flex items-center gap-1">
+                            <RiTimeLine className="size-3 shrink-0" />
+                            {timeAgo(u.lastActive)}
+                          </p>
+                        )}
+                      </div>
 
                       {/* Actions */}
                       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">

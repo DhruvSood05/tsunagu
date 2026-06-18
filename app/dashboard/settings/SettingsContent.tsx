@@ -173,6 +173,8 @@ export default function SettingsContent({ user, gmailConnected, calendarConnecte
   const [memoryEnabled, setMemoryEnabled] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deletingAll, setDeletingAll] = useState(false);
+  const [showDeleteAccount, setShowDeleteAccount] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -183,6 +185,17 @@ export default function SettingsContent({ user, gmailConnected, calendarConnecte
     setSigningOut(true);
     await authClient.signOut();
     router.push("/");
+  };
+
+  const handleDeleteAccount = async () => {
+    setDeletingAccount(true);
+    try {
+      await fetch("/api/user/account", { method: "DELETE" });
+      await authClient.signOut();
+      router.push("/");
+    } finally {
+      setDeletingAccount(false);
+    }
   };
 
   const handleDisconnect = async (service: "gmail" | "calendar") => {
@@ -686,10 +699,71 @@ export default function SettingsContent({ user, gmailConnected, calendarConnecte
               </Card>
             </section>
 
+            {/* ── Danger Zone ─────────────────────────────────── */}
+            <section className="space-y-2.5">
+              <SectionLabel>Danger Zone</SectionLabel>
+              <Card>
+                <Row last>
+                  <div className="flex items-center gap-3.5">
+                    <div className="size-10 rounded-xl bg-rose-500/8 dark:bg-rose-500/6 border border-rose-500/15 flex items-center justify-center shrink-0">
+                      <RiDeleteBinLine className="size-4.5 text-rose-500/70 dark:text-rose-400/70" />
+                    </div>
+                    <div>
+                      <p className="text-[13.5px] font-semibold text-foreground">Delete account</p>
+                      <p className="text-[12px] text-muted-foreground mt-0.5">Permanently delete your account and all data</p>
+                    </div>
+                  </div>
+                  <DangerButton onClick={() => setShowDeleteAccount(true)}>
+                    <RiDeleteBinLine className="size-3.5" />
+                    Delete account
+                  </DangerButton>
+                </Row>
+              </Card>
+            </section>
+
             <div className="h-8" />
           </div>
         </div>
       </div>
+
+      {/* ── Delete Account Dialog ───────────────────────────── */}
+      <Dialog open={showDeleteAccount} onOpenChange={(o) => { if (!deletingAccount) setShowDeleteAccount(o); }}>
+        <DialogContent className="max-w-sm" aria-describedby={undefined}>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-rose-500">
+              <RiDeleteBinLine className="size-4" />
+              Delete account
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-1">
+            <p className="text-[13px] text-muted-foreground leading-relaxed">
+              This will permanently delete your account, all emails drafts, chat history, calendar data, and connected integrations.
+            </p>
+            <div className="bg-rose-500/8 border border-rose-500/20 rounded-xl px-4 py-3">
+              <p className="text-[12px] font-semibold text-rose-600 dark:text-rose-400">This action cannot be undone.</p>
+            </div>
+          </div>
+          <div className="flex gap-2 pt-1">
+            <button
+              onClick={() => setShowDeleteAccount(false)}
+              disabled={deletingAccount}
+              className="flex-1 h-9 text-[13px] font-semibold rounded-xl border border-border/60 bg-secondary/60 hover:bg-secondary text-foreground transition-all cursor-pointer disabled:opacity-40"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleDeleteAccount}
+              disabled={deletingAccount}
+              className="flex-1 h-9 text-[13px] font-semibold rounded-xl bg-rose-500 hover:bg-rose-600 text-white transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {deletingAccount
+                ? <><RiLoaderLine className="size-3.5 animate-spin" /> Deleting…</>
+                : <><RiDeleteBinLine className="size-3.5" /> Yes, delete</>
+              }
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* ── Upgrade Dialog ──────────────────────────────────── */}
       <Dialog open={showUpgrade} onOpenChange={setShowUpgrade}>

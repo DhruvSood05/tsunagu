@@ -45,8 +45,8 @@ export async function GET() {
       db.select({ tenantId: corsairAccounts.tenantId, integrationId: corsairAccounts.integrationId })
         .from(corsairAccounts),
       db.select().from(corsairIntegrations),
-      db.select({ userId: sessionTable.userId, expiresAt: sessionTable.expiresAt })
-        .from(sessionTable).orderBy(desc(sessionTable.expiresAt)),
+      db.select({ userId: sessionTable.userId, updatedAt: sessionTable.updatedAt, expiresAt: sessionTable.expiresAt })
+        .from(sessionTable).orderBy(desc(sessionTable.updatedAt)),
     ]);
 
   const prefsMap = new Map(allPrefs.map((p) => [p.userId, p]));
@@ -64,11 +64,17 @@ export async function GET() {
     accounts.filter((a) => a.integrationId === calIntId).map((a) => a.tenantId),
   );
 
+  // updatedAt is refreshed by Better Auth on every request (session "touch"),
+  // so the most recent updatedAt across all sessions = true last active time.
+  const now = new Date();
   const lastActiveMap = new Map<string, string>();
+  const activeNow = new Set<string>(); // users with at least one non-expired session
   for (const s of lastSessions) {
     if (!lastActiveMap.has(s.userId)) {
-      const approx = new Date(s.expiresAt.getTime() - 30 * 24 * 60 * 60 * 1000);
-      lastActiveMap.set(s.userId, approx.toISOString());
+      lastActiveMap.set(s.userId, s.updatedAt.toISOString());
+    }
+    if (s.expiresAt > now) {
+      activeNow.add(s.userId);
     }
   }
 
@@ -97,6 +103,7 @@ export async function GET() {
       aiAccess,
       role,
       lastActive: lastActiveMap.get(u.id) ?? null,
+      isActive: activeNow.has(u.id),
     };
   });
 

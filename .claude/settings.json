@@ -1,9 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "WebFetch(domain:api.corsair.dev)",
-      "Bash(node -e ' *)",
-      "Bash(node -e \"require\\('openai'\\) && console.log\\('openai ok'\\)\")"
-    ]
-  }
-}
