@@ -168,6 +168,7 @@ export const userPreferences = pgTable("user_preferences", {
   // 'user' | 'admin' | 'superadmin'
   role: text("role").notNull().default("user"),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  lastActiveAt: timestamp("last_active_at").notNull().defaultNow(),
 });
 
 // AI usage tracking for rate limiting (free tier: 20 requests/day)

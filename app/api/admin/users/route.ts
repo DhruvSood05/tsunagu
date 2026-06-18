@@ -64,19 +64,33 @@ export async function GET() {
     accounts.filter((a) => a.integrationId === calIntId).map((a) => a.tenantId),
   );
 
-  // updatedAt is refreshed by Better Auth on every request (session "touch"),
-  // so the most recent updatedAt across all sessions = true last active time.
+  // We check userPreferences.lastActiveAt (managed by the new heartbeat system)
   const now = new Date();
   const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
-  const lastActiveMap = new Map<string, string>();
   const activeNow = new Set<string>(); // users active in the last 5 minutes
-  for (const s of lastSessions) {
-    if (!lastActiveMap.has(s.userId)) {
-      lastActiveMap.set(s.userId, s.updatedAt.toISOString());
+
+  // For the exact "Last Active" timestamp, use lastActiveAt if it exists, fallback to session update
+  const lastActiveMap = new Map<string, string>();
+  for (const u of users) {
+    const prefs = prefsMap.get(u.id);
+    // Find their most recent session timestamp as a baseline
+    let latestSessionDate = new Date(0);
+    for (const s of lastSessions) {
+      if (s.userId === u.id && new Date(s.updatedAt) > latestSessionDate) {
+        latestSessionDate = new Date(s.updatedAt);
+      }
     }
-    // Consider them "live" only if they made a request in the last 5 minutes
-    if (s.updatedAt > fiveMinutesAgo) {
-      activeNow.add(s.userId);
+    
+    // Heartbeat timestamp wins if it's more recent than the last session touch
+    const hbDate = prefs?.lastActiveAt ? new Date(prefs.lastActiveAt) : new Date(0);
+    const actualLastActive = hbDate > latestSessionDate ? hbDate : latestSessionDate;
+    
+    if (actualLastActive.getTime() > 0) {
+      lastActiveMap.set(u.id, actualLastActive.toISOString());
+    }
+
+    if (actualLastActive > fiveMinutesAgo) {
+      activeNow.add(u.id);
     }
   }
 

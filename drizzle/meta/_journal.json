@@ -43,6 +43,13 @@
       "when": 1781635928323,
       "tag": "0005_superb_thing",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1781791783943,
+      "tag": "0006_moaning_yellowjacket",
+      "breakpoints": true
     }
   ]
 }
