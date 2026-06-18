@@ -67,13 +67,15 @@ export async function GET() {
   // updatedAt is refreshed by Better Auth on every request (session "touch"),
   // so the most recent updatedAt across all sessions = true last active time.
   const now = new Date();
+  const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
   const lastActiveMap = new Map<string, string>();
-  const activeNow = new Set<string>(); // users with at least one non-expired session
+  const activeNow = new Set<string>(); // users active in the last 5 minutes
   for (const s of lastSessions) {
     if (!lastActiveMap.has(s.userId)) {
       lastActiveMap.set(s.userId, s.updatedAt.toISOString());
     }
-    if (s.expiresAt > now) {
+    // Consider them "live" only if they made a request in the last 5 minutes
+    if (s.updatedAt > fiveMinutesAgo) {
       activeNow.add(s.userId);
     }
   }
