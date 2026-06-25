@@ -1,11 +1,14 @@
 "use client";
 
-import { FlaskConical, X } from "lucide-react";
+import { FlaskConical, RotateCcw, X } from "lucide-react";
 import { useState } from "react";
 import { authClient } from "@/lib/auth-client";
+import { useDemoContext } from "@/lib/demo/DemoContext";
 
 export default function DemoBanner() {
   const [dismissed, setDismissed] = useState(false);
+  const { resetDemo } = useDemoContext();
+
   if (dismissed) return null;
 
   return (
@@ -19,6 +22,14 @@ export default function DemoBanner() {
         </span>
       </div>
       <div className="flex items-center gap-2 shrink-0">
+        <button
+          onClick={resetDemo}
+          className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
+          title="Reset demo data to defaults"
+        >
+          <RotateCcw className="size-3" strokeWidth={1.75} />
+          Reset
+        </button>
         <button
           onClick={() => authClient.signIn.social({ provider: "google", callbackURL: "/dashboard" })}
           className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-primary text-primary-foreground text-[11px] font-semibold hover:bg-primary/90 transition-colors cursor-pointer"

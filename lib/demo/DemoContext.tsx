@@ -1,7 +1,24 @@
 "use client";
 
-import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
 import { DEMO_EMAILS, DEMO_EVENTS, DEMO_USER, DEMO_CALENDAR } from "./demo-data";
+
+const LS_EMAILS  = "tsunagu_demo_emails";
+const LS_EVENTS  = "tsunagu_demo_events";
+const LS_DRAFTS  = "tsunagu_demo_drafts";
+
+function lsGet<T>(key: string, fallback: () => T): T {
+  if (typeof window === "undefined") return fallback();
+  try {
+    const raw = localStorage.getItem(key);
+    if (raw) return JSON.parse(raw) as T;
+  } catch {}
+  return fallback();
+}
+
+function lsSet(key: string, value: unknown) {
+  try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
+}
 
 export interface DemoDraft {
   id: string;
@@ -42,6 +59,9 @@ interface DemoContextValue {
   // UI state
   showSignInModal: boolean;
   setShowSignInModal: (open: boolean) => void;
+
+  /** Wipe localStorage and restore all demo data to its original state */
+  resetDemo: () => void;
 }
 
 const DemoContext = createContext<DemoContextValue | null>(null);
@@ -57,14 +77,25 @@ const genId = () => `demo-new-${++_idCounter}`;
 
 export function DemoProvider({ children }: { children: ReactNode }) {
   const [emails, setEmailsRaw] = useState<any[]>(() =>
-    // deep-clone so mutations don't touch the original
-    DEMO_EMAILS.map((e) => ({ ...e, labelIds: [...(e.labelIds ?? [])] }))
+    lsGet(LS_EMAILS, () =>
+      DEMO_EMAILS.map((e) => ({ ...e, labelIds: [...(e.labelIds ?? [])] }))
+    )
   );
   const [events, setEvents] = useState<any[]>(() =>
-    DEMO_EVENTS.map((e) => ({ ...e }))
+    lsGet(LS_EVENTS, () => DEMO_EVENTS.map((e) => ({ ...e })))
   );
-  const [drafts, setDrafts] = useState<DemoDraft[]>([]);
+  const [drafts, setDrafts] = useState<DemoDraft[]>(() =>
+    lsGet<DemoDraft[]>(LS_DRAFTS, () => []).map((d) => ({
+      ...d,
+      savedAt: new Date(d.savedAt), // revive Date from JSON string
+    }))
+  );
   const [showSignInModal, setShowSignInModal] = useState(false);
+
+  // Persist to localStorage whenever state changes
+  useEffect(() => { lsSet(LS_EMAILS, emails); }, [emails]);
+  useEffect(() => { lsSet(LS_EVENTS, events); }, [events]);
+  useEffect(() => { lsSet(LS_DRAFTS, drafts); }, [drafts]);
 
   const setEmails = useCallback((next: any[]) => setEmailsRaw(next), []);
 
@@ -156,6 +187,17 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     setEvents((prev) => prev.filter((e) => e.id !== id));
   }, []);
 
+  const resetDemo = useCallback(() => {
+    try {
+      localStorage.removeItem(LS_EMAILS);
+      localStorage.removeItem(LS_EVENTS);
+      localStorage.removeItem(LS_DRAFTS);
+    } catch {}
+    setEmailsRaw(DEMO_EMAILS.map((e) => ({ ...e, labelIds: [...(e.labelIds ?? [])] })));
+    setEvents(DEMO_EVENTS.map((e) => ({ ...e })));
+    setDrafts([]);
+  }, []);
+
   return (
     <DemoContext.Provider
       value={{
@@ -180,6 +222,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
         calendars: DEMO_CALENDAR,
         showSignInModal,
         setShowSignInModal,
+        resetDemo,
       }}
     >
       {children}
