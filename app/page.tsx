@@ -793,10 +793,10 @@ function Hero({ onSignIn, error }: { onSignIn: () => void; error: string | null 
             <GoogleIcon className="size-4 relative z-10" />
             <span className="relative z-10">Get started free</span>
           </button>
-          <a href="#product" className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground border border-border px-7 py-3.5 rounded-xl hover:bg-secondary/60 transition-all cursor-pointer">
-            See how it works
+          <Link href="/demo" className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground border border-border px-7 py-3.5 rounded-xl hover:bg-secondary/60 transition-all cursor-pointer">
+            Try Demo
             <ArrowRight className="size-4" strokeWidth={1.75} />
-          </a>
+          </Link>
         </div>
         <p className="hero-line hero-d4 text-[11px] text-muted-foreground/60 font-medium">No credit card · No setup · Works with your existing Gmail</p>
 

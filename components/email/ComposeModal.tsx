@@ -16,12 +16,13 @@ interface ComposeModalProps {
   onClose: () => void;
   initialTo?: string;
   initialSubject?: string;
+  isDemo?: boolean;
 }
 
 const MODAL_W   = 480;
 const MODAL_H   = 480; // approximate full height for clamping
 
-export default function ComposeModal({ onClose, initialTo = "", initialSubject = "" }: ComposeModalProps) {
+export default function ComposeModal({ onClose, initialTo = "", initialSubject = "", isDemo }: ComposeModalProps) {
   const [to,       setTo]       = useState(initialTo);
   const [subject,  setSubject]  = useState(initialSubject);
   const [body,     setBody]     = useState("");
@@ -115,6 +116,7 @@ export default function ComposeModal({ onClose, initialTo = "", initialSubject =
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isDemo) { setStatus("Demo mode: email sending is disabled."); return; }
     setSending(true);
     setStatus(null);
     try {
@@ -132,6 +134,7 @@ export default function ComposeModal({ onClose, initialTo = "", initialSubject =
   };
 
   const handleSaveDraft = async () => {
+    if (isDemo) { setStatus("draft"); return; }
     const fd = buildForm();
     if (draftId) {
       await fetch(`/api/drafts/${draftId}`, { method: "PATCH", body: fd });

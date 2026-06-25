@@ -17,6 +17,7 @@ const interEmail = Inter({
   weight: ["400", "500"],
 });
 
+
 export const metadata: Metadata = {
   title: "Tsunagu | Premium AI-Powered Email And Calendar Workspace",
   description:

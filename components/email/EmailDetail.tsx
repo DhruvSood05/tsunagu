@@ -30,6 +30,7 @@ interface EmailDetailProps {
   onArchive?: () => void;
   replyKey?: number;
   onAnalyzed?: (emailId: string, priority: string) => void;
+  isDemo?: boolean;
 }
 
 interface CalendarOption {
@@ -57,7 +58,7 @@ function SenderAvatar({ url, initials }: { url?: string; initials: string }) {
   );
 }
 
-export default function EmailDetail({ email, onClose, onDelete, onArchive, replyKey, onAnalyzed }: EmailDetailProps) {
+export default function EmailDetail({ email, onClose, onDelete, onArchive, replyKey, onAnalyzed, isDemo }: EmailDetailProps) {
   const { theme } = useTheme();
   const [showReply, setShowReply] = useState(false);
   const [showForward, setShowForward] = useState(false);
@@ -134,9 +135,9 @@ export default function EmailDetail({ email, onClose, onDelete, onArchive, reply
     [email?.id]
   );
 
-  // Auto-mark as read (fire-and-forget)
+  // Auto-mark as read (fire-and-forget) — skip in demo mode
   useEffect(() => {
-    if (!email?.id || !email.labelIds?.includes("UNREAD")) return;
+    if (isDemo || !email?.id || !email.labelIds?.includes("UNREAD")) return;
     fetch(`/api/emails/${email.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -158,6 +159,7 @@ export default function EmailDetail({ email, onClose, onDelete, onArchive, reply
   }, [email?.id]);
 
   const handleSummarize = async () => {
+    if (isDemo) { setAiData({ _demoBlocked: true }); return; }
     if (!email?.id || aiLoading) return;
     setAiLoading(true);
     setAiData(null);
@@ -185,9 +187,13 @@ export default function EmailDetail({ email, onClose, onDelete, onArchive, reply
     }
   };
 
-  // Load calendars when add-event panel opens
+  // Load calendars when add-event panel opens — skip API in demo
   useEffect(() => {
     if (!showAddEvent || calendars.length > 0) return;
+    if (isDemo) {
+      setCalendars([{ id: "primary", summary: "My Calendar" }]);
+      return;
+    }
     fetch("/api/calendar/calendars")
       .then((r) => r.json())
       .then((data) => {
@@ -196,7 +202,7 @@ export default function EmailDetail({ email, onClose, onDelete, onArchive, reply
         setEventCalendar(list[0]?.id ?? "primary");
       })
       .catch(() => setCalendars([{ id: "primary", summary: "My Calendar" }]));
-  }, [showAddEvent, calendars.length]);
+  }, [showAddEvent, calendars.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const openAddEvent = () => {
     setEventTitle(detected.title);
@@ -224,28 +230,29 @@ export default function EmailDetail({ email, onClose, onDelete, onArchive, reply
 
   const handleDelete = async () => {
     setDeleting(true);
-    await fetch(`/api/emails/${email.id}`, { method: "DELETE" });
+    if (!isDemo) await fetch(`/api/emails/${email.id}`, { method: "DELETE" });
     onDelete();
   };
 
   const handleArchive = async () => {
     setArchiving(true);
-    if (isArchived) {
-      // Unarchive — add INBOX label back
-      await fetch(`/api/emails/${email.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ addLabelIds: ["INBOX"] }),
-      }).catch(() => {});
-    } else {
-      // Archive — remove INBOX label
-      await fetch(`/api/emails/${email.id}/archive`, { method: "POST" }).catch(() => {});
+    if (!isDemo) {
+      if (isArchived) {
+        await fetch(`/api/emails/${email.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ addLabelIds: ["INBOX"] }),
+        }).catch(() => {});
+      } else {
+        await fetch(`/api/emails/${email.id}/archive`, { method: "POST" }).catch(() => {});
+      }
     }
     onArchive?.();
   };
 
   const handleReply = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isDemo) { setStatus("demo"); return; }
     setSending(true);
     setStatus(null);
     const fd = new FormData();
@@ -269,6 +276,7 @@ export default function EmailDetail({ email, onClose, onDelete, onArchive, reply
 
   const handleForward = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isDemo) { setForwardStatus("demo"); return; }
     setForwardSending(true);
     setForwardStatus(null);
     const fd = new FormData();
@@ -293,6 +301,7 @@ export default function EmailDetail({ email, onClose, onDelete, onArchive, reply
   };
 
   const handleSuggestedReplyClick = async (draftPrompt: string) => {
+    if (isDemo) { setShowReply(true); return; }
     setReplyGenerating(true);
     setShowReply(true);
     setReplyBody("");
@@ -314,6 +323,7 @@ export default function EmailDetail({ email, onClose, onDelete, onArchive, reply
   };
 
   const handleCustomAiDraft = async () => {
+    if (isDemo) { setShowReply(true); return; }
     if (!aiPrompt.trim()) return;
     setReplyGenerating(true);
     setShowReply(true);
@@ -336,6 +346,7 @@ export default function EmailDetail({ email, onClose, onDelete, onArchive, reply
   };
 
   const handleAddEvent = async () => {
+    if (isDemo) { setAddStatus("success"); setTimeout(() => setShowAddEvent(false), 1200); return; }
     setAddingEvent(true);
     setAddStatus("idle");
     try {
@@ -506,6 +517,11 @@ export default function EmailDetail({ email, onClose, onDelete, onArchive, reply
                   <Skeleton className="h-2.5 w-2/3 rounded-full bg-primary/8" />
                 </div>
               </div>
+            </div>
+          ) : aiData?._demoBlocked ? (
+            <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-secondary/60 border border-border/40">
+              <AlertCircle className="size-4 text-muted-foreground/60 shrink-0" strokeWidth={1.75} />
+              <span className="text-xs text-muted-foreground/70">AI features are available after signing in.</span>
             </div>
           ) : aiData?._rateLimited ? (
             <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-secondary/60 border border-border/40">
@@ -715,6 +731,9 @@ export default function EmailDetail({ email, onClose, onDelete, onArchive, reply
                     Forwarded!
                   </span>
                 )}
+                {forwardStatus === "demo" && (
+                  <span className="text-xs text-amber-500 font-semibold mr-1">Demo: sending disabled.</span>
+                )}
                 <button
                   type="button"
                   onClick={() => setShowForward(false)}
@@ -809,6 +828,9 @@ export default function EmailDetail({ email, onClose, onDelete, onArchive, reply
                 )}
                 {status === "sent" && (
                   <span className="text-xs text-emerald-500 font-semibold mr-1">Sent!</span>
+                )}
+                {status === "demo" && (
+                  <span className="text-xs text-amber-500 font-semibold mr-1">Demo: sending disabled.</span>
                 )}
                 <button
                   type="button"

@@ -11,6 +11,7 @@ interface EmailRowProps {
   priority?: "high" | "medium" | "low" | null;
   onClick: () => void;
   onCheck: (checked: boolean) => void;
+  onStar?: (id: string, starred: boolean) => void;
 }
 
 // Warm editorial monochrome — subtle ink-on-paper tints that sit quietly
@@ -34,7 +35,7 @@ const PRIORITY_STYLES: Record<string, string> = {
   low: "text-emerald-500 bg-emerald-500/10 border-emerald-500/20",
 };
 
-export default function EmailRow({ email, selected, checked, priority, onClick, onCheck }: EmailRowProps) {
+export default function EmailRow({ email, selected, checked, priority, onClick, onCheck, onStar }: EmailRowProps) {
   const isUnread = email.labelIds?.includes("UNREAD");
   const [starred, setStarred] = useState(email.labelIds?.includes("STARRED") ?? false);
 
@@ -77,6 +78,10 @@ export default function EmailRow({ email, selected, checked, priority, onClick, 
     e.stopPropagation();
     const next = !starred;
     setStarred(next);
+    if (onStar) {
+      onStar(email.id, next);
+      return;
+    }
     try {
       await fetch(`/api/emails/${email.id}`, {
         method: "PATCH",

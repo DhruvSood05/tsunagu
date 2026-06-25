@@ -14,6 +14,8 @@ interface EmailListProps {
   loading?: boolean;
   onBulkDelete?: (ids: string[]) => void;
   emailPriorities?: Record<string, string>;
+  isDemo?: boolean;
+  onStar?: (id: string, starred: boolean) => void;
 }
 
 export function EmailListSkeleton() {
@@ -47,6 +49,8 @@ export default function EmailList({
   loading,
   onBulkDelete,
   emailPriorities,
+  isDemo,
+  onStar,
 }: EmailListProps) {
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
@@ -63,7 +67,9 @@ export default function EmailList({
   const handleBulkDelete = async () => {
     const ids = Array.from(checkedIds);
     setBulkDeleting(true);
-    await Promise.all(ids.map((id) => fetch(`/api/emails/${id}`, { method: "DELETE" })));
+    if (!isDemo) {
+      await Promise.all(ids.map((id) => fetch(`/api/emails/${id}`, { method: "DELETE" })));
+    }
     onBulkDelete?.(ids);
     setCheckedIds(new Set());
     setBulkDeleting(false);
@@ -122,6 +128,7 @@ export default function EmailList({
           priority={emailPriorities?.[email.id] as any ?? null}
           onClick={() => onSelect(email)}
           onCheck={(checked) => toggleCheck(email.id, checked)}
+          onStar={onStar}
         />
       ))}
     </div>

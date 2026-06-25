@@ -32,9 +32,10 @@ interface SidebarProps {
   onCompose?: () => void;
   gmailConnected?: boolean;
   calendarConnected?: boolean;
+  basePath?: string;
 }
 
-export default function Sidebar({ user, onCompose }: SidebarProps) {
+export default function Sidebar({ user, onCompose, basePath = "/dashboard" }: SidebarProps) {
   const isSuperAdmin = user?.email === ADMIN_EMAIL;
   const [isAdminRole, setIsAdminRole] = useState(false);
   const isAdmin = isSuperAdmin || isAdminRole;
@@ -65,19 +66,19 @@ export default function Sidebar({ user, onCompose }: SidebarProps) {
   }, [pathname]);
 
   const mainFolders = [
-    { id: "inbox",   href: "/dashboard?folder=inbox",   label: "Inbox",    icon: Inbox },
-    { id: "sent",    href: "/dashboard?folder=sent",    label: "Sent",     icon: Send },
-    { id: "drafts",  href: "/dashboard/drafts",         label: "Drafts",   icon: FileText },
-    { id: "archive", href: "/dashboard?folder=archive", label: "Archive",  icon: Archive },
-    { id: "starred", href: "/dashboard?folder=starred", label: "Starred",  icon: Star },
-    { id: "calendar",href: "/dashboard/calendar",       label: "Calendar", icon: Calendar },
+    { id: "inbox",    href: `${basePath}?folder=inbox`,   label: "Inbox",    icon: Inbox },
+    { id: "sent",     href: `${basePath}?folder=sent`,    label: "Sent",     icon: Send },
+    { id: "drafts",   href: `${basePath}/drafts`,         label: "Drafts",   icon: FileText },
+    { id: "archive",  href: `${basePath}?folder=archive`, label: "Archive",  icon: Archive },
+    { id: "starred",  href: `${basePath}?folder=starred`, label: "Starred",  icon: Star },
+    { id: "calendar", href: `${basePath}/calendar`,       label: "Calendar", icon: Calendar },
   ];
 
   const sidebarContent = (
     <>
       {/* Logo + Collapse toggle */}
       <div className="h-14 flex items-center justify-between px-4 border-b border-sidebar-border shrink-0">
-        <Link href="/dashboard" className="flex items-center gap-2.5 hover:opacity-85 transition-opacity overflow-hidden">
+        <Link href={basePath} className="flex items-center gap-2.5 hover:opacity-85 transition-opacity overflow-hidden">
           <TsunaguLogo className="size-6 text-primary shrink-0" />
           {!collapsed && (
             <span className="font-semibold text-[15px] tracking-tight text-foreground leading-none whitespace-nowrap">
@@ -129,7 +130,7 @@ export default function Sidebar({ user, onCompose }: SidebarProps) {
             </p>
           )}
           {mainFolders.map(({ id, href, label, icon: Icon }) => {
-            const isPage = id === "drafts" || id === "calendar" ? pathname === `/dashboard/${id}` : pathname === "/dashboard";
+            const isPage = id === "drafts" || id === "calendar" ? pathname === `${basePath}/${id}` : pathname === basePath;
             const active = id === "drafts" || id === "calendar" ? isPage : isPage && currentFolder === id;
             return (
               <Link
@@ -162,17 +163,17 @@ export default function Sidebar({ user, onCompose }: SidebarProps) {
           )}
           <Link
             id="tour-ai-link"
-            href="/dashboard/ai"
+            href={`${basePath}/ai`}
             title={collapsed ? "AI Assistant" : undefined}
             className={`relative flex items-center gap-2.5 rounded-lg transition-all duration-150 ${
               collapsed ? "justify-center px-0 py-2.5 mx-0.5" : "px-2.5 py-2"
             } text-[13px] ${
-              pathname === "/dashboard/ai"
+              pathname === `${basePath}/ai`
                 ? "bg-ai-surface text-foreground font-medium shadow-sm border border-ai/20"
                 : "text-muted-foreground hover:text-foreground hover:bg-foreground/5 dark:hover:bg-[#202022]"
             }`}
           >
-            {pathname === "/dashboard/ai" && !collapsed && (
+            {pathname === `${basePath}/ai` && !collapsed && (
               <span className="absolute -left-px top-1/2 -translate-y-1/2 h-4 w-[3px] rounded-full bg-ai" />
             )}
             <Sparkles
@@ -191,21 +192,21 @@ export default function Sidebar({ user, onCompose }: SidebarProps) {
               </p>
             )}
             <Link
-              href="/dashboard/admin"
+              href={`${basePath}/admin`}
               title={collapsed ? "Dashboard" : undefined}
               className={`relative flex items-center gap-2.5 rounded-lg transition-all duration-150 ${
                 collapsed ? "justify-center px-0 py-2.5 mx-0.5" : "px-2.5 py-2"
               } text-[13px] ${
-                pathname === "/dashboard/admin"
+                pathname === `${basePath}/admin`
                   ? "bg-secondary text-foreground font-medium shadow-sm border border-border"
                   : "text-muted-foreground hover:text-foreground hover:bg-foreground/5 dark:hover:bg-[#202022]"
               }`}
             >
-              {pathname === "/dashboard/admin" && !collapsed && (
+              {pathname === `${basePath}/admin` && !collapsed && (
                 <span className="absolute -left-px top-1/2 -translate-y-1/2 h-4 w-[3px] rounded-full bg-foreground" />
               )}
               <Shield
-                className={`size-[18px] shrink-0 ${pathname === "/dashboard/admin" ? "text-foreground" : "text-muted-foreground/70"}`}
+                className={`size-[18px] shrink-0 ${pathname === `${basePath}/admin` ? "text-foreground" : "text-muted-foreground/70"}`}
                 strokeWidth={1.75}
               />
               {!collapsed && <span>Dashboard</span>}
@@ -218,21 +219,21 @@ export default function Sidebar({ user, onCompose }: SidebarProps) {
       <div id="tour-settings" className="px-2.5 py-3 border-t border-sidebar-border shrink-0">
         <div className={`flex items-center ${collapsed ? "flex-col gap-2" : "gap-1.5"}`}>
           <Link
-            href="/dashboard/settings"
+            href={`${basePath}/settings`}
             title={collapsed ? "Settings" : undefined}
             className={`relative flex items-center gap-2.5 rounded-lg transition-all duration-150 ${
               collapsed ? "justify-center px-0 py-2.5 w-full" : "flex-1 px-2.5 py-2"
             } text-[13px] ${
-              pathname === "/dashboard/settings"
+              pathname === `${basePath}/settings`
                 ? "bg-secondary text-foreground font-medium shadow-sm border border-border"
                 : "text-muted-foreground hover:text-foreground hover:bg-foreground/5 dark:hover:bg-[#202022]"
             }`}
           >
-            {pathname === "/dashboard/settings" && !collapsed && (
+            {pathname === `${basePath}/settings` && !collapsed && (
               <span className="absolute -left-px top-1/2 -translate-y-1/2 h-4 w-[3px] rounded-full bg-foreground" />
             )}
             <Settings
-              className={`size-[18px] shrink-0 ${pathname === "/dashboard/settings" ? "text-foreground" : "text-muted-foreground/70"}`}
+              className={`size-[18px] shrink-0 ${pathname === `${basePath}/settings` ? "text-foreground" : "text-muted-foreground/70"}`}
               strokeWidth={1.75}
             />
             {!collapsed && <span>Settings</span>}
