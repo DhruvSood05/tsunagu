@@ -3,6 +3,14 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
 import { DEMO_EMAILS, DEMO_EVENTS, DEMO_USER, DEMO_CALENDAR } from "./demo-data";
 
+export interface DemoDraft {
+  id: string;
+  to: string;
+  subject: string;
+  body: string;
+  savedAt: Date;
+}
+
 interface DemoContextValue {
   // User
   user: typeof DEMO_USER;
@@ -17,6 +25,12 @@ interface DemoContextValue {
   deleteEmail: (id: string) => void;
   bulkDelete: (ids: string[]) => void;
   getEmailById: (id: string) => any | undefined;
+
+  // Draft state
+  drafts: DemoDraft[];
+  saveDraft: (draft: { to: string; subject: string; body: string }) => void;
+  updateDraft: (id: string, patch: { to: string; subject: string; body: string }) => void;
+  deleteDraft: (id: string) => void;
 
   // Calendar state
   events: any[];
@@ -49,6 +63,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
   const [events, setEvents] = useState<any[]>(() =>
     DEMO_EVENTS.map((e) => ({ ...e }))
   );
+  const [drafts, setDrafts] = useState<DemoDraft[]>([]);
   const [showSignInModal, setShowSignInModal] = useState(false);
 
   const setEmails = useCallback((next: any[]) => setEmailsRaw(next), []);
@@ -111,6 +126,21 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     [emails]
   );
 
+  const saveDraft = useCallback((draft: { to: string; subject: string; body: string }) => {
+    const newDraft: DemoDraft = { ...draft, id: genId(), savedAt: new Date() };
+    setDrafts((prev) => [newDraft, ...prev]);
+  }, []);
+
+  const updateDraft = useCallback((id: string, patch: { to: string; subject: string; body: string }) => {
+    setDrafts((prev) =>
+      prev.map((d) => (d.id === id ? { ...d, ...patch, savedAt: new Date() } : d))
+    );
+  }, []);
+
+  const deleteDraft = useCallback((id: string) => {
+    setDrafts((prev) => prev.filter((d) => d.id !== id));
+  }, []);
+
   const addEvent = useCallback((event: any) => {
     const newEvent = { ...event, id: event.id ?? genId(), _calendarId: "primary" };
     setEvents((prev) => [...prev, newEvent]);
@@ -139,6 +169,10 @@ export function DemoProvider({ children }: { children: ReactNode }) {
         deleteEmail,
         bulkDelete,
         getEmailById,
+        drafts,
+        saveDraft,
+        updateDraft,
+        deleteDraft,
         events,
         addEvent,
         updateEvent,

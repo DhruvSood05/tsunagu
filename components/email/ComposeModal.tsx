@@ -16,16 +16,32 @@ interface ComposeModalProps {
   onClose: () => void;
   initialTo?: string;
   initialSubject?: string;
+  initialBody?: string;
   isDemo?: boolean;
+  /** Demo-only: called with draft content when the user saves a new draft */
+  onSaveDraft?: (draft: { to: string; subject: string; body: string }) => void;
+  /** Demo-only: existing draft id being edited; triggers update instead of create */
+  editDraftId?: string;
+  /** Demo-only: called with updated draft content when editing an existing draft */
+  onUpdateDraft?: (id: string, patch: { to: string; subject: string; body: string }) => void;
 }
 
 const MODAL_W   = 480;
 const MODAL_H   = 480; // approximate full height for clamping
 
-export default function ComposeModal({ onClose, initialTo = "", initialSubject = "", isDemo }: ComposeModalProps) {
+export default function ComposeModal({
+  onClose,
+  initialTo = "",
+  initialSubject = "",
+  initialBody = "",
+  isDemo,
+  onSaveDraft,
+  editDraftId,
+  onUpdateDraft,
+}: ComposeModalProps) {
   const [to,       setTo]       = useState(initialTo);
   const [subject,  setSubject]  = useState(initialSubject);
-  const [body,     setBody]     = useState("");
+  const [body,     setBody]     = useState(initialBody);
   const [files,    setFiles]    = useState<FileList | null>(null);
   const [sending,  setSending]  = useState(false);
   const [status,   setStatus]   = useState<string | null>(null);
@@ -134,7 +150,17 @@ export default function ComposeModal({ onClose, initialTo = "", initialSubject =
   };
 
   const handleSaveDraft = async () => {
-    if (isDemo) { setStatus("draft"); return; }
+    if (isDemo) {
+      const patch = { to, subject, body };
+      if (editDraftId && onUpdateDraft) {
+        onUpdateDraft(editDraftId, patch);
+      } else {
+        onSaveDraft?.(patch);
+      }
+      setStatus("draft");
+      setTimeout(onClose, 700);
+      return;
+    }
     const fd = buildForm();
     if (draftId) {
       await fetch(`/api/drafts/${draftId}`, { method: "PATCH", body: fd });

@@ -371,7 +371,7 @@ export default function DemoDashboard() {
       </div>
 
       {/* Compose */}
-      {showCompose && <ComposeModal onClose={() => setShowCompose(false)} isDemo />}
+      {showCompose && <ComposeModal onClose={() => setShowCompose(false)} isDemo onSaveDraft={ctx.saveDraft} />}
 
       {/* Settings */}
       <SettingsOverlay
