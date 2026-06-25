@@ -29,6 +29,7 @@ export default function DemoAIContent() {
           <TopNav
             user={ctx.user}
             gmailConnected={true}
+            basePath="/demo"
             onOpenPalette={() => ctx.setShowSignInModal(true)}
           />
 

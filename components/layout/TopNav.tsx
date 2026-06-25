@@ -3,22 +3,26 @@
 import { authClient } from "@/lib/auth-client";
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   Mail,
   ChevronsUpDown,
   Search,
   LogOut,
+  Settings,
   Menu,
 } from "lucide-react";
 import NotificationBell from "@/components/notifications/NotificationBell";
+import ThemeToggle from "@/components/layout/ThemeToggle";
 
 interface TopNavProps {
   user?: { name?: string | null; email?: string | null; image?: string | null } | null;
   onOpenPalette?: () => void;
   gmailConnected?: boolean;
+  basePath?: string;
 }
 
-export default function TopNav({ user, onOpenPalette, gmailConnected = false }: TopNavProps) {
+export default function TopNav({ user, onOpenPalette, gmailConnected = false, basePath = "/dashboard" }: TopNavProps) {
   const router = useRouter();
   const [workspaceOpen, setWorkspaceOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -137,6 +141,9 @@ export default function TopNav({ user, onOpenPalette, gmailConnected = false }: 
         {/* Notifications */}
         <NotificationBell />
 
+        {/* Theme */}
+        <ThemeToggle />
+
         {/* Profile Dropdown */}
         <div ref={profileRef} className="relative">
           <button
@@ -163,6 +170,15 @@ export default function TopNav({ user, onOpenPalette, gmailConnected = false }: 
                 <p className="text-[13px] font-semibold text-foreground leading-tight truncate">{user?.name ?? "User"}</p>
                 <p className="text-[11px] text-muted-foreground truncate mt-0.5">{user?.email}</p>
               </div>
+              <div className="my-1 border-t border-border/40" />
+              <Link
+                href={`${basePath}/settings`}
+                onClick={() => setProfileOpen(false)}
+                className="flex items-center gap-2 w-full px-2.5 py-2 text-[13px] text-foreground/80 hover:text-foreground hover:bg-secondary/80 transition-all rounded-lg cursor-pointer"
+              >
+                <Settings className="size-4 shrink-0" strokeWidth={1.75} />
+                Settings
+              </Link>
               <div className="my-1 border-t border-border/40" />
               <button
                 onClick={handleSignOut}

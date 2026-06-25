@@ -31,6 +31,20 @@ import {
 } from "@/lib/calendar-helpers";
 import { useResizablePanel } from "@/hooks/useResizablePanel";
 
+// Module-level caches — survive tab switches and soft navigations within the session.
+// Keyed by userId so multiple accounts in the same browser never share data.
+// Session-length cache — once a date range or calendar list is loaded it stays
+// cached until the user explicitly mutates data or the page is refreshed.
+// The 30s webhook poll handles real-time event changes while the calendar is open.
+const CALENDAR_CACHE_TTL_MS = Infinity;
+
+const calEventsCache = new Map<string, { events: CalendarEvent[]; fetchedAt: number }>();
+const calListCache   = new Map<string, { list: CalendarInfo[];    fetchedAt: number }>();
+
+function calEventsCacheKey(userId: string, calIds: string[], min: string, max: string) {
+  return `${userId}|${calIds.join(",")}|${min}|${max}`;
+}
+
 interface CalendarContentProps {
   user: { id?: string; name?: string | null; email?: string | null; image?: string | null } | null;
   gmailConnected: boolean;
@@ -95,6 +109,12 @@ export default function CalendarContent({ user, gmailConnected, calendarConnecte
     direction: "left",
   });
 
+  // ── Clear caches when the logged-in user changes ──────────────────────────
+  useEffect(() => {
+    calEventsCache.clear();
+    calListCache.clear();
+  }, [user?.id]);
+
   // ── Webhook-driven calendar refresh — poll every 30s ─────────────────────
   useEffect(() => {
     const userId = user?.id;
@@ -125,6 +145,22 @@ export default function CalendarContent({ user, gmailConnected, calendarConnecte
 
   // ── Load calendars on mount ────────────────────────────────────────────────
   useEffect(() => {
+    const userId = user?.id ?? "";
+    const cached = calListCache.get(userId);
+    if (cached && Date.now() - cached.fetchedAt < CALENDAR_CACHE_TTL_MS) {
+      // Fresh calendar list — apply immediately without a network request.
+      const list = cached.list.map((c, i) => ({
+        ...c,
+        color: calColors[c.id] ?? CALENDAR_PALETTE[i % CALENDAR_PALETTE.length],
+      }));
+      const enabled = new Set(list.map((c) => c.id));
+      setCalendars(list);
+      setEnabledCals(enabled);
+      if (list.length > 0) setForm((f) => ({ ...f, calendarId: list[0].id }));
+      if (dateRange.current) loadEvents(dateRange.current.min, dateRange.current.max, enabled);
+      return;
+    }
+
     fetch("/api/calendar/calendars")
       .then((r) => r.json())
       .then(({ calendars: raw = [] }: { calendars: { id: string; summary?: string }[] }) => {
@@ -133,6 +169,7 @@ export default function CalendarContent({ user, gmailConnected, calendarConnecte
           summary: c.summary,
           color: calColors[c.id] ?? CALENDAR_PALETTE[i % CALENDAR_PALETTE.length],
         }));
+        calListCache.set(userId, { list, fetchedAt: Date.now() });
         const enabled = new Set(list.map((c) => c.id));
         setCalendars(list);
         setEnabledCals(enabled);
@@ -151,11 +188,26 @@ export default function CalendarContent({ user, gmailConnected, calendarConnecte
 
   // ── API calls ──────────────────────────────────────────────────────────────
 
-  const loadEvents = async (min: string, max: string, calIds?: Set<string>) => {
-    setLoading(true);
+  const loadEvents = async (min: string, max: string, calIds?: Set<string>, force = false) => {
+    const ids = [...(calIds ?? enabledCals)].sort();
+    if (ids.length === 0) { setEvents([]); return; }
+
+    const userId = user?.id ?? "";
+    const key = calEventsCacheKey(userId, ids, min, max);
+    const cached = calEventsCache.get(key);
+
+    if (!force && cached) {
+      setEvents(cached.events);
+      setLoading(false);
+      // Fresh — skip the network round-trip entirely. The 30s webhook poll
+      // handles any real-time changes while the user is on this page.
+      if (Date.now() - cached.fetchedAt < CALENDAR_CACHE_TTL_MS) return;
+      // Stale — show cached data immediately, then silently refresh below.
+    } else {
+      setLoading(true);
+    }
+
     try {
-      const ids = [...(calIds ?? enabledCals)];
-      if (ids.length === 0) { setEvents([]); return; }
       const url = `/api/calendar/events?timeMin=${encodeURIComponent(min)}&timeMax=${encodeURIComponent(max)}&calendarIds=${encodeURIComponent(ids.join(","))}`;
       const res = await fetch(url);
       if (res.status === 401) {
@@ -163,10 +215,24 @@ export default function CalendarContent({ user, gmailConnected, calendarConnecte
         if (data?.error === "connection_expired") { setCalendarExpired(true); return; }
       }
       setCalendarExpired(false);
-      if (res.ok) setEvents((await res.json()).events ?? []);
+      if (res.ok) {
+        const freshEvents: CalendarEvent[] = (await res.json()).events ?? [];
+        calEventsCache.set(key, { events: freshEvents, fetchedAt: Date.now() });
+        setEvents(freshEvents);
+      }
     } finally {
       setLoading(false);
     }
+  };
+
+  // Drops the cache entry for the currently visible date range so the next
+  // loadEvents call always fetches fresh data after a mutation.
+  const invalidateEventsCache = () => {
+    const a = api();
+    if (!a) return;
+    const ids = [...enabledCals].sort();
+    const key = calEventsCacheKey(user?.id ?? "", ids, a.view.activeStart.toISOString(), a.view.activeEnd.toISOString());
+    calEventsCache.delete(key);
   };
 
   const handleCreate = async () => {
@@ -193,6 +259,7 @@ export default function CalendarContent({ user, gmailConnected, calendarConnecte
       if (res.ok) {
         setShowCreate(false);
         setForm({ ...DEFAULT_CREATE_FORM, calendarId: calendars[0]?.id ?? "primary" });
+        invalidateEventsCache();
         const a = api();
         if (a) await loadEvents(a.view.activeStart.toISOString(), a.view.activeEnd.toISOString());
       }
@@ -223,6 +290,7 @@ export default function CalendarContent({ user, gmailConnected, calendarConnecte
           body: JSON.stringify({ calendarId: editForm.calendarId, event: patch, sendUpdates: "all" }),
         });
         setSelected(null); setEditMode(false);
+        invalidateEventsCache();
         const a = api();
         if (a) await loadEvents(a.view.activeStart.toISOString(), a.view.activeEnd.toISOString());
         return;
@@ -250,6 +318,7 @@ export default function CalendarContent({ user, gmailConnected, calendarConnecte
     try {
       await fetch(`/api/calendar/events/${id}`, { method: "DELETE" });
       setSelected(null);
+      invalidateEventsCache();
       const a = api();
       if (a) await loadEvents(a.view.activeStart.toISOString(), a.view.activeEnd.toISOString());
     } finally { setDeleting(false); }

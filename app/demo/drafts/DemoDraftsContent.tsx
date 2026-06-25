@@ -31,6 +31,7 @@ export default function DemoDraftsContent() {
           <TopNav
             user={ctx.user}
             gmailConnected={true}
+            basePath="/demo"
             onOpenPalette={() => ctx.setShowSignInModal(true)}
           />
 

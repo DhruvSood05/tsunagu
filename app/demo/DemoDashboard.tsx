@@ -254,6 +254,7 @@ export default function DemoDashboard() {
           <TopNav
             user={ctx.user}
             gmailConnected={true}
+            basePath="/demo"
             onOpenPalette={() => ctx.setShowSignInModal(true)}
           />
 

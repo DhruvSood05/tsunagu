@@ -63,3 +63,28 @@ export function decodeEmailBody(message: any): {
 export function decodeBody(message: any): string {
   return decodeEmailBody(message).content;
 }
+
+export interface EmailAttachment {
+  attachmentId: string;
+  filename: string;
+  mimeType: string;
+  size: number;
+}
+
+export function getAttachments(message: any): EmailAttachment[] {
+  const result: EmailAttachment[] = [];
+  function walk(part: any) {
+    if (!part) return;
+    if (part.filename && part.body?.attachmentId) {
+      result.push({
+        attachmentId: part.body.attachmentId,
+        filename: part.filename,
+        mimeType: part.mimeType ?? "application/octet-stream",
+        size: part.body.size ?? 0,
+      });
+    }
+    for (const sub of part.parts ?? []) walk(sub);
+  }
+  walk(message?.payload ?? {});
+  return result;
+}

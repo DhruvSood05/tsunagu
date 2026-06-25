@@ -1,7 +1,7 @@
 "use client";
 
 import { authClient } from "@/lib/auth-client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import CategoryTabs, { type Category } from "@/components/email/CategoryTabs";
 import ComposeModal from "@/components/email/ComposeModal";
@@ -28,7 +28,11 @@ interface FetchOptions {
 
 // Module-level cache — survives re-renders and page navigation within the session.
 // Keyed by userId so different accounts in the same browser never share entries.
-const pageCache = new Map<string, { messages: any[]; nextPageToken: string | null }>();
+const pageCache = new Map<string, { messages: any[]; nextPageToken: string | null; fetchedAt: number }>();
+// Once fetched, cache entries live for the entire browser session. The 30s
+// webhook poll handles real-time inbox updates, so no background re-fetch
+// is needed when switching tabs — data shows instantly every time.
+const EMAIL_CACHE_TTL_MS = Infinity;
 
 function cacheKey(userId: string, mode: Mode, token: string, query?: string, category?: string) {
   return `${userId}:${mode}:${category ?? "inbox"}:${token}:${query ?? ""}`;
@@ -126,6 +130,9 @@ export default function DashboardContent({
       setEmails(cached.messages);
       setNextPageToken(cached.nextPageToken);
       setLoading(false);
+      // Data is fresh — the webhook poll will catch any new mail. Skip the
+      // background re-fetch entirely so tab switches feel instant.
+      if (Date.now() - cached.fetchedAt < EMAIL_CACHE_TTL_MS) return;
     } else {
       setEmails([]);
       setLoading(true);
@@ -152,7 +159,7 @@ export default function DashboardContent({
       setGmailExpired(false);
       const messages = data.messages ?? [];
       const nextToken = data.nextPageToken ?? null;
-      pageCache.set(key, { messages, nextPageToken: nextToken });
+      pageCache.set(key, { messages, nextPageToken: nextToken, fetchedAt: Date.now() });
       setEmails(messages);
       setNextPageToken(nextToken);
     } catch {
@@ -167,6 +174,23 @@ export default function DashboardContent({
   useEffect(() => {
     pageCache.clear();
   }, [session?.user?.id]);
+
+  // Synchronously hydrate from cache before the browser paints when the folder
+  // changes. useEffect fires *after* paint, which causes a one-frame flash of
+  // stale data. useLayoutEffect fires before paint, making tab switches instant.
+  useLayoutEffect(() => {
+    const userId = session?.user?.id;
+    if (!userId) return;
+    const activeCat = folder === "inbox" ? activeCategory : folder;
+    const key = cacheKey(userId, "inbox", "", undefined, activeCat);
+    const cached = pageCache.get(key);
+    if (cached) {
+      setEmails(cached.messages);
+      setNextPageToken(cached.nextPageToken);
+      setLoading(false);
+      setSelectedEmail(null);
+    }
+  }, [folder]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Load user tour preference on mount
   useEffect(() => {
@@ -240,7 +264,7 @@ export default function DashboardContent({
         const emailData = await emailRes.json();
         if (emailData.messages) {
           const key = cacheKey(userId, "inbox", "", undefined, activeCat);
-          pageCache.set(key, { messages: emailData.messages, nextPageToken: emailData.nextPageToken ?? null });
+          pageCache.set(key, { messages: emailData.messages, nextPageToken: emailData.nextPageToken ?? null, fetchedAt: Date.now() });
           setEmails(emailData.messages);
           if (emailData.nextPageToken !== undefined) setNextPageToken(emailData.nextPageToken ?? null);
         }
@@ -271,7 +295,7 @@ export default function DashboardContent({
         if (emails[next]) handleSelectEmail(emails[next]);
       }
       if ((e.key === "e" || e.key === "E") && selectedEmail) {
-        handleArchiveEmail();
+        handleArchiveEmail(true); // keyboard shortcut must fire the API itself
       }
       if ((e.key === "r" || e.key === "R") && selectedEmail) {
         setReplyKey((k) => k + 1);
@@ -377,24 +401,100 @@ export default function DashboardContent({
     }
   };
 
-  const handleArchiveEmail = async () => {
+  // Removes the email from local state and cache only.
+  // Callers are responsible for the API call so EmailDetail's archive/unarchive
+  // button (which already makes its own PATCH/POST) doesn't double-fire.
+  const handleArchiveEmail = (apiCall = false) => {
     if (!selectedEmail) return;
     const id = selectedEmail.id;
-    // Optimistically remove from list and close pane
+    const userId = session?.user?.id ?? "";
     setSelectedEmail(null);
     setEmails((prev) => prev.filter((e) => e.id !== id));
-    fetch(`/api/emails/${id}/archive`, { method: "POST" }).catch(() => {});
+
+    for (const [key, val] of pageCache.entries()) {
+      if (val.messages.some((m: any) => m.id === id)) {
+        pageCache.set(key, { ...val, messages: val.messages.filter((m: any) => m.id !== id) });
+      }
+    }
+
+    // Invalidate archive cache so the next visit re-fetches fresh from Gmail.
+    for (const key of pageCache.keys()) {
+      if (key.startsWith(`${userId}:inbox:archive:`)) pageCache.delete(key);
+    }
+
+    // Only fire the API when called from the keyboard shortcut (not from EmailDetail,
+    // which has already made the correct archive/unarchive request itself).
+    if (apiCall) {
+      fetch(`/api/emails/${id}/archive`, { method: "POST" }).catch(() => {});
+    }
   };
 
   const handleEmailDeleted = () => {
     const id = selectedEmail?.id;
     setSelectedEmail(null);
-    if (id) setEmails((prev) => prev.filter((e) => e.id !== id));
+    if (!id) return;
+    setEmails((prev) => prev.filter((e) => e.id !== id));
+    for (const [key, val] of pageCache.entries()) {
+      if (val.messages.some((m: any) => m.id === id)) {
+        pageCache.set(key, { ...val, messages: val.messages.filter((m: any) => m.id !== id) });
+      }
+    }
   };
 
   const handleBulkDelete = (ids: string[]) => {
     setEmails((prev) => prev.filter((e) => !ids.includes(e.id)));
     if (selectedEmail && ids.includes(selectedEmail.id)) setSelectedEmail(null);
+  };
+
+  const handleStar = (id: string, starred: boolean) => {
+    const userId = session?.user?.id ?? "";
+
+    const toggleLabels = (labelIds: string[]) =>
+      starred
+        ? [...labelIds.filter((l) => l !== "STARRED"), "STARRED"]
+        : labelIds.filter((l) => l !== "STARRED");
+
+    // Update the visible list. When unstarring inside the Starred folder the
+    // email no longer belongs there, so filter it out entirely.
+    setEmails((prev) => {
+      if (!starred && folder === "starred") {
+        return prev.filter((e) => e.id !== id);
+      }
+      return prev.map((e) =>
+        e.id === id ? { ...e, labelIds: toggleLabels(e.labelIds ?? []) } : e
+      );
+    });
+
+    // Patch every cache entry that contains this email.
+    for (const [key, val] of pageCache.entries()) {
+      const isStarredCache = key.startsWith(`${userId}:inbox:starred:`);
+      const idx = val.messages.findIndex((m: any) => m.id === id);
+
+      if (isStarredCache) {
+        if (!starred && idx !== -1) {
+          // Remove from starred cache when unstarring
+          pageCache.set(key, { ...val, messages: val.messages.filter((m: any) => m.id !== id) });
+        } else if (starred && idx === -1) {
+          // Add to starred cache when starring so navigating there is instant
+          const src = emails.find((e) => e.id === id);
+          if (src) {
+            const updated = { ...src, labelIds: toggleLabels(src.labelIds ?? []) };
+            pageCache.set(key, { ...val, messages: [updated, ...val.messages] });
+          }
+        }
+      } else if (idx !== -1) {
+        const updated = [...val.messages];
+        updated[idx] = { ...updated[idx], labelIds: toggleLabels(updated[idx].labelIds ?? []) };
+        pageCache.set(key, { ...val, messages: updated });
+      }
+    }
+
+    // Sync with Gmail API (fire-and-forget)
+    fetch(`/api/emails/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(starred ? { addLabelIds: ["STARRED"] } : { removeLabelIds: ["STARRED"] }),
+    }).catch(() => {});
   };
 
   const hasDetail = selectedEmail !== null || detailLoading;
@@ -479,6 +579,7 @@ export default function DashboardContent({
                     loading={loading}
                     onBulkDelete={handleBulkDelete}
                     emailPriorities={emailPriorities}
+                    onStar={handleStar}
                   />
                 )}
               </div>
@@ -541,7 +642,7 @@ export default function DashboardContent({
                     email={selectedEmail}
                     onClose={() => setSelectedEmail(null)}
                     onDelete={handleEmailDeleted}
-                    onArchive={handleArchiveEmail}
+                    onArchive={() => handleArchiveEmail(false)}
                     replyKey={replyKey}
                     onAnalyzed={(emailId, priority) =>
                       setEmailPriorities((prev) => ({ ...prev, [emailId]: priority }))

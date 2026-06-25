@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { getHeader, decodeEmailBody } from "@/lib/email";
+import { getHeader, decodeEmailBody, getAttachments, type EmailAttachment } from "@/lib/email";
 import { detectEventFromEmail } from "@/lib/event-detect";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -21,6 +21,11 @@ import {
   AlertCircle,
   Forward,
   Archive,
+  FileText,
+  FileImage,
+  File,
+  Download,
+  X,
 } from "lucide-react";
 
 interface EmailDetailProps {
@@ -88,6 +93,7 @@ export default function EmailDetail({ email, onClose, onDelete, onArchive, reply
   const [replyGenerating, setReplyGenerating] = useState(false);
 
   const [iframeHeight, setIframeHeight] = useState(500);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const handleIframeLoad = (e: React.SyntheticEvent<HTMLIFrameElement>) => {
     try {
@@ -108,6 +114,26 @@ export default function EmailDetail({ email, onClose, onDelete, onArchive, reply
   const [eventDesc, setEventDesc] = useState("");
   const [addingEvent, setAddingEvent] = useState(false);
   const [addStatus, setAddStatus] = useState<"idle" | "success" | "error">("idle");
+
+  const attachments = getAttachments(email);
+
+  function attachmentUrl(att: EmailAttachment) {
+    return `/api/emails/${email.id}/attachments/${att.attachmentId}?mimeType=${encodeURIComponent(att.mimeType)}&filename=${encodeURIComponent(att.filename)}`;
+  }
+
+  function formatSize(bytes: number) {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  function AttachmentIcon({ mimeType }: { mimeType: string }) {
+    if (mimeType.startsWith("image/")) return <FileImage className="size-4 text-violet-400 shrink-0" strokeWidth={1.75} />;
+    if (mimeType === "application/pdf") return <FileText className="size-4 text-rose-400 shrink-0" strokeWidth={1.75} />;
+    if (mimeType.includes("word") || mimeType.includes("document")) return <FileText className="size-4 text-blue-400 shrink-0" strokeWidth={1.75} />;
+    if (mimeType.includes("sheet") || mimeType.includes("excel") || mimeType.includes("csv")) return <FileText className="size-4 text-emerald-400 shrink-0" strokeWidth={1.75} />;
+    return <File className="size-4 text-muted-foreground/60 shrink-0" strokeWidth={1.75} />;
+  }
 
   const isArchived = !(email.labelIds ?? []).includes("INBOX");
 
@@ -380,42 +406,97 @@ export default function EmailDetail({ email, onClose, onDelete, onArchive, reply
     }
   };
 
-  // Dynamically configure email reader colors depending on theme
   const isDark = theme === "dark";
-  const textColor = isDark ? "#f8f9fa" : "#111111";
-  const linkColor = isDark ? "#60a5fa" : "#2563eb";
-  const blockquoteBorder = isDark ? "#2d2f39" : "#e4e4e7";
-  const blockquoteColor = isDark ? "#8e919a" : "#71717a";
-  const codeBg = isDark ? "#17181c" : "#f4f4f5";
-  const borderCol = isDark ? "rgba(255,255,255,0.06)" : "#e4e4e7";
 
-  const emailStyles = `
+  // Plain-text content must be HTML-escaped before injection into an iframe srcDoc.
+  const escapeHtml = (s: string) =>
+    s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+  // ── Dark-mode strategy ──────────────────────────────────────────────────────
+  // HTML emails bake inline style="background:#fff;color:#333" on every element.
+  // !important on body/html cannot win that specificity battle. The only reliable
+  // fix is CSS filter: invert the entire <html> element so white→dark and
+  // dark-text→light, then re-invert <img>/<video> to restore their true colours.
+  //
+  // Plain text is fully under our control (we write the only HTML), so we use
+  // explicit theme colours there instead of the filter trick.
+  const htmlDarkStyles = `
     <style>
       *, *::before, *::after { box-sizing: border-box; }
+      html {
+        filter: invert(1) hue-rotate(180deg);
+        background: #ffffff;
+      }
       body {
         font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         font-size: 13.5px;
         line-height: 1.6;
-        color: ${textColor};
         margin: 0;
         padding: 24px 20px;
         word-break: break-word;
-        background-color: transparent;
       }
-      a { color: ${linkColor}; text-decoration: none; }
+      img, video { filter: invert(1) hue-rotate(180deg); }
+      img { max-width: 100%; height: auto; border-radius: 8px; }
+      a { text-decoration: none; }
+      a:hover { text-decoration: underline; }
+    </style>`;
+
+  const lightStyles = `
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+      html { background: #ffffff; }
+      body {
+        font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        font-size: 13.5px;
+        line-height: 1.6;
+        color: #111111;
+        margin: 0;
+        padding: 24px 20px;
+        word-break: break-word;
+        background: #ffffff;
+      }
+      a { color: #2563eb; text-decoration: none; }
       a:hover { text-decoration: underline; }
       img { max-width: 100%; height: auto; border-radius: 8px; }
-      blockquote { border-left: 3px solid ${blockquoteBorder}; margin: 12px 0; padding: 4px 16px; color: ${blockquoteColor}; }
-      pre, code { font-size: 13px; background: ${codeBg}; border-radius: 6px; padding: 4px 6px; font-family: monospace; border: 1px solid ${borderCol}; }
+      blockquote { border-left: 3px solid #e4e4e7; margin: 12px 0; padding: 4px 16px; color: #71717a; }
+      pre, code { font-size: 13px; background: #f4f4f5; border-radius: 6px; padding: 4px 6px; font-family: monospace; border: 1px solid #e4e4e7; }
       table { border-collapse: collapse; width: 100%; margin: 12px 0; }
-      td, th { padding: 8px 10px; border-bottom: 1px solid ${borderCol}; }
-      th { text-align: left; font-weight: 600; color: ${textColor}; }
-    </style>
-  `;
+      td, th { padding: 8px 10px; border-bottom: 1px solid #e4e4e7; }
+      th { text-align: left; font-weight: 600; }
+    </style>`;
 
+  const plainDarkStyles = `
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+      html { background: #1c1c1e; }
+      body {
+        font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        font-size: 13.5px;
+        line-height: 1.6;
+        color: #f0f0f0;
+        margin: 0;
+        padding: 24px 20px;
+        word-break: break-word;
+        background: #1c1c1e;
+      }
+      a { color: #60a5fa; text-decoration: none; }
+      a:hover { text-decoration: underline; }
+      pre, code { background: #17181c; border-radius: 6px; padding: 4px 6px; border: 1px solid rgba(255,255,255,0.06); }
+    </style>`;
+
+  // iframe container / element background colour
+  // For HTML dark mode: white inverted by the filter = #000; use black to match.
+  const frameBg = isDark ? (isHtml ? "#000000" : "#1c1c1e") : "#ffffff";
+
+  const emailStyles = isHtml
+    ? (isDark ? htmlDarkStyles : lightStyles)
+    : (isDark ? plainDarkStyles : lightStyles);
+
+  // Both HTML and plain-text go through an iframe so they're sandboxed and
+  // rendered with our injected theme styles.
   const srcDoc = isHtml
     ? `<!DOCTYPE html><html><head><meta charset="utf-8">${emailStyles}</head><body>${content}</body></html>`
-    : undefined;
+    : `<!DOCTYPE html><html><head><meta charset="utf-8">${emailStyles}</head><body><div style="white-space:pre-wrap;word-break:break-word;">${escapeHtml(content || "(empty body)")}</div></body></html>`;
 
   return (
     <div className="flex flex-col h-full overflow-hidden bg-card select-none font-sans">
@@ -574,23 +655,83 @@ export default function EmailDetail({ email, onClose, onDelete, onArchive, reply
           </div>
         )}
 
-        {/* Email body */}
-        <div className="relative bg-card/10">
-          {isHtml ? (
-            <iframe
-              srcDoc={srcDoc}
-              sandbox="allow-same-origin allow-popups"
-              className="w-full border-0 bg-transparent block"
-              style={{ height: iframeHeight }}
-              onLoad={handleIframeLoad}
-              title="Email content"
-            />
-          ) : (
-            <div className="px-6 py-6 text-sm text-foreground/90 whitespace-pre-wrap leading-relaxed">
-              {content || "(empty body)"}
-            </div>
-          )}
+        {/* Email body — always sandboxed in an iframe so injected theme styles
+            take effect even when the email bakes in its own background/color rules. */}
+        <div className="relative" style={{ backgroundColor: frameBg }}>
+          <iframe
+            srcDoc={srcDoc}
+            sandbox="allow-same-origin allow-popups"
+            className="w-full border-0 block"
+            style={{ height: iframeHeight, backgroundColor: frameBg }}
+            onLoad={handleIframeLoad}
+            title="Email content"
+          />
         </div>
+
+        {/* Attachments */}
+        {attachments.length > 0 && (
+          <div className="px-5 py-4">
+            <p className="text-[10px] font-bold text-muted-foreground/50 uppercase tracking-widest mb-3 font-heading">
+              {attachments.length} Attachment{attachments.length > 1 ? "s" : ""}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {attachments.map((att) => {
+                const url = attachmentUrl(att);
+                const isPdf = att.mimeType === "application/pdf";
+                const isImage = att.mimeType.startsWith("image/");
+                const canPreview = isPdf || isImage;
+                const isPreviewing = previewUrl === url;
+                return (
+                  <div
+                    key={att.attachmentId}
+                    className="flex items-center gap-2.5 border border-border/50 rounded-xl px-3 py-2.5 bg-secondary/30 hover:bg-secondary/50 transition-colors max-w-xs"
+                  >
+                    <AttachmentIcon mimeType={att.mimeType} />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[12px] font-medium text-foreground truncate">{att.filename}</p>
+                      <p className="text-[10px] text-muted-foreground">{formatSize(att.size)}</p>
+                    </div>
+                    <div className="flex items-center gap-0.5 shrink-0">
+                      {canPreview && (
+                        <button
+                          onClick={() => setPreviewUrl(isPreviewing ? null : url)}
+                          className={`p-1.5 rounded-lg transition-colors cursor-pointer ${isPreviewing ? "bg-primary/15 text-primary" : "text-muted-foreground/60 hover:text-foreground hover:bg-secondary"}`}
+                          title={isPreviewing ? "Close preview" : "Preview"}
+                        >
+                          {isPreviewing ? <X className="size-3.5" strokeWidth={1.75} /> : <FileText className="size-3.5" strokeWidth={1.75} />}
+                        </button>
+                      )}
+                      <a
+                        href={url}
+                        download={att.filename}
+                        className="p-1.5 rounded-lg text-muted-foreground/60 hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
+                        title="Download"
+                      >
+                        <Download className="size-3.5" strokeWidth={1.75} />
+                      </a>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Inline preview for PDFs and images */}
+            {previewUrl && (
+              <div className="mt-3 rounded-xl overflow-hidden border border-border/40 bg-secondary/10">
+                {previewUrl.includes("image/") || attachments.find(a => attachmentUrl(a) === previewUrl)?.mimeType.startsWith("image/") ? (
+                  <img src={previewUrl} alt="Attachment preview" className="w-full object-contain max-h-[600px]" />
+                ) : (
+                  <iframe
+                    src={previewUrl}
+                    className="w-full border-0"
+                    style={{ height: 600 }}
+                    title="Attachment preview"
+                  />
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Add to Calendar panel */}

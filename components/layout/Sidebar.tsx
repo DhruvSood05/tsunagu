@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import ThemeToggle from "./ThemeToggle";
 import {
   Inbox,
   Send,
@@ -11,7 +10,6 @@ import {
   Star,
   Calendar,
   Sparkles,
-  Settings,
   Plus,
   Shield,
   PanelLeftClose,
@@ -215,32 +213,6 @@ export default function Sidebar({ user, onCompose, basePath = "/dashboard" }: Si
         )}
       </div>
 
-      {/* Footer */}
-      <div id="tour-settings" className="px-2.5 py-3 border-t border-sidebar-border shrink-0">
-        <div className={`flex items-center ${collapsed ? "flex-col gap-2" : "gap-1.5"}`}>
-          <Link
-            href={`${basePath}/settings`}
-            title={collapsed ? "Settings" : undefined}
-            className={`relative flex items-center gap-2.5 rounded-lg transition-all duration-150 ${
-              collapsed ? "justify-center px-0 py-2.5 w-full" : "flex-1 px-2.5 py-2"
-            } text-[13px] ${
-              pathname === `${basePath}/settings`
-                ? "bg-secondary text-foreground font-medium shadow-sm border border-border"
-                : "text-muted-foreground hover:text-foreground hover:bg-foreground/5 dark:hover:bg-[#202022]"
-            }`}
-          >
-            {pathname === `${basePath}/settings` && !collapsed && (
-              <span className="absolute -left-px top-1/2 -translate-y-1/2 h-4 w-[3px] rounded-full bg-foreground" />
-            )}
-            <Settings
-              className={`size-[18px] shrink-0 ${pathname === `${basePath}/settings` ? "text-foreground" : "text-muted-foreground/70"}`}
-              strokeWidth={1.75}
-            />
-            {!collapsed && <span>Settings</span>}
-          </Link>
-          <ThemeToggle />
-        </div>
-      </div>
     </>
   );
 

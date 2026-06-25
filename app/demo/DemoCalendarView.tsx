@@ -342,6 +342,7 @@ export default function DemoCalendarView() {
           <TopNav
             user={ctx.user}
             gmailConnected={true}
+            basePath="/demo"
             onOpenPalette={() => ctx.setShowSignInModal(true)}
           />
 

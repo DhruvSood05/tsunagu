@@ -48,7 +48,9 @@ export async function GET(req: Request) {
     };
 
     if (category === "archive") {
-      queryParams.q = "-in:inbox -in:trash -in:spam -in:draft";
+      // in:anywhere overrides Gmail's default scope so the search covers all mail.
+      // Then we exclude every system folder — what remains is genuinely archived mail.
+      queryParams.q = "in:anywhere -in:inbox -in:sent -in:trash -in:spam -in:draft -in:chats";
     } else {
       queryParams.labelIds = CATEGORY_LABELS[category] ?? CATEGORY_LABELS.inbox;
     }
