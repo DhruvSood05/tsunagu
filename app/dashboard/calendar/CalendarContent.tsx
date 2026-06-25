@@ -31,15 +31,7 @@ import {
 } from "@/lib/calendar-helpers";
 import { useResizablePanel } from "@/hooks/useResizablePanel";
 
-// Module-level caches — survive tab switches and soft navigations within the session.
-// Keyed by userId so multiple accounts in the same browser never share data.
-// Session-length cache — once a date range or calendar list is loaded it stays
-// cached until the user explicitly mutates data or the page is refreshed.
-// The 30s webhook poll handles real-time event changes while the calendar is open.
-const CALENDAR_CACHE_TTL_MS = Infinity;
-
-const calEventsCache = new Map<string, { events: CalendarEvent[]; fetchedAt: number }>();
-const calListCache   = new Map<string, { list: CalendarInfo[];    fetchedAt: number }>();
+import { calEventsCache, calListCache, clearAllCaches, findCachedEventsForRange, prefetchDrafts } from "@/lib/client-cache";
 
 function calEventsCacheKey(userId: string, calIds: string[], min: string, max: string) {
   return `${userId}|${calIds.join(",")}|${min}|${max}`;
@@ -109,10 +101,9 @@ export default function CalendarContent({ user, gmailConnected, calendarConnecte
     direction: "left",
   });
 
-  // ── Clear caches when the logged-in user changes ──────────────────────────
+  // ── Clear all shared caches when the logged-in user changes ─────────────
   useEffect(() => {
-    calEventsCache.clear();
-    calListCache.clear();
+    clearAllCaches();
   }, [user?.id]);
 
   // ── Webhook-driven calendar refresh — poll every 30s ─────────────────────
@@ -147,7 +138,7 @@ export default function CalendarContent({ user, gmailConnected, calendarConnecte
   useEffect(() => {
     const userId = user?.id ?? "";
     const cached = calListCache.get(userId);
-    if (cached && Date.now() - cached.fetchedAt < CALENDAR_CACHE_TTL_MS) {
+    if (cached) {
       // Fresh calendar list — apply immediately without a network request.
       const list = cached.list.map((c, i) => ({
         ...c,
@@ -194,15 +185,15 @@ export default function CalendarContent({ user, gmailConnected, calendarConnecte
 
     const userId = user?.id ?? "";
     const key = calEventsCacheKey(userId, ids, min, max);
-    const cached = calEventsCache.get(key);
+    // Check exact key first, then fall back to any wider cached range (e.g. prefetch).
+    const cached = calEventsCache.get(key) ?? findCachedEventsForRange(userId, ids, min, max);
 
     if (!force && cached) {
       setEvents(cached.events);
       setLoading(false);
-      // Fresh — skip the network round-trip entirely. The 30s webhook poll
-      // handles any real-time changes while the user is on this page.
-      if (Date.now() - cached.fetchedAt < CALENDAR_CACHE_TTL_MS) return;
-      // Stale — show cached data immediately, then silently refresh below.
+      // Cache is session-scoped (Infinity TTL) — skip the network round-trip.
+      // The 30s webhook poll handles any real-time changes while the user is here.
+      return;
     } else {
       setLoading(true);
     }
@@ -557,7 +548,16 @@ export default function CalendarContent({ user, gmailConnected, calendarConnecte
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
-      <Sidebar user={user} gmailConnected={gmailConnected} calendarConnected={calendarConnected} />
+      <Sidebar
+        user={user}
+        gmailConnected={gmailConnected}
+        calendarConnected={calendarConnected}
+        onPrefetchFolder={(id) => {
+          const userId = user?.id;
+          if (!userId) return;
+          if (id === "drafts") prefetchDrafts(userId);
+        }}
+      />
 
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         <TopNav user={user} gmailConnected={gmailConnected} />

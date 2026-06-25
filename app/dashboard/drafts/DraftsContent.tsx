@@ -1,7 +1,8 @@
 "use client";
 
 import { authClient } from "@/lib/auth-client";
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
+import { draftsCache, prefetchCalendar } from "@/lib/client-cache";
 import ComposeModal from "@/components/email/ComposeModal";
 import DraftEditPanel from "@/components/email/DraftEditPanel";
 import DraftRow from "@/components/email/DraftRow";
@@ -40,14 +41,34 @@ export default function DraftsContent({
       const qs = token ? `?pageToken=${encodeURIComponent(token)}` : "";
       const res = await fetch(`/api/drafts${qs}`);
       const data = await res.json();
-      setDrafts(data.drafts ?? []);
-      setNextPageToken(data.nextPageToken ?? null);
+      const ds = data.drafts ?? [];
+      const nt = data.nextPageToken ?? null;
+      setDrafts(ds);
+      setNextPageToken(nt);
+      // Warm the shared cache so returning to this page is instant.
+      const userId = session?.user?.id;
+      if (userId && !token) {
+        draftsCache.set(`${userId}:`, { drafts: ds, nextPageToken: nt, fetchedAt: Date.now() });
+      }
     } catch {
       setError("Failed to load drafts.");
     } finally {
       setLoading(false);
     }
   };
+
+  // Hydrate from the shared cache synchronously before paint so the list
+  // appears instantly on return visits (prefetched by DashboardContent).
+  useLayoutEffect(() => {
+    const userId = session?.user?.id;
+    if (!userId) return;
+    const cached = draftsCache.get(`${userId}:`);
+    if (cached) {
+      setDrafts(cached.drafts);
+      setNextPageToken(cached.nextPageToken);
+      setLoading(false);
+    }
+  }, [session?.user?.id]);
 
   useEffect(() => {
     fetchPage("");
@@ -114,6 +135,11 @@ export default function DraftsContent({
         onCompose={() => setShowCompose(true)}
         gmailConnected={gmailConnected}
         calendarConnected={calendarConnected}
+        onPrefetchFolder={(id) => {
+          const userId = session?.user?.id;
+          if (!userId) return;
+          if (id === "calendar" && calendarConnected) prefetchCalendar(userId);
+        }}
       />
 
       {/* Main Workspace Frame */}

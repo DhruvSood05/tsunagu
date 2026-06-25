@@ -26,13 +26,7 @@ interface FetchOptions {
   category?: Category | string;
 }
 
-// Module-level cache — survives re-renders and page navigation within the session.
-// Keyed by userId so different accounts in the same browser never share entries.
-const pageCache = new Map<string, { messages: any[]; nextPageToken: string | null; fetchedAt: number }>();
-// Once fetched, cache entries live for the entire browser session. The 30s
-// webhook poll handles real-time inbox updates, so no background re-fetch
-// is needed when switching tabs — data shows instantly every time.
-const EMAIL_CACHE_TTL_MS = Infinity;
+import { emailCache as pageCache, clearAllCaches, prefetchCalendar, prefetchDrafts } from "@/lib/client-cache";
 
 function cacheKey(userId: string, mode: Mode, token: string, query?: string, category?: string) {
   return `${userId}:${mode}:${category ?? "inbox"}:${token}:${query ?? ""}`;
@@ -132,7 +126,7 @@ export default function DashboardContent({
       setLoading(false);
       // Data is fresh — the webhook poll will catch any new mail. Skip the
       // background re-fetch entirely so tab switches feel instant.
-      if (Date.now() - cached.fetchedAt < EMAIL_CACHE_TTL_MS) return;
+      if (cached.fetchedAt > 0) return; // cache is session-scoped (Infinity TTL)
     } else {
       setEmails([]);
       setLoading(true);
@@ -169,11 +163,20 @@ export default function DashboardContent({
     }
   };
 
-  // Clear the page cache when the logged-in user changes so a different account
-  // never sees a previous account's cached emails.
+  // Clear all shared caches when the logged-in user changes.
   useEffect(() => {
-    pageCache.clear();
+    clearAllCaches();
   }, [session?.user?.id]);
+
+  // Background-prefetch Calendar and Drafts data while the user browses emails.
+  // By the time they click the sidebar link, data is already cached and the
+  // page renders instantly without waiting for a network round-trip.
+  useEffect(() => {
+    const userId = session?.user?.id;
+    if (!userId) return;
+    if (calendarConnected) prefetchCalendar(userId);
+    prefetchDrafts(userId);
+  }, [session?.user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Synchronously hydrate from cache before the browser paints when the folder
   // changes. useEffect fires *after* paint, which causes a one-frame flash of
@@ -507,6 +510,12 @@ export default function DashboardContent({
         onCompose={() => setShowCompose(true)}
         gmailConnected={gmailConnected}
         calendarConnected={calendarConnected}
+        onPrefetchFolder={(id) => {
+          const userId = session?.user?.id;
+          if (!userId) return;
+          if (id === "calendar" && calendarConnected) prefetchCalendar(userId);
+          if (id === "drafts") prefetchDrafts(userId);
+        }}
       />
 
       {/* Main Workspace Frame */}

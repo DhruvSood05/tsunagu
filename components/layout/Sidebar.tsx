@@ -31,9 +31,11 @@ interface SidebarProps {
   gmailConnected?: boolean;
   calendarConnected?: boolean;
   basePath?: string;
+  /** Called when the user hovers a sidebar folder link — use to kick off prefetches */
+  onPrefetchFolder?: (folderId: string) => void;
 }
 
-export default function Sidebar({ user, onCompose, basePath = "/dashboard" }: SidebarProps) {
+export default function Sidebar({ user, onCompose, basePath = "/dashboard", onPrefetchFolder }: SidebarProps) {
   const isSuperAdmin = user?.email === ADMIN_EMAIL;
   const [isAdminRole, setIsAdminRole] = useState(false);
   const isAdmin = isSuperAdmin || isAdminRole;
@@ -135,6 +137,7 @@ export default function Sidebar({ user, onCompose, basePath = "/dashboard" }: Si
                 key={id}
                 href={href}
                 title={collapsed ? label : undefined}
+                onMouseEnter={() => onPrefetchFolder?.(id)}
                 className={`relative flex items-center gap-2.5 rounded-lg transition-all duration-150 ${
                   collapsed ? "justify-center px-0 py-2.5 mx-0.5" : "px-2.5 py-2"
                 } text-[13px] ${

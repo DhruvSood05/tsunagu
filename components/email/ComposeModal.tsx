@@ -246,7 +246,7 @@ export default function ComposeModal({
                 placeholder="recipient@example.com"
                 type="email"
                 autoFocus={!initialTo}
-                className="h-8 text-[13px] border-0 rounded-none px-0 shadow-none focus-visible:ring-0 bg-transparent"
+                className="h-8 text-[13px] text-foreground border-0 rounded-none px-0 shadow-none focus-visible:ring-0 focus-visible:border-0 bg-transparent dark:bg-transparent placeholder:text-muted-foreground/50"
               />
             </div>
 
@@ -259,7 +259,7 @@ export default function ComposeModal({
                 onChange={(e) => setSubject(e.target.value)}
                 placeholder="Subject"
                 autoFocus={!!initialTo}
-                className="h-8 text-[13px] border-0 rounded-none px-0 shadow-none focus-visible:ring-0 bg-transparent"
+                className="h-8 text-[13px] text-foreground border-0 rounded-none px-0 shadow-none focus-visible:ring-0 focus-visible:border-0 bg-transparent dark:bg-transparent placeholder:text-muted-foreground/50"
               />
             </div>
           </div>
